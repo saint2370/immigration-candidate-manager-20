@@ -208,40 +208,40 @@ const Index = () => {
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-blue-50 p-6 rounded-lg">
               <div className="flex items-center mb-4">
-                <img src="/lovable-uploads/a7798152-6004-45cd-82ac-015273e182fb.png" alt="Candidat" className="w-12 h-12 rounded-full object-cover mr-3" />
+                <img src="/lovable-uploads/e83d4090-759f-4383-a50e-0935b0dff46f.png" alt="Candidate guinéenne" className="w-12 h-12 rounded-full object-cover mr-3" />
                 <div>
-                  <h4 className="font-semibold">Marc Dupont</h4>
-                  <p className="text-sm text-gray-600">Visa de travail</p>
+                  <h4 className="font-semibold">Fanta Camara</h4>
+                  <p className="text-sm text-gray-600">Visa de travail | Guinée</p>
                 </div>
               </div>
               <p className="text-gray-700">
-                "Grâce à cette plateforme, j'ai pu suivre facilement l'évolution de ma demande de visa de travail. Service efficace et très pratique !"
+                "En tant que professionnelle guinéenne, j'ai pu suivre facilement l'évolution de ma demande de visa de travail pour le Canada. Le service est transparent et m'a permis de préparer sereinement mon départ. Vivement recommandé!"
               </p>
             </div>
             
             <div className="bg-blue-50 p-6 rounded-lg">
               <div className="flex items-center mb-4">
-                <img src="/lovable-uploads/2c6012c5-1aeb-427c-9537-6464053f3b55.png" alt="Candidat" className="w-12 h-12 rounded-full object-cover mr-3" />
+                <img src="/lovable-uploads/e6ba2df5-51d5-4e44-8310-c09f211ddd38.png" alt="Candidates ivoiriennes" className="w-12 h-12 rounded-full object-cover mr-3" />
                 <div>
-                  <h4 className="font-semibold">Sophie Martin</h4>
-                  <p className="text-sm text-gray-600">Résidence permanente</p>
+                  <h4 className="font-semibold">Marie Kouamé</h4>
+                  <p className="text-sm text-gray-600">Résidence permanente | Côte d'Ivoire</p>
                 </div>
               </div>
               <p className="text-gray-700">
-                "Le suivi en temps réel de mon dossier de résidence permanente m'a permis de rester sereine tout au long du processus. Très recommandé !"
+                "Notre demande de résidence permanente depuis la Côte d'Ivoire était complexe, mais grâce à cette plateforme, nous avons pu suivre chaque étape et soumettre tous nos documents à temps. Un service indispensable pour notre famille!"
               </p>
             </div>
             
             <div className="bg-blue-50 p-6 rounded-lg">
               <div className="flex items-center mb-4">
-                <img src="/lovable-uploads/6741185c-18b1-4058-a6ab-670479ba19e7.png" alt="Candidat" className="w-12 h-12 rounded-full object-cover mr-3" />
+                <img src="/lovable-uploads/11a52f19-da3d-40d6-8a0e-e964633eac3a.png" alt="Candidat camerounais" className="w-12 h-12 rounded-full object-cover mr-3" />
                 <div>
-                  <h4 className="font-semibold">Ahmed Khalil</h4>
-                  <p className="text-sm text-gray-600">Regroupement familial</p>
+                  <h4 className="font-semibold">Paul Mbarga</h4>
+                  <p className="text-sm text-gray-600">Regroupement familial | Cameroun</p>
                 </div>
               </div>
               <p className="text-gray-700">
-                "Interface intuitive et accès rapide à tous nos documents. Le processus de regroupement familial a été bien moins stressant grâce à ce service."
+                "En tant que Camerounais vivant au Canada, j'ai utilisé ce service pour suivre la procédure de regroupement familial. L'interface est intuitive et les notifications m'ont aidé à comprendre où en était mon dossier à chaque instant."
               </p>
             </div>
           </div>
