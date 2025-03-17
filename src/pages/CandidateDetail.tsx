@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
   ArrowLeft, Edit, Trash2, Download, User, FileClock, 
-  FileText, History, Timeline, Calendar, Info
+  FileText, History, Activity, Calendar, Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -190,7 +190,7 @@ const CandidateDetail = () => {
               "text-gray-600 pb-3"
             )}
           >
-            <Timeline size={18} className="mr-2" />
+            <Activity size={18} className="mr-2" />
             Timeline
           </TabsTrigger>
         </TabsList>
@@ -383,7 +383,7 @@ const CandidateDetail = () => {
         <TabsContent value="timeline" className="space-y-6 animate-slide-up">
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="p-5 border-b border-gray-100 flex items-center">
-              <Timeline size={20} className="text-gray-400 mr-2" />
+              <Activity size={20} className="text-gray-400 mr-2" />
               <h3 className="text-lg font-semibold text-gray-900">Timeline du dossier</h3>
             </div>
             
