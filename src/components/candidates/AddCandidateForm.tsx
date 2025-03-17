@@ -1,12 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { CalendarIcon, Plus, X, Upload } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 import {
   Dialog,
@@ -52,12 +53,12 @@ import { cn } from "@/lib/utils";
 
 // Types de visa disponibles
 const visaTypes = [
-  { id: 'travail', label: 'Visa de Travail' },
-  { id: 'visiteur', label: 'Visa Visiteur' },
-  { id: 'residence', label: 'Résidence Permanente' }
+  { id: 'Visiteur', label: 'Visa Visiteur' },
+  { id: 'Travail', label: 'Visa de Travail' },
+  { id: 'Résidence Permanente', label: 'Résidence Permanente' }
 ];
 
-// Bureaux disponibles
+// Obtenir les bureaux depuis la base de données (pour l'instant hardcodé)
 const bureaux = [
   'Paris', 'Rabat', 'New York', 'Mumbai', 'Mexico', 
   'Tokyo', 'Moscou', 'Madrid', 'Séoul', 'Le Caire'
@@ -68,28 +69,6 @@ const statuses = [
   'En cours', 'Approuvé', 'En attente', 'Rejeté', 'Complété', 'Expiré'
 ];
 
-// Documents requis par type de visa - Mis à jour selon les exigences spécifiques
-const requiredDocuments = {
-  visiteur: ['Visa', 'Billet d\'avion'],
-  travail: [
-    'Contrat de travail', 
-    'Lettre d\'offre d\'emploi', 
-    'EIMT', 
-    'Permis de travail', 
-    'Visa', 
-    'Billet d\'avion'
-  ],
-  residence: [
-    'Contrat de travail', 
-    'Lettre d\'offre d\'emploi', 
-    'EIMT', 
-    'Permis de travail', 
-    'Visa', 
-    'Billet d\'avion',
-    'Lettre de recommandation'
-  ]
-};
-
 // Schéma de validation du formulaire principal
 const formSchema = z.object({
   prenom: z.string().min(1, { message: 'Le prénom est requis' }),
@@ -98,17 +77,22 @@ const formSchema = z.object({
   lieuNaissance: z.string().min(1, { message: 'Le lieu de naissance est requis' }),
   numeroPassport: z.string().min(5, { message: 'Numéro de passeport invalide' }),
   numeroTelephone: z.string().min(8, { message: 'Numéro de téléphone invalide' }),
+  email: z.string().email({ message: 'Email invalide' }).optional().or(z.literal('')),
+  adresse: z.string().optional(),
   typeVisa: z.string({ required_error: 'Veuillez sélectionner un type de visa' }),
   dateSoumission: z.date({ required_error: 'La date de soumission est requise' }),
   dateVoyagePrevue: z.date({ required_error: 'La date prévue du voyage est requise' }),
   bureau: z.string({ required_error: 'Veuillez sélectionner un bureau' }),
   status: z.string({ required_error: 'Veuillez sélectionner un statut' }),
+  procedure: z.string().optional(),
+  delaiTraitement: z.string().optional(),
+  notes: z.string().optional(),
   detailsBillet: z.string().optional(),
 });
 
 // Schéma pour les détails spécifiques à la résidence permanente
 const residenceSchema = z.object({
-  programmeImmigration: z.enum(['Express Entry', 'Arrima']),
+  programmeImmigration: z.enum(['Entrée express', 'Arrima', 'Autre']),
   immigrationFamiliale: z.boolean().default(false),
   nombrePersonnes: z.number().min(1).default(1),
   conjointNom: z.string().optional(),
@@ -130,12 +114,23 @@ interface EnfantType {
   age: string;
 }
 
+// Type pour les documents
+interface DocumentType {
+  id: string;
+  nom: string;
+  visa_type: string;
+  required: boolean;
+}
+
 const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, onAddCandidate }) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('general');
   const [uploadedDocuments, setUploadedDocuments] = useState<Record<string, File | null>>({});
   const [enfants, setEnfants] = useState<EnfantType[]>([]);
   const [newEnfant, setNewEnfant] = useState<EnfantType>({nom: '', prenom: '', age: ''});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
+  const [isLoadingDocTypes, setIsLoadingDocTypes] = useState(false);
 
   // Formulaire principal
   const form = useForm<z.infer<typeof formSchema>>({
@@ -146,9 +141,14 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
       lieuNaissance: '',
       numeroPassport: '',
       numeroTelephone: '',
+      email: '',
+      adresse: '',
       typeVisa: '',
+      procedure: '',
+      delaiTraitement: '',
       bureau: '',
-      status: 'En cours',
+      status: 'En attente',
+      notes: '',
       detailsBillet: '',
     },
   });
@@ -157,7 +157,7 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
   const residenceForm = useForm<z.infer<typeof residenceSchema>>({
     resolver: zodResolver(residenceSchema),
     defaultValues: {
-      programmeImmigration: 'Express Entry',
+      programmeImmigration: 'Entrée express',
       immigrationFamiliale: false,
       nombrePersonnes: 1,
       conjointNom: '',
@@ -169,14 +169,41 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
 
   // Surveiller le type de visa pour afficher les documents appropriés
   const visaType = form.watch('typeVisa');
-  
-  const documentsToUpload = visaType ? requiredDocuments[visaType as keyof typeof requiredDocuments] || [] : [];
 
+  // Charger les types de documents en fonction du visa sélectionné
+  useEffect(() => {
+    if (!visaType) return;
+    
+    const fetchDocumentTypes = async () => {
+      setIsLoadingDocTypes(true);
+      try {
+        const { data, error } = await supabase
+          .from('document_types')
+          .select('*')
+          .eq('visa_type', visaType);
+        
+        if (error) throw error;
+        setDocumentTypes(data);
+      } catch (error) {
+        console.error('Error fetching document types:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les types de documents.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoadingDocTypes(false);
+      }
+    };
+    
+    fetchDocumentTypes();
+  }, [visaType, toast]);
+  
   // Gérer le téléversement d'un document
-  const handleFileUpload = (documentName: string, file: File | null) => {
+  const handleFileUpload = (documentId: string, file: File | null) => {
     setUploadedDocuments(prev => ({
       ...prev,
-      [documentName]: file
+      [documentId]: file
     }));
   };
 
@@ -195,47 +222,204 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
     setEnfants(updatedEnfants);
   };
 
-  // Soumission du formulaire
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    // Combiner les données du formulaire principal et les documents téléversés
-    const candidateData = {
-      ...data,
-      id: Math.random().toString(36).substring(2, 11),
-      photo: '',
-      nationality: data.lieuNaissance,
-      visaType: visaTypes.find(t => t.id === data.typeVisa)?.label || data.typeVisa,
-      submissionDate: format(data.dateSoumission, 'dd MMMM yyyy', { locale: fr }),
-      documents: uploadedDocuments,
-    };
+  // Téléverser un fichier dans le storage Supabase
+  const uploadFile = async (file: File, candidateId: string, documentTypeId: string) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${candidateId}/${documentTypeId}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `${fileName}`;
+    
+    const { data, error } = await supabase.storage
+      .from('documents')
+      .upload(filePath, file);
+    
+    if (error) throw error;
+    
+    return { filePath, fileName: file.name };
+  };
 
-    // Ajouter les détails spécifiques à la résidence permanente si nécessaire
-    if (data.typeVisa === 'residence') {
-      const residenceData = residenceForm.getValues();
-      Object.assign(candidateData, {
-        programmeImmigration: residenceData.programmeImmigration,
-        immigrationFamiliale: residenceData.immigrationFamiliale,
-        nombrePersonnes: residenceData.nombrePersonnes,
-        conjoint: residenceData.immigrationFamiliale ? {
-          nom: residenceData.conjointNom,
-          prenom: residenceData.conjointPrenom,
-          numeroPassport: residenceData.conjointPassport
-        } : null,
-        enfants: enfants,
-        detailsAutresPersonnes: residenceData.detailsAutresPersonnes,
-      });
+  // Insérer des documents dans la base de données
+  const insertDocuments = async (candidateId: string) => {
+    for (const [documentTypeId, file] of Object.entries(uploadedDocuments)) {
+      if (!file) continue;
+      
+      try {
+        // Upload the file
+        const { filePath, fileName } = await uploadFile(file, candidateId, documentTypeId);
+        
+        // Insert document record
+        const { error } = await supabase
+          .from('documents')
+          .insert({
+            candidate_id: candidateId,
+            document_type_id: documentTypeId,
+            file_path: filePath,
+            filename: fileName,
+            status: 'uploaded',
+            upload_date: new Date().toISOString()
+          });
+        
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error uploading document:', error);
+        // Continue with other documents even if one fails
+      }
     }
+  };
 
-    // Appeler la fonction pour ajouter le candidat
-    onAddCandidate(candidateData);
+  // Insérer l'historique du candidat
+  const insertHistory = async (candidateId: string, action: string) => {
+    try {
+      const { error } = await supabase
+        .from('history')
+        .insert({
+          candidate_id: candidateId,
+          action,
+          date: new Date().toISOString()
+        });
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error inserting history:', error);
+    }
+  };
+
+  // Insérer les détails du vol
+  const insertFlightDetails = async (candidateId: string, detailsBillet: string) => {
+    if (!detailsBillet) return;
     
-    // Afficher un toast de confirmation
-    toast({
-      title: "Candidat ajouté",
-      description: `${data.prenom} ${data.nom} a été ajouté avec succès.`,
-    });
+    try {
+      const { error } = await supabase
+        .from('details_vol')
+        .insert({
+          candidate_id: candidateId,
+          numero_vol: detailsBillet
+        });
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error inserting flight details:', error);
+    }
+  };
+
+  // Insérer les détails de résidence permanente
+  const insertResidenceDetails = async (candidateId: string) => {
+    if (visaType !== 'Résidence Permanente') return null;
     
-    // Fermer le formulaire
-    onClose();
+    try {
+      const residenceData = residenceForm.getValues();
+      
+      const { data, error } = await supabase
+        .from('permanent_residence_details')
+        .insert({
+          candidate_id: candidateId,
+          immigration_program: residenceData.programmeImmigration,
+          nombre_personnes: residenceData.nombrePersonnes,
+          conjoint_nom: residenceData.conjointNom || null,
+          conjoint_prenom: residenceData.conjointPrenom || null,
+          conjoint_passport: residenceData.conjointPassport || null
+        })
+        .select();
+      
+      if (error) throw error;
+      
+      // Si nous avons des enfants, les insérer également
+      if (enfants.length > 0 && data && data[0]) {
+        const permanentResidenceId = data[0].id;
+        
+        for (const enfant of enfants) {
+          const { error: enfantError } = await supabase
+            .from('enfants')
+            .insert({
+              permanent_residence_id: permanentResidenceId,
+              nom: enfant.nom,
+              prenom: enfant.prenom,
+              age: parseInt(enfant.age, 10)
+            });
+          
+          if (enfantError) throw enfantError;
+        }
+      }
+      
+      return data ? data[0]?.id : null;
+    } catch (error) {
+      console.error('Error inserting residence details:', error);
+      return null;
+    }
+  };
+
+  // Soumission du formulaire
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    setIsSubmitting(true);
+    
+    try {
+      // Formater les dates pour la base de données (YYYY-MM-DD)
+      const formatDateForDB = (date: Date) => format(date, 'yyyy-MM-dd');
+      
+      // Insérer le candidat
+      const { data: insertedCandidate, error: insertError } = await supabase
+        .from('candidates')
+        .insert({
+          nom: data.nom,
+          prenom: data.prenom,
+          date_naissance: formatDateForDB(data.dateNaissance),
+          lieu_naissance: data.lieuNaissance,
+          nationalite: data.lieuNaissance, // Using lieu_naissance as nationality
+          numero_passport: data.numeroPassport,
+          telephone: data.numeroTelephone,
+          email: data.email || null,
+          adresse: data.adresse || null,
+          visa_type: data.typeVisa as any,
+          procedure: data.procedure || null,
+          date_soumission: formatDateForDB(data.dateSoumission),
+          delai_traitement: data.delaiTraitement || null,
+          status: data.status as any,
+          date_voyage: formatDateForDB(data.dateVoyagePrevue),
+          bureau: data.bureau,
+          notes: data.notes || null
+        })
+        .select();
+      
+      if (insertError) throw insertError;
+      
+      const candidateId = insertedCandidate[0].id;
+      
+      // Insérer l'historique de création du candidat
+      await insertHistory(candidateId, 'Dossier créé');
+      
+      // Si c'est une demande de résidence permanente, insérer les détails additionnels
+      if (data.typeVisa === 'Résidence Permanente') {
+        await insertResidenceDetails(candidateId);
+      }
+      
+      // Insérer les détails du vol si disponibles
+      if (data.detailsBillet) {
+        await insertFlightDetails(candidateId, data.detailsBillet);
+      }
+      
+      // Insérer les documents téléversés
+      await insertDocuments(candidateId);
+      
+      // Appeler la fonction pour notifier que le candidat a été ajouté
+      onAddCandidate({
+        id: candidateId,
+        prenom: data.prenom,
+        nom: data.nom,
+        // Autres données du candidat...
+      });
+      
+      // Fermer le formulaire
+      onClose();
+      
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de l'ajout du candidat.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -252,7 +436,7 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
           <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="general">Informations générales</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
-            {visaType === 'residence' && (
+            {visaType === 'Résidence Permanente' && (
               <TabsTrigger value="residence">Détails résidence</TabsTrigger>
             )}
           </TabsList>
@@ -380,6 +564,36 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                     )}
                   />
 
+                  {/* Email (optionnel) */}
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email (optionnel)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Adresse (optionnelle) */}
+                  <FormField
+                    control={form.control}
+                    name="adresse"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Adresse (optionnelle)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Adresse" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   {/* Type de visa */}
                   <FormField
                     control={form.control}
@@ -411,6 +625,21 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                             ))}
                           </SelectContent>
                         </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Procédure (optionnelle) */}
+                  <FormField
+                    control={form.control}
+                    name="procedure"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Procédure (optionnelle)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: Entrée express" {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -453,6 +682,21 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                             />
                           </PopoverContent>
                         </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Délai de traitement (optionnel) */}
+                  <FormField
+                    control={form.control}
+                    name="delaiTraitement"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Délai de traitement (optionnel)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: 8-12 semaines" {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -559,13 +803,32 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                   />
                 </div>
 
+                {/* Notes (optionnelles) */}
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes (optionnelles)</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Notes importantes concernant le dossier"
+                          className="min-h-[80px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 {/* Détails du billet d'avion */}
                 <FormField
                   control={form.control}
                   name="detailsBillet"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Détails du billet d'avion</FormLabel>
+                      <FormLabel>Détails du billet d'avion (optionnels)</FormLabel>
                       <FormControl>
                         <Textarea 
                           placeholder="Numéro de vol, compagnie aérienne, escales, etc."
@@ -579,8 +842,17 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                 />
 
                 <DialogFooter className="mt-6">
-                  <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
-                  <Button type="submit">Ajouter le candidat</Button>
+                  <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>Annuler</Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Ajout en cours...
+                      </div>
+                    ) : (
+                      'Ajouter le candidat'
+                    )}
+                  </Button>
                 </DialogFooter>
               </form>
             </Form>
@@ -589,46 +861,56 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
           <TabsContent value="documents" className="space-y-4">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Documents requis</h3>
-              {visaType ? (
-                <div className="grid grid-cols-1 gap-4">
-                  {documentsToUpload.map((doc) => (
-                    <div key={doc} className="border rounded-md p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium">{doc}</h4>
-                        {uploadedDocuments[doc] && (
-                          <Badge variant="outline" className="bg-green-50 text-green-700">
-                            Téléversé
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Input 
-                          type="file" 
-                          className="flex-1"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0] || null;
-                            handleFileUpload(doc, file);
-                          }}
-                        />
-                        {uploadedDocuments[doc] && (
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="icon"
-                            onClick={() => handleFileUpload(doc, null)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                      {uploadedDocuments[doc] && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          {uploadedDocuments[doc]?.name} ({Math.round(uploadedDocuments[doc]?.size / 1024)} Ko)
-                        </p>
-                      )}
-                    </div>
-                  ))}
+              {isLoadingDocTypes ? (
+                <div className="flex justify-center p-6">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ircc-blue"></div>
                 </div>
+              ) : visaType ? (
+                documentTypes.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-4">
+                    {documentTypes.map((doc) => (
+                      <div key={doc.id} className="border rounded-md p-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <h4 className="font-medium">{doc.nom}</h4>
+                          {uploadedDocuments[doc.id] && (
+                            <Badge variant="outline" className="bg-green-50 text-green-700">
+                              Téléversé
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input 
+                            type="file" 
+                            className="flex-1"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0] || null;
+                              handleFileUpload(doc.id, file);
+                            }}
+                          />
+                          {uploadedDocuments[doc.id] && (
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="icon"
+                              onClick={() => handleFileUpload(doc.id, null)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                        {uploadedDocuments[doc.id] && (
+                          <p className="text-sm text-gray-500 mt-1">
+                            {uploadedDocuments[doc.id]?.name} ({Math.round((uploadedDocuments[doc.id]?.size || 0) / 1024)} Ko)
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">
+                    Aucun document requis n'a été trouvé pour ce type de visa.
+                  </p>
+                )
               ) : (
                 <p className="text-muted-foreground">
                   Veuillez d'abord sélectionner un type de visa dans l'onglet "Informations générales".
@@ -637,20 +919,20 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
             </div>
           </TabsContent>
 
-          {visaType === 'residence' && (
+          {visaType === 'Résidence Permanente' && (
             <TabsContent value="residence" className="space-y-4">
               <form className="space-y-4">
                 <div className="space-y-4">
                   <div>
                     <FormLabel>Programme d'immigration</FormLabel>
-                    <div className="grid grid-cols-2 gap-2 mt-1">
+                    <div className="grid grid-cols-3 gap-2 mt-1">
                       <Button
                         type="button"
-                        variant={residenceForm.getValues().programmeImmigration === 'Express Entry' ? 'default' : 'outline'}
-                        onClick={() => residenceForm.setValue('programmeImmigration', 'Express Entry')}
+                        variant={residenceForm.getValues().programmeImmigration === 'Entrée express' ? 'default' : 'outline'}
+                        onClick={() => residenceForm.setValue('programmeImmigration', 'Entrée express')}
                         className="w-full"
                       >
-                        Express Entry
+                        Entrée express
                       </Button>
                       <Button
                         type="button"
@@ -659,6 +941,14 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                         className="w-full"
                       >
                         Arrima
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={residenceForm.getValues().programmeImmigration === 'Autre' ? 'default' : 'outline'}
+                        onClick={() => residenceForm.setValue('programmeImmigration', 'Autre')}
+                        className="w-full"
+                      >
+                        Autre
                       </Button>
                     </div>
                   </div>

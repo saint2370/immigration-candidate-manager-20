@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { 
   Users, Search, Filter, Download, 
   Plus, ChevronLeft, ChevronRight 
@@ -25,110 +26,56 @@ import { Eye, Edit, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 import AddCandidateForm from '@/components/candidates/AddCandidateForm';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from "@/integrations/supabase/client";
 
-// Mocked data
-const initialCandidates = [
-  {
-    id: '1',
-    photo: '',
-    name: 'Sophie Martin',
-    nationality: 'France',
-    visaType: 'Travail',
-    submissionDate: '12 avril 2023',
-    status: 'En cours',
-    bureau: 'Paris'
-  },
-  {
-    id: '2',
-    photo: '',
-    name: 'Mohamed Ali',
-    nationality: 'Maroc',
-    visaType: 'Visiteur',
-    submissionDate: '5 avril 2023',
-    status: 'En attente',
-    bureau: 'Rabat'
-  },
-  {
-    id: '3',
-    photo: '',
-    name: 'John Smith',
-    nationality: 'USA',
-    visaType: 'Résidence Permanente',
-    submissionDate: '2 avril 2023',
-    status: 'Approuvé',
-    bureau: 'New York'
-  },
-  {
-    id: '4',
-    photo: '',
-    name: 'Aisha Patel',
-    nationality: 'Inde',
-    visaType: 'Travail',
-    submissionDate: '28 mars 2023',
-    status: 'En cours',
-    bureau: 'Mumbai'
-  },
-  {
-    id: '5',
-    photo: '',
-    name: 'Carlos Rodriguez',
-    nationality: 'Mexique',
-    visaType: 'Résidence Permanente',
-    submissionDate: '25 mars 2023',
-    status: 'Rejeté',
-    bureau: 'Mexico'
-  },
-  {
-    id: '6',
-    photo: '',
-    name: 'Yuki Tanaka',
-    nationality: 'Japon',
-    visaType: 'Visiteur',
-    submissionDate: '20 mars 2023',
-    status: 'Complété',
-    bureau: 'Tokyo'
-  },
-  {
-    id: '7',
-    photo: '',
-    name: 'Elena Petrova',
-    nationality: 'Russie',
-    visaType: 'Travail',
-    submissionDate: '15 mars 2023',
-    status: 'En attente',
-    bureau: 'Moscou'
-  },
-  {
-    id: '8',
-    photo: '',
-    name: 'Luis Gonzalez',
-    nationality: 'Espagne',
-    visaType: 'Visiteur',
-    submissionDate: '10 mars 2023',
-    status: 'Approuvé',
-    bureau: 'Madrid'
-  },
-  {
-    id: '9',
-    photo: '',
-    name: 'Kim Min-ji',
-    nationality: 'Corée du Sud',
-    visaType: 'Résidence Permanente',
-    submissionDate: '5 mars 2023',
-    status: 'En cours',
-    bureau: 'Séoul'
-  },
-  {
-    id: '10',
-    photo: '',
-    name: 'Ahmed Hassan',
-    nationality: 'Égypte',
-    visaType: 'Travail',
-    submissionDate: '28 février 2023',
-    status: 'En attente',
-    bureau: 'Le Caire'
+// Types based on our database schema
+interface Candidate {
+  id: string;
+  nom: string;
+  prenom: string;
+  nationalite: string;
+  visa_type: 'Visiteur' | 'Travail' | 'Résidence Permanente';
+  date_soumission: string;
+  status: 'En cours' | 'Approuvé' | 'En attente' | 'Rejeté' | 'Complété' | 'Expiré';
+  bureau: string;
+}
+
+// Format candidate data for display
+const formatCandidateForDisplay = (candidate: any): Candidate => {
+  // Parse date_soumission from database format to display format
+  const formattedDate = candidate.date_soumission 
+    ? format(new Date(candidate.date_soumission), 'dd MMMM yyyy', { locale: fr }) 
+    : '';
+  
+  return {
+    id: candidate.id,
+    nom: candidate.nom,
+    prenom: candidate.prenom,
+    nationalite: candidate.nationalite,
+    visa_type: candidate.visa_type,
+    date_soumission: formattedDate,
+    status: candidate.status,
+    bureau: candidate.bureau
+  };
+};
+
+// Fetch candidates from Supabase
+const fetchCandidates = async () => {
+  const { data, error } = await supabase
+    .from('candidates')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching candidates:', error);
+    throw error;
   }
-];
+  
+  return data.map(formatCandidateForDisplay);
+};
 
 const getStatusBadge = (status: string) => {
   const statusMap: Record<string, { variant: string; label: string }> = {
@@ -151,7 +98,6 @@ const getStatusBadge = (status: string) => {
 
 const CandidatesList = () => {
   const { toast } = useToast();
-  const [candidates, setCandidates] = useState(initialCandidates);
   const [page, setPage] = useState(1);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -163,20 +109,28 @@ const CandidatesList = () => {
     visaType: []
   });
   
+  // Use React Query to fetch candidates
+  const { data: candidates = [], isLoading, isError, refetch } = useQuery({
+    queryKey: ['candidates'],
+    queryFn: fetchCandidates
+  });
+
   const pageSize = 7;
   
-  // Filtrer les candidats en fonction de la recherche et des filtres
+  // Filter candidates based on search and filters
   const filteredCandidates = candidates.filter(candidate => {
+    const fullName = `${candidate.prenom} ${candidate.nom}`.toLowerCase();
+    
     const matchesSearch = searchTerm === '' || 
-      candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      candidate.nationality.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      fullName.includes(searchTerm.toLowerCase()) ||
+      candidate.nationalite.toLowerCase().includes(searchTerm.toLowerCase()) ||
       candidate.bureau.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = selectedFilters.status.length === 0 || 
       selectedFilters.status.includes(candidate.status);
     
     const matchesVisaType = selectedFilters.visaType.length === 0 || 
-      selectedFilters.visaType.includes(candidate.visaType);
+      selectedFilters.visaType.includes(candidate.visa_type);
     
     return matchesSearch && matchesStatus && matchesVisaType;
   });
@@ -189,31 +143,30 @@ const CandidatesList = () => {
     page * pageSize
   );
 
-  // Fonction pour ajouter un nouveau candidat
-  const handleAddCandidate = (candidateData: any) => {
-    // Adapter les données pour correspondre à la structure attendue
-    const newCandidate = {
-      id: candidateData.id,
-      photo: '',
-      name: `${candidateData.prenom} ${candidateData.nom}`,
-      nationality: candidateData.lieuNaissance,
-      visaType: candidateData.visaType,
-      submissionDate: candidateData.submissionDate,
-      status: candidateData.status,
-      bureau: candidateData.bureau
-    };
-    
-    // Ajouter le candidat à la liste
-    setCandidates(prev => [newCandidate, ...prev]);
-    
-    // Afficher un toast de confirmation
-    toast({
-      title: "Candidat ajouté",
-      description: `${newCandidate.name} a été ajouté avec succès.`,
-    });
+  // Add a new candidate to the database
+  const handleAddCandidate = async (candidateData: any) => {
+    try {
+      // Call refetch after successfully adding a candidate
+      await refetch();
+      
+      // Show success toast
+      toast({
+        title: "Candidat ajouté",
+        description: `${candidateData.prenom} ${candidateData.nom} a été ajouté avec succès.`,
+      });
+    } catch (error) {
+      console.error('Error in handleAddCandidate:', error);
+      
+      // Show error toast
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de l'ajout du candidat.",
+        variant: "destructive"
+      });
+    }
   };
 
-  // Fonction pour appliquer un filtre
+  // Toggle filter function
   const toggleFilter = (type: 'status' | 'visaType', value: string) => {
     setSelectedFilters(prev => {
       const current = [...prev[type]];
@@ -274,7 +227,7 @@ const CandidatesList = () => {
                   <div className="p-2">
                     <p className="text-sm font-medium mb-2">Statut</p>
                     <div className="space-y-1">
-                      {['En cours', 'Approuvé', 'En attente', 'Rejeté', 'Complété'].map(status => (
+                      {['En cours', 'Approuvé', 'En attente', 'Rejeté', 'Complété', 'Expiré'].map(status => (
                         <DropdownMenuItem 
                           key={status}
                           className={cn(
@@ -351,7 +304,31 @@ const CandidatesList = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedCandidates.length > 0 ? (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-24 text-center">
+                    <div className="flex flex-col items-center py-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ircc-blue"></div>
+                      <p className="mt-2 text-gray-500">Chargement des candidats...</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : isError ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-24 text-center">
+                    <div className="flex flex-col items-center py-4">
+                      <p className="text-red-500">Erreur lors du chargement des candidats</p>
+                      <Button 
+                        variant="outline" 
+                        className="mt-2"
+                        onClick={() => refetch()}
+                      >
+                        Réessayer
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : paginatedCandidates.length > 0 ? (
                 paginatedCandidates.map((candidate) => (
                   <TableRow 
                     key={candidate.id}
@@ -360,14 +337,14 @@ const CandidatesList = () => {
                     <TableCell className="font-medium">
                       <div className="flex items-center">
                         <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 mr-3">
-                          {candidate.name.charAt(0)}
+                          {candidate.prenom.charAt(0)}
                         </div>
-                        {candidate.name}
+                        {candidate.prenom} {candidate.nom}
                       </div>
                     </TableCell>
-                    <TableCell>{candidate.nationality}</TableCell>
-                    <TableCell>{candidate.visaType}</TableCell>
-                    <TableCell>{candidate.submissionDate}</TableCell>
+                    <TableCell>{candidate.nationalite}</TableCell>
+                    <TableCell>{candidate.visa_type}</TableCell>
+                    <TableCell>{candidate.date_soumission}</TableCell>
                     <TableCell>{getStatusBadge(candidate.status)}</TableCell>
                     <TableCell>{candidate.bureau}</TableCell>
                     <TableCell className="text-right">
