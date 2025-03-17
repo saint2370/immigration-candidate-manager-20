@@ -3,13 +3,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from '@/integrations/supabase/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft, Download, FileText, AlertCircle, Clock } from 'lucide-react';
+import IRCCHeader from '@/components/layout/IRCCHeader';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { FileDown, Clock, Calendar, MapPin, Phone, Mail, User, FileText, Download, ArrowLeft, MessageCircle, ExternalLink } from 'lucide-react';
 
 // Define a type for the documents with the nested document_types
 type DocumentWithTypeName = Database['public']['Tables']['documents']['Row'] & {
@@ -19,407 +21,380 @@ type DocumentWithTypeName = Database['public']['Tables']['documents']['Row'] & {
   } | null;
 };
 
-// Status steps mapping
-const statusSteps: Record<string, number> = {
-  'En attente': 20,
-  'En cours': 40,
-  'Complété': 80,
-  'Approuvé': 100,
-  'Rejeté': 100,
-  'Expiré': 100
-};
-
-// Status to color mapping
-const statusColors: Record<string, string> = {
-  'En attente': 'bg-yellow-500',
-  'En cours': 'bg-blue-500',
-  'Complété': 'bg-green-500',
-  'Approuvé': 'bg-green-500',
-  'Rejeté': 'bg-red-500',
-  'Expiré': 'bg-gray-500'
-};
-
 const CandidatePortalDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const { toast } = useToast();
   const [candidate, setCandidate] = useState<Database['public']['Tables']['candidates']['Row'] | null>(null);
   const [documents, setDocuments] = useState<DocumentWithTypeName[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [progressValue, setProgressValue] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  // Calculate progress based on status
+  const calculateProgress = (status: string): number => {
+    switch (status) {
+      case 'En attente': return 15;
+      case 'En cours': return 45;
+      case 'Approuvé': return 85;
+      case 'Complété': return 100;
+      case 'Rejeté': return 100;
+      case 'Expiré': return 100;
+      default: return 0;
+    }
+  };
+
+  // Get status color based on status
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case 'Approuvé': return 'text-green-700 bg-green-100';
+      case 'En cours': return 'text-blue-700 bg-blue-100';
+      case 'En attente': return 'text-amber-700 bg-amber-100';
+      case 'Rejeté': return 'text-red-700 bg-red-100';
+      case 'Complété': return 'text-emerald-700 bg-emerald-100';
+      case 'Expiré': return 'text-gray-700 bg-gray-100';
+      default: return 'text-gray-700 bg-gray-100';
+    }
+  };
+
+  // Get progress color based on status
+  const getProgressColor = (status: string): string => {
+    switch (status) {
+      case 'Approuvé': return 'bg-green-500';
+      case 'En cours': return 'bg-blue-500';
+      case 'En attente': return 'bg-amber-500';
+      case 'Rejeté': return 'bg-red-500';
+      case 'Complété': return 'bg-emerald-500';
+      case 'Expiré': return 'bg-gray-500';
+      default: return 'bg-gray-500';
+    }
+  };
 
   useEffect(() => {
     if (id) {
       fetchCandidate();
-      fetchDocuments();
     }
   }, [id]);
 
-  useEffect(() => {
-    if (candidate) {
-      // Set progress based on status
-      const progress = statusSteps[candidate.status] || 0;
-      
-      // Animate progress bar
-      const timer = setTimeout(() => {
-        setProgressValue(progress);
-      }, 200);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [candidate]);
-
   const fetchCandidate = async () => {
     setIsLoading(true);
+    setError(null);
+    
     try {
-      // First try to find by ID directly (UUID)
-      let { data: candidateData, error } = await supabase
+      // First try to find by identification_number (IMM-XXXX format)
+      let { data: candidateData, error: idError } = await supabase
         .from('candidates')
         .select('*')
-        .eq('id', id as string)
+        .eq('identification_number', id as string)
         .maybeSingle();
 
-      // If not found, try to find by identification_number
-      if (!candidateData && !error) {
-        const { data: candidateByNumber, error: idError } = await supabase
+      // If not found by identification_number, try by UUID
+      if (!candidateData && !idError) {
+        const { data: candidateById, error: uuidError } = await supabase
           .from('candidates')
           .select('*')
-          .eq('identification_number', id as string)
+          .eq('id', id as string)
           .maybeSingle();
 
-        if (idError) {
-          console.error("Error fetching candidate by identification number:", idError);
+        if (uuidError) {
+          console.error("Error fetching candidate by UUID:", uuidError);
         }
 
-        candidateData = candidateByNumber;
+        candidateData = candidateById;
       }
 
       if (candidateData) {
         setCandidate(candidateData);
         console.log("Candidate data loaded:", candidateData);
+        fetchDocuments(candidateData.id);
       } else {
+        setError("Numéro d'identification incorrect ou dossier introuvable.");
         console.error("No candidate found with ID or identification number:", id);
       }
     } catch (error) {
+      setError("Une erreur est survenue lors de la recherche du dossier.");
       console.error("Error fetching candidate:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = async (candidateId: string) => {
     try {
-      // First try to find by candidate ID directly
-      let candidateIdToUse = id;
-      
-      // If the id parameter is actually an identification_number, we need to get the actual ID
-      if (id && id.includes("IMM-")) {
-        const { data: candidateData } = await supabase
-          .from('candidates')
-          .select('id')
-          .eq('identification_number', id as string)
-          .maybeSingle();
-        
-        if (candidateData) {
-          candidateIdToUse = candidateData.id;
-        }
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*, document_types(nom, required)')
+        .eq('candidate_id', candidateId);
+
+      if (error) {
+        console.error("Error fetching documents:", error);
       }
-      
-      // Now fetch documents with the correct candidate ID
-      if (candidateIdToUse) {
-        const { data, error } = await supabase
-          .from('documents')
-          .select('*, document_types(nom, required)')
-          .eq('candidate_id', candidateIdToUse);
 
-        if (error) {
-          console.error("Error fetching documents:", error);
-        }
-
-        if (data) {
-          console.log("Documents loaded:", data);
-          setDocuments(data as DocumentWithTypeName[]);
-        }
+      if (data) {
+        console.log("Documents loaded:", data);
+        setDocuments(data as DocumentWithTypeName[]);
       }
     } catch (error) {
       console.error("Unexpected error fetching documents:", error);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex justify-center items-center bg-gray-50">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="rounded-full bg-gray-200 h-16 w-16 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-24"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!candidate) {
-    return (
-      <div className="min-h-screen flex justify-center items-center bg-gray-50">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-700">Dossier non trouvé</h2>
-          <p className="mt-2 text-gray-500">Le dossier demandé n'existe pas ou n'est pas accessible.</p>
-          <Link to="/portal" className="mt-4 inline-flex items-center text-blue-600 hover:text-blue-800">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour au portail
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const handleDownload = async (filePath: string, fileName: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .download(filePath);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Create a download link and trigger download
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName || 'document';
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Téléchargement réussi",
+        description: "Le document a été téléchargé avec succès.",
+      });
+    } catch (error) {
+      console.error("Error downloading document:", error);
+      toast({
+        title: "Erreur de téléchargement",
+        description: "Impossible de télécharger le document.",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <Link to="/portal" className="inline-flex items-center text-gray-600 hover:text-gray-900">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour au portail
-          </Link>
-          <div className="text-sm text-gray-500">
-            ID: <span className="font-mono">{candidate.identification_number}</span>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <IRCCHeader />
+      
+      <div className="flex-1 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
+          {/* Back button */}
+          <div className="mb-6">
+            <Link to="/portal" className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors">
+              <ArrowLeft size={18} />
+              <span>Retour à la page d'accueil</span>
+            </Link>
           </div>
-        </div>
-
-        {/* Header with candidate info */}
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <div className="flex flex-col md:flex-row items-center md:items-start">
-            <div className="mb-4 md:mb-0 md:mr-6 flex-shrink-0">
-              {candidate.photo_url ? (
-                <Avatar className="h-24 w-24 md:h-32 md:w-32">
-                  <AvatarImage 
-                    src={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/profile_photos/${candidate.photo_url}`}
-                    alt={`${candidate.prenom} ${candidate.nom}`}
-                  />
-                  <AvatarFallback className="text-3xl">
-                    {candidate.prenom?.charAt(0)}{candidate.nom?.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-              ) : (
-                <Avatar className="h-24 w-24 md:h-32 md:w-32">
-                  <AvatarFallback className="text-3xl">
-                    {candidate.prenom?.charAt(0)}{candidate.nom?.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-              )}
+          
+          {isLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ircc-blue"></div>
             </div>
-            
-            <div className="flex-1 text-center md:text-left">
-              <h1 className="text-2xl font-bold text-gray-900">{candidate.prenom} {candidate.nom}</h1>
-              
-              <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="flex items-center text-gray-600">
-                  <User className="h-4 w-4 mr-2" />
-                  <span>Né(e) le {format(new Date(candidate.date_naissance), 'dd MMMM yyyy', { locale: fr })}</span>
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <MapPin className="h-4 w-4 mr-2" />
-                  <span>{candidate.nationalite}</span>
-                </div>
-                {candidate.email && (
-                  <div className="flex items-center text-gray-600">
-                    <Mail className="h-4 w-4 mr-2" />
-                    <span>{candidate.email}</span>
-                  </div>
-                )}
-                {candidate.telephone && (
-                  <div className="flex items-center text-gray-600">
-                    <Phone className="h-4 w-4 mr-2" />
-                    <span>{candidate.telephone}</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="mt-4 flex flex-wrap justify-center md:justify-start gap-2">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                  {candidate.visa_type}
-                </span>
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                  candidate.status === 'Approuvé' ? 'bg-green-100 text-green-800' :
-                  candidate.status === 'En cours' ? 'bg-blue-100 text-blue-800' :
-                  candidate.status === 'En attente' ? 'bg-yellow-100 text-yellow-800' :
-                  candidate.status === 'Rejeté' ? 'bg-red-100 text-red-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                  {candidate.status}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Progress tracker */}
-        <Card className="mb-6">
-          <CardHeader className="pb-3">
-            <CardTitle>Progression de votre dossier</CardTitle>
-            <CardDescription>
-              Suivi de l'avancement de votre demande de {candidate.visa_type}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>État actuel: <span className="font-medium">{candidate.status}</span></span>
-                  <span>{progressValue}%</span>
-                </div>
-                <Progress 
-                  value={progressValue} 
-                  className="h-3"
-                  style={{ 
-                    '--progress-background': `var(--${statusColors[candidate.status] || 'bg-gray-500'})` 
-                  } as React.CSSProperties}
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
-                  <Calendar className="h-5 w-5 text-gray-600 mb-2" />
-                  <span className="text-xs text-gray-500">Date de soumission</span>
-                  <span className="font-medium">{format(new Date(candidate.date_soumission), 'dd MMM yyyy', { locale: fr })}</span>
-                </div>
-                
-                {candidate.delai_traitement && (
-                  <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
-                    <Clock className="h-5 w-5 text-gray-600 mb-2" />
-                    <span className="text-xs text-gray-500">Délai de traitement</span>
-                    <span className="font-medium">{candidate.delai_traitement}</span>
-                  </div>
-                )}
-                
-                {candidate.date_voyage && (
-                  <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
-                    <ExternalLink className="h-5 w-5 text-gray-600 mb-2" />
-                    <span className="text-xs text-gray-500">Date prévue du voyage</span>
-                    <span className="font-medium">{format(new Date(candidate.date_voyage), 'dd MMM yyyy', { locale: fr })}</span>
-                  </div>
-                )}
-                
-                <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
-                  <MapPin className="h-5 w-5 text-gray-600 mb-2" />
-                  <span className="text-xs text-gray-500">Bureau en charge</span>
-                  <span className="font-medium">{candidate.bureau}</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Documents section */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <FileText className="mr-2 h-5 w-5" />
-              Documents
-            </CardTitle>
-            <CardDescription>
-              Consultez et téléchargez vos documents
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {documents.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {documents.map((doc) => (
-                  <div key={doc.id} className="border rounded-md p-4 flex justify-between items-center">
-                    <div>
-                      <span className="font-medium">{doc.document_types?.nom || 'Document'}</span>
-                      {doc.document_types?.required && (
-                        <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800">Requis</span>
+          ) : error ? (
+            <Card className="shadow-lg border-gray-200">
+              <CardContent className="pt-6 flex flex-col items-center justify-center py-16">
+                <AlertCircle size={48} className="text-red-500 mb-4" />
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Dossier non trouvé</h3>
+                <p className="text-gray-600 text-center mb-6">{error}</p>
+                <Link to="/portal">
+                  <Button>Retour à la recherche</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          ) : candidate ? (
+            <>
+              {/* Candidate Information Card */}
+              <Card className="shadow-lg border-gray-200 mb-6">
+                <CardHeader className="bg-gradient-to-r from-ircc-blue to-ircc-dark-blue text-white rounded-t-lg">
+                  <CardTitle className="text-xl">
+                    Détails de votre dossier d'immigration
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    {/* Photo/Avatar */}
+                    <div className="md:col-span-1 flex flex-col items-center">
+                      {candidate.photo_url ? (
+                        <Avatar className="h-40 w-40 rounded-full">
+                          <AvatarImage 
+                            src={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/profile_photos/${candidate.photo_url}`}
+                            alt={`${candidate.prenom} ${candidate.nom}`}
+                            className="object-cover"
+                          />
+                          <AvatarFallback className="text-4xl bg-ircc-blue text-white">
+                            {candidate.prenom?.charAt(0)}{candidate.nom?.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                      ) : (
+                        <Avatar className="h-40 w-40 rounded-full">
+                          <AvatarFallback className="text-4xl bg-ircc-blue text-white">
+                            {candidate.prenom?.charAt(0)}{candidate.nom?.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
                       )}
-                      <div className="text-xs text-gray-500">
-                        {doc.status === 'uploaded' ? 'Téléversé' : 
-                         doc.status === 'verified' ? 'Vérifié' : 
-                         doc.status === 'pending' ? 'En attente' :
-                         doc.status === 'rejected' ? 'Rejeté' : 
-                         doc.status === 'expired' ? 'Expiré' : 'Statut inconnu'}
+                      
+                      {/* ID display */}
+                      <div className="mt-4 bg-blue-50 rounded-lg px-4 py-2 text-center">
+                        <p className="text-sm text-gray-600">Numéro de dossier</p>
+                        <p className="font-bold text-blue-800">{candidate.identification_number}</p>
                       </div>
                     </div>
                     
-                    {doc.file_path ? (
-                      <a 
-                        href={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/documents/${doc.file_path}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-ircc-blue hover:bg-ircc-dark-blue focus:outline-none focus:border-ircc-dark-blue focus:shadow-outline-blue active:bg-ircc-dark-blue transition ease-in-out duration-150"
-                      >
-                        <Download className="mr-1 h-4 w-4" />
-                        Télécharger
-                      </a>
-                    ) : (
-                      <span className="text-xs px-3 py-1 rounded-md bg-gray-100 text-gray-600">
-                        Non disponible
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 text-gray-500">
-                Aucun document n'est disponible pour le moment.
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    {/* Candidate details */}
+                    <div className="md:col-span-3">
+                      <h2 className="text-2xl font-bold mb-4">{candidate.prenom} {candidate.nom}</h2>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">Nationalité</p>
+                          <p className="font-medium">{candidate.nationalite}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">Numéro de passeport</p>
+                          <p className="font-medium">{candidate.numero_passport}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">Date de naissance</p>
+                          <p className="font-medium">{format(new Date(candidate.date_naissance), 'dd MMMM yyyy', { locale: fr })}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">Lieu de naissance</p>
+                          <p className="font-medium">{candidate.lieu_naissance}</p>
+                        </div>
+                        {candidate.email && (
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">Courriel</p>
+                            <p className="font-medium">{candidate.email}</p>
+                          </div>
+                        )}
+                        {candidate.telephone && (
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">Téléphone</p>
+                            <p className="font-medium">{candidate.telephone}</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Status section */}
+                      <div className="mt-6">
+                        <div className="flex flex-wrap justify-between items-center mb-2">
+                          <div className="flex items-center">
+                            <h3 className="font-semibold text-gray-800 mr-3">État de votre demande</h3>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(candidate.status)}`}>
+                              {candidate.status}
+                            </span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Clock size={16} className="mr-1" />
+                            <span>Mise à jour: {format(new Date(candidate.updated_at), 'dd MMMM yyyy', { locale: fr })}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Progress bar */}
+                        <div className="relative pt-1">
+                          <div className="flex mb-2 items-center justify-between">
+                            <div>
+                              <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-100">
+                                Progrès du dossier
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-xs font-semibold inline-block text-blue-600">
+                                {calculateProgress(candidate.status)}%
+                              </span>
+                            </div>
+                          </div>
+                          <Progress
+                            value={calculateProgress(candidate.status)}
+                            className="h-2 bg-gray-200"
+                            indicatorClassName={getProgressColor(candidate.status)}
+                          />
+                        </div>
+                      </div>
 
-        {/* Contact and Support section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Contact et support</CardTitle>
-            <CardDescription>
-              Besoin d'aide ou d'informations supplémentaires ?
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h3 className="font-medium text-gray-900">Nous contacter</h3>
-                <p className="text-sm text-gray-600">
-                  Si vous avez des questions concernant votre dossier, n'hésitez pas à nous contacter :
-                </p>
-                <div className="flex flex-col space-y-2">
-                  <Button variant="outline" className="justify-start">
-                    <Mail className="mr-2 h-4 w-4" />
-                    Envoyer un email
-                  </Button>
-                  <Button variant="outline" className="justify-start">
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    Contacter via WhatsApp
-                  </Button>
-                </div>
-              </div>
+                      {/* Visa type and details */}
+                      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">Type de visa</p>
+                          <p className="font-medium">{candidate.visa_type}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">Date de soumission</p>
+                          <p className="font-medium">{format(new Date(candidate.date_soumission), 'dd MMMM yyyy', { locale: fr })}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">Bureau en charge</p>
+                          <p className="font-medium">{candidate.bureau}</p>
+                        </div>
+                        {candidate.delai_traitement && (
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">Délai de traitement estimé</p>
+                            <p className="font-medium">{candidate.delai_traitement}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
               
-              <div className="space-y-4">
-                <h3 className="font-medium text-gray-900">Questions fréquentes</h3>
-                <div className="space-y-3">
-                  <div className="text-sm bg-gray-50 p-3 rounded-md">
-                    <p className="font-medium text-gray-900">Combien de temps dure le traitement de ma demande ?</p>
-                    <p className="mt-1 text-gray-600">
-                      Le délai de traitement varie selon le type de visa et le bureau. Pour votre demande, le délai estimé est de {candidate.delai_traitement || 'quelques semaines à plusieurs mois'}.
-                    </p>
-                  </div>
-                  
-                  <div className="text-sm bg-gray-50 p-3 rounded-md">
-                    <p className="font-medium text-gray-900">Que faire si un document est rejeté ?</p>
-                    <p className="mt-1 text-gray-600">
-                      Si un document est rejeté, vous recevrez une notification expliquant les raisons. Vous devrez soumettre un nouveau document conforme aux exigences.
-                    </p>
-                  </div>
-                  
-                  <div className="text-sm bg-gray-50 p-3 rounded-md">
-                    <p className="font-medium text-gray-900">Comment mettre à jour mes informations personnelles ?</p>
-                    <p className="mt-1 text-gray-600">
-                      Pour mettre à jour vos informations personnelles, veuillez contacter notre service client avec votre numéro d'identification.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              {/* Documents Card */}
+              <Card className="shadow-lg border-gray-200">
+                <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-t-lg">
+                  <CardTitle className="text-xl">
+                    Vos documents
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  {documents.length > 0 ? (
+                    <div className="space-y-4">
+                      {documents.map((doc) => (
+                        <div 
+                          key={doc.id} 
+                          className="border rounded-lg p-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-center">
+                            <FileText className="text-blue-500 mr-3" />
+                            <div>
+                              <h4 className="font-medium">{doc.document_types?.nom || 'Document'}</h4>
+                              <p className="text-sm text-gray-500">{doc.filename || 'Fichier téléversé'}</p>
+                            </div>
+                          </div>
+                          {doc.file_path ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex items-center gap-2"
+                              onClick={() => handleDownload(doc.file_path!, doc.filename || 'document')}
+                            >
+                              <Download size={16} />
+                              Télécharger
+                            </Button>
+                          ) : (
+                            <span className="text-sm text-gray-500 italic">Aucun fichier</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10">
+                      <FileText size={42} className="mx-auto text-gray-300 mb-3" />
+                      <h3 className="text-lg font-medium text-gray-800 mb-1">Aucun document disponible</h3>
+                      <p className="text-gray-500">Vos documents seront affichés ici lorsqu'ils seront disponibles.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          ) : null}
+        </div>
       </div>
+      
+      {/* Footer */}
+      <footer className="bg-[#26374A] text-white py-6 mt-auto">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-gray-300 text-sm">© 2024 IRCC Statut. Tous droits réservés.</p>
+        </div>
+      </footer>
     </div>
   );
 };
