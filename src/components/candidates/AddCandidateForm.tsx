@@ -8,6 +8,7 @@ import { fr } from 'date-fns/locale';
 import { CalendarIcon, Plus, X, Upload } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from '@/integrations/supabase/types';
 
 import {
   Dialog,
@@ -51,11 +52,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+// Types précis basés sur la base de données
+type VisaType = Database['public']['Enums']['visa_type'];
+type StatusType = Database['public']['Enums']['status_type'];
+type ImmigrationProgram = Database['public']['Enums']['immigration_program'];
+
 // Types de visa disponibles
 const visaTypes = [
-  { id: 'Visiteur', label: 'Visa Visiteur' },
-  { id: 'Travail', label: 'Visa de Travail' },
-  { id: 'Résidence Permanente', label: 'Résidence Permanente' }
+  { id: 'Visiteur' as VisaType, label: 'Visa Visiteur' },
+  { id: 'Travail' as VisaType, label: 'Visa de Travail' },
+  { id: 'Résidence Permanente' as VisaType, label: 'Résidence Permanente' }
 ];
 
 // Obtenir les bureaux depuis la base de données (pour l'instant hardcodé)
@@ -66,7 +72,12 @@ const bureaux = [
 
 // Statuts disponibles
 const statuses = [
-  'En cours', 'Approuvé', 'En attente', 'Rejeté', 'Complété', 'Expiré'
+  'En cours' as StatusType, 
+  'Approuvé' as StatusType, 
+  'En attente' as StatusType, 
+  'Rejeté' as StatusType, 
+  'Complété' as StatusType, 
+  'Expiré' as StatusType
 ];
 
 // Schéma de validation du formulaire principal
@@ -79,11 +90,11 @@ const formSchema = z.object({
   numeroTelephone: z.string().min(8, { message: 'Numéro de téléphone invalide' }),
   email: z.string().email({ message: 'Email invalide' }).optional().or(z.literal('')),
   adresse: z.string().optional(),
-  typeVisa: z.string({ required_error: 'Veuillez sélectionner un type de visa' }),
+  typeVisa: z.enum(['Visiteur', 'Travail', 'Résidence Permanente']),
   dateSoumission: z.date({ required_error: 'La date de soumission est requise' }),
   dateVoyagePrevue: z.date({ required_error: 'La date prévue du voyage est requise' }),
   bureau: z.string({ required_error: 'Veuillez sélectionner un bureau' }),
-  status: z.string({ required_error: 'Veuillez sélectionner un statut' }),
+  status: z.enum(['En cours', 'Approuvé', 'En attente', 'Rejeté', 'Complété', 'Expiré']),
   procedure: z.string().optional(),
   delaiTraitement: z.string().optional(),
   notes: z.string().optional(),
@@ -143,7 +154,7 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
       numeroTelephone: '',
       email: '',
       adresse: '',
-      typeVisa: '',
+      typeVisa: 'Visiteur',
       procedure: '',
       delaiTraitement: '',
       bureau: '',
@@ -312,7 +323,7 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
         .from('permanent_residence_details')
         .insert({
           candidate_id: candidateId,
-          immigration_program: residenceData.programmeImmigration,
+          immigration_program: residenceData.programmeImmigration as ImmigrationProgram,
           nombre_personnes: residenceData.nombrePersonnes,
           conjoint_nom: residenceData.conjointNom || null,
           conjoint_prenom: residenceData.conjointPrenom || null,
@@ -368,18 +379,21 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
           telephone: data.numeroTelephone,
           email: data.email || null,
           adresse: data.adresse || null,
-          visa_type: data.typeVisa as any,
+          visa_type: data.typeVisa as VisaType,
           procedure: data.procedure || null,
           date_soumission: formatDateForDB(data.dateSoumission),
           delai_traitement: data.delaiTraitement || null,
-          status: data.status as any,
+          status: data.status as StatusType,
           date_voyage: formatDateForDB(data.dateVoyagePrevue),
           bureau: data.bureau,
           notes: data.notes || null
         })
         .select();
       
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw insertError;
+      }
       
       const candidateId = insertedCandidate[0].id;
       
