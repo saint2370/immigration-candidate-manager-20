@@ -61,23 +61,6 @@
     @apply bg-background text-foreground;
   }
 
-  /* Reusable animation classes */
-  .animate-fade-in {
-    @apply animate-fade-in;
-  }
-  
-  .animate-slide-up {
-    @apply animate-slide-up;
-  }
-  
-  .animate-slide-down {
-    @apply animate-slide-down;
-  }
-  
-  .animate-slide-in-left {
-    @apply animate-slide-in-left;
-  }
-
   /* Custom glassmorphism effect */
   .glass {
     @apply bg-white bg-opacity-70 backdrop-blur-md shadow-glass;
