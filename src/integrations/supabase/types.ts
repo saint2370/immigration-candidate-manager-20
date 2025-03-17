@@ -26,6 +26,7 @@ export type Database = {
           nom: string
           notes: string | null
           numero_passport: string
+          photo_url: string | null
           prenom: string
           procedure: string | null
           status: Database["public"]["Enums"]["status_type"]
@@ -49,6 +50,7 @@ export type Database = {
           nom: string
           notes?: string | null
           numero_passport: string
+          photo_url?: string | null
           prenom: string
           procedure?: string | null
           status?: Database["public"]["Enums"]["status_type"]
@@ -72,6 +74,7 @@ export type Database = {
           nom?: string
           notes?: string | null
           numero_passport?: string
+          photo_url?: string | null
           prenom?: string
           procedure?: string | null
           status?: Database["public"]["Enums"]["status_type"]

@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarIcon, Plus, X } from 'lucide-react';
+import { CalendarIcon, Plus, X, Upload } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from '@/integrations/supabase/types';
@@ -50,6 +49,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Label } from '../ui/label';
 
 // Types précis basés sur la base de données
 type VisaType = Database['public']['Enums']['visa_type'];
@@ -142,6 +142,8 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [isLoadingDocTypes, setIsLoadingDocTypes] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   // Formulaire principal
   const form = useForm<z.infer<typeof formSchema>>({
@@ -242,6 +244,21 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
     setEnfants(updatedEnfants);
   };
 
+  // Téléversement de la photo de profil
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPhotoFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setPhotoPreview(previewUrl);
+    }
+  };
+
+  const clearPhotoSelection = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+  };
+
   // Téléverser un fichier dans le storage Supabase
   const uploadFile = async (file: File, candidateId: string, documentTypeId: string) => {
     try {
@@ -267,6 +284,34 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
       return { filePath, fileName: file.name };
     } catch (error) {
       console.error('Exception during upload:', error);
+      throw error;
+    }
+  };
+
+  // Téléverser la photo de profil
+  const uploadProfilePhoto = async (candidateId: string): Promise<string | null> => {
+    if (!photoFile) return null;
+    
+    try {
+      const fileExt = photoFile.name.split('.').pop();
+      const fileName = `${candidateId}/profile.${fileExt}`;
+      
+      const { data, error } = await supabase.storage
+        .from('profile_photos')
+        .upload(fileName, photoFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      if (error) {
+        console.error('Error uploading profile photo:', error);
+        throw error;
+      }
+      
+      console.log('Upload profile photo successful:', data);
+      return fileName;
+    } catch (error) {
+      console.error('Exception during profile photo upload:', error);
       throw error;
     }
   };
@@ -407,6 +452,9 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
     try {
       // Formater les dates pour la base de données (YYYY-MM-DD)
       const formatDateForDB = (date: Date) => format(date, 'yyyy-MM-dd');
+
+      // Variables pour stocker les résultats d'upload
+      let photoUrlPath = null;
       
       // Insérer le candidat
       const { data: insertedCandidate, error: insertError } = await supabase
@@ -428,7 +476,8 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
           status: data.status as StatusType,
           date_voyage: formatDateForDB(data.dateVoyagePrevue),
           bureau: data.bureau,
-          notes: data.notes || null
+          notes: data.notes || null,
+          photo_url: null // Initialisé à null, sera mis à jour après l'upload
         })
         .select();
       
@@ -443,6 +492,28 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
       
       console.log('Candidate inserted:', insertedCandidate);
       const candidateId = insertedCandidate[0].id;
+      
+      // Téléverser la photo de profil si disponible
+      if (photoFile) {
+        try {
+          photoUrlPath = await uploadProfilePhoto(candidateId);
+          
+          // Mettre à jour le candidat avec l'URL de la photo
+          if (photoUrlPath) {
+            await supabase
+              .from('candidates')
+              .update({ photo_url: photoUrlPath })
+              .eq('id', candidateId);
+          }
+        } catch (error) {
+          console.error('Error uploading profile photo:', error);
+          toast({
+            title: "Avertissement",
+            description: "Le candidat a été créé mais il y a eu un problème avec le téléversement de la photo.",
+            variant: "destructive"
+          });
+        }
+      }
       
       // Insérer l'historique de création du candidat
       await insertHistory(candidateId, 'Dossier créé');
@@ -472,6 +543,7 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
         id: candidateId,
         prenom: data.prenom,
         nom: data.nom,
+        photo_url: photoUrlPath
         // Autres données du candidat...
       });
       
@@ -501,13 +573,60 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-3 mb-4">
+          <TabsList className="grid grid-cols-4 mb-4">
+            <TabsTrigger value="photo">Photo</TabsTrigger>
             <TabsTrigger value="general">Informations générales</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
             {visaType === 'Résidence Permanente' && (
               <TabsTrigger value="residence">Détails résidence</TabsTrigger>
             )}
           </TabsList>
+
+          <TabsContent value="photo" className="space-y-4">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 w-full flex flex-col items-center justify-center">
+                {photoPreview ? (
+                  <div className="relative">
+                    <img 
+                      src={photoPreview} 
+                      alt="Aperçu de la photo" 
+                      className="w-48 h-48 object-cover rounded-full" 
+                    />
+                    <button 
+                      onClick={clearPhotoSelection}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+                      type="button"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="h-12 w-12 text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-500 mb-4">Cliquez ou glissez-déposez une photo</p>
+                    <Button variant="outline" asChild>
+                      <Label htmlFor="photo-upload" className="cursor-pointer">
+                        Sélectionner une photo
+                        <Input
+                          id="photo-upload"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handlePhotoChange}
+                        />
+                      </Label>
+                    </Button>
+                  </>
+                )}
+              </div>
+              
+              {photoPreview && (
+                <p className="text-sm text-gray-500 italic">
+                  La photo sera téléversée lorsque vous soumettrez le formulaire
+                </p>
+              )}
+            </div>
+          </TabsContent>
 
           <TabsContent value="general" className="space-y-4">
             <Form {...form}>
@@ -870,315 +989,3 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                     )}
                   />
                 </div>
-
-                {/* Notes (optionnelles) */}
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes (optionnelles)</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Notes importantes concernant le dossier"
-                          className="min-h-[80px]"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Détails du billet d'avion */}
-                <FormField
-                  control={form.control}
-                  name="detailsBillet"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Détails du billet d'avion (optionnels)</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Numéro de vol, compagnie aérienne, escales, etc."
-                          className="min-h-[80px]"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <DialogFooter className="mt-6">
-                  <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>Annuler</Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <div className="flex items-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Ajout en cours...
-                      </div>
-                    ) : (
-                      'Ajouter le candidat'
-                    )}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </TabsContent>
-
-          <TabsContent value="documents" className="space-y-4">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Documents requis</h3>
-              {isLoadingDocTypes ? (
-                <div className="flex justify-center p-6">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ircc-blue"></div>
-                </div>
-              ) : visaType ? (
-                documentTypes.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-4">
-                    {documentTypes.map((doc) => (
-                      <div key={doc.id} className="border rounded-md p-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <h4 className="font-medium">{doc.nom}</h4>
-                          {uploadedDocuments[doc.id] && (
-                            <Badge variant="outline" className="bg-green-50 text-green-700">
-                              Téléversé
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Input 
-                            type="file" 
-                            className="flex-1"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0] || null;
-                              handleFileUpload(doc.id, file);
-                            }}
-                          />
-                          {uploadedDocuments[doc.id] && (
-                            <Button 
-                              type="button" 
-                              variant="outline" 
-                              size="icon"
-                              onClick={() => handleFileUpload(doc.id, null)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                        {uploadedDocuments[doc.id] && (
-                          <p className="text-sm text-gray-500 mt-1">
-                            {uploadedDocuments[doc.id]?.name} ({Math.round((uploadedDocuments[doc.id]?.size || 0) / 1024)} Ko)
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">
-                    Aucun document requis n'a été trouvé pour ce type de visa.
-                  </p>
-                )
-              ) : (
-                <p className="text-muted-foreground">
-                  Veuillez d'abord sélectionner un type de visa dans l'onglet "Informations générales".
-                </p>
-              )}
-            </div>
-          </TabsContent>
-
-          {visaType === 'Résidence Permanente' && (
-            <TabsContent value="residence" className="space-y-4">
-              <form className="space-y-4">
-                <div className="space-y-4">
-                  <div>
-                    <FormLabel>Programme d'immigration</FormLabel>
-                    <div className="grid grid-cols-3 gap-2 mt-1">
-                      <Button
-                        type="button"
-                        variant={residenceForm.getValues().programmeImmigration === 'Entrée express' ? 'default' : 'outline'}
-                        onClick={() => residenceForm.setValue('programmeImmigration', 'Entrée express')}
-                        className="w-full"
-                      >
-                        Entrée express
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={residenceForm.getValues().programmeImmigration === 'Arrima' ? 'default' : 'outline'}
-                        onClick={() => residenceForm.setValue('programmeImmigration', 'Arrima')}
-                        className="w-full"
-                      >
-                        Arrima
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={residenceForm.getValues().programmeImmigration === 'Autre' ? 'default' : 'outline'}
-                        onClick={() => residenceForm.setValue('programmeImmigration', 'Autre')}
-                        className="w-full"
-                      >
-                        Autre
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <FormLabel>Immigration familiale</FormLabel>
-                      <input
-                        type="checkbox"
-                        checked={residenceForm.getValues().immigrationFamiliale}
-                        onChange={(e) => {
-                          residenceForm.setValue('immigrationFamiliale', e.target.checked);
-                          if (e.target.checked) {
-                            residenceForm.setValue('nombrePersonnes', Math.max(2, residenceForm.getValues().nombrePersonnes));
-                          } else {
-                            residenceForm.setValue('nombrePersonnes', 1);
-                            // Réinitialiser les détails du conjoint
-                            residenceForm.setValue('conjointNom', '');
-                            residenceForm.setValue('conjointPrenom', '');
-                            residenceForm.setValue('conjointPassport', '');
-                            setEnfants([]);
-                          }
-                        }}
-                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                      />
-                    </div>
-                  </div>
-                  
-                  {residenceForm.getValues().immigrationFamiliale && (
-                    <>
-                      <div>
-                        <FormLabel>Nombre de personnes</FormLabel>
-                        <Input
-                          type="number"
-                          min="2"
-                          value={residenceForm.getValues().nombrePersonnes}
-                          onChange={(e) => residenceForm.setValue('nombrePersonnes', parseInt(e.target.value, 10) || 2)}
-                          className="w-full"
-                        />
-                      </div>
-                      
-                      <div className="border rounded-md p-4">
-                        <h4 className="font-medium mb-3">Informations du conjoint</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <FormLabel>Nom du conjoint</FormLabel>
-                            <Input
-                              placeholder="Nom"
-                              value={residenceForm.getValues().conjointNom || ''}
-                              onChange={(e) => residenceForm.setValue('conjointNom', e.target.value)}
-                            />
-                          </div>
-                          
-                          <div>
-                            <FormLabel>Prénom du conjoint</FormLabel>
-                            <Input
-                              placeholder="Prénom"
-                              value={residenceForm.getValues().conjointPrenom || ''}
-                              onChange={(e) => residenceForm.setValue('conjointPrenom', e.target.value)}
-                            />
-                          </div>
-                          
-                          <div className="md:col-span-2">
-                            <FormLabel>Numéro de passeport du conjoint</FormLabel>
-                            <Input
-                              placeholder="Numéro de passeport"
-                              value={residenceForm.getValues().conjointPassport || ''}
-                              onChange={(e) => residenceForm.setValue('conjointPassport', e.target.value)}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {residenceForm.getValues().nombrePersonnes > 2 && (
-                        <div className="border rounded-md p-4">
-                          <h4 className="font-medium mb-3">Informations des enfants</h4>
-                          
-                          {enfants.length > 0 && (
-                            <div className="mb-4">
-                              <h5 className="text-sm font-medium mb-2">Enfants ajoutés:</h5>
-                              {enfants.map((enfant, index) => (
-                                <div key={index} className="flex items-center gap-2 mb-2 border p-2 rounded">
-                                  <span className="flex-1">
-                                    {enfant.prenom} {enfant.nom}, {enfant.age} ans
-                                  </span>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() => removeEnfant(index)}
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                              <FormLabel>Nom</FormLabel>
-                              <Input
-                                placeholder="Nom"
-                                value={newEnfant.nom}
-                                onChange={(e) => setNewEnfant({ ...newEnfant, nom: e.target.value })}
-                              />
-                            </div>
-                            
-                            <div>
-                              <FormLabel>Prénom</FormLabel>
-                              <Input
-                                placeholder="Prénom"
-                                value={newEnfant.prenom}
-                                onChange={(e) => setNewEnfant({ ...newEnfant, prenom: e.target.value })}
-                              />
-                            </div>
-                            
-                            <div>
-                              <FormLabel>Âge</FormLabel>
-                              <Input
-                                placeholder="Âge"
-                                type="number"
-                                min="0"
-                                max="25"
-                                value={newEnfant.age}
-                                onChange={(e) => setNewEnfant({ ...newEnfant, age: e.target.value })}
-                              />
-                            </div>
-                          </div>
-                          
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="mt-3 flex items-center gap-1"
-                            onClick={addEnfant}
-                            disabled={!newEnfant.nom || !newEnfant.prenom || !newEnfant.age}
-                          >
-                            <Plus className="h-4 w-4" />
-                            Ajouter un enfant
-                          </Button>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  
-                  <div>
-                    <FormLabel>Autres détails</FormLabel>
-                    <Textarea
-                      placeholder="Détails supplémentaires concernant la demande de résidence permanente"
-                      className="min-h-[80px]"
-                      value={residenceForm.getValues().detailsAutresPersonnes || ''}
-                      onChange={(e) => residenceForm.setValue('detailsAutresPersonnes', e.target.value)}
-                    />
-                  </div>
-                </div>
-              </form>
-            </TabsContent>
-          )}
-        </Tabs>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-export default AddCandidateForm;
