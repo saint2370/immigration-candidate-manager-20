@@ -1,45 +1,48 @@
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { Toaster } from '@/components/ui/toaster';
+import Layout from '@/components/layout/Layout';
+import Index from '@/pages/Index';
+import Dashboard from '@/pages/Dashboard';
+import CandidatesList from '@/pages/CandidatesList';
+import CandidateDetail from '@/pages/CandidateDetail';
+import Settings from '@/pages/Settings';
+import NotFound from '@/pages/NotFound';
+import CandidatePortal from '@/pages/CandidatePortal';
+import CandidatePortalDetail from '@/pages/CandidatePortalDetail';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Layout from "./components/layout/Layout";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import CandidatesList from "./pages/CandidatesList";
-import CandidateDetail from "./pages/CandidateDetail";
-import Settings from "./pages/Settings";
-import NotFound from "./pages/NotFound";
+function App() {
+  const [queryClient] = useState(() => new QueryClient());
 
-const queryClient = new QueryClient();
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', true);
+  }, []);
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
+  return (
+    <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Index />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="candidates" element={<CandidatesList />} />
+            <Route path="candidates/edit/:id" element={<CandidateDetail />} />
+            <Route path="candidate/:id" element={<CandidateDetail />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
           
-          {/* Protected routes with layout */}
-          <Route path="/" element={<Layout><Index /></Layout>} />
-          <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
-          <Route path="/candidates" element={<Layout><CandidatesList /></Layout>} />
-          <Route path="/candidate/:id" element={<Layout><CandidateDetail /></Layout>} />
-          <Route path="/candidates/edit/:id" element={<Layout><CandidateDetail /></Layout>} />
-          <Route path="/work-visas" element={<Layout><CandidatesList /></Layout>} />
-          <Route path="/visitor-visas" element={<Layout><CandidatesList /></Layout>} />
-          <Route path="/permanent-residence" element={<Layout><CandidatesList /></Layout>} />
-          <Route path="/settings" element={<Layout><Settings /></Layout>} />
+          {/* Portal routes - no layout wrapper */}
+          <Route path="/portal" element={<CandidatePortal />} />
+          <Route path="/portal/candidate/:id" element={<CandidatePortalDetail />} />
           
-          {/* 404 page */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <Toaster />
       </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    </QueryClientProvider>
+  );
+}
 
 export default App;
+
