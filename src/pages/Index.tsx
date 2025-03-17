@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import IRCCHeader from '@/components/layout/IRCCHeader';
@@ -27,8 +27,29 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
+  const [immigrationId, setImmigrationId] = useState('');
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!immigrationId.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez entrer votre numéro d'identification d'immigration.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Navigate to portal with the ID
+    navigate(`/portal?id=${encodeURIComponent(immigrationId)}`);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
@@ -45,18 +66,18 @@ const Index = () => {
               <p className="text-lg md:text-xl text-gray-600">
                 Consultez en temps réel l'état de votre demande et téléchargez vos documents en quelques clics.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3">
                 <Input 
                   placeholder="Entrez votre ID d'immigration" 
                   className="flex-1"
+                  value={immigrationId}
+                  onChange={(e) => setImmigrationId(e.target.value)}
                 />
-                <Link to="/portal">
-                  <Button className="bg-ircc-blue hover:bg-ircc-dark-blue w-full sm:w-auto">
-                    Accéder à mon dossier
-                    <ChevronRight size={18} />
-                  </Button>
-                </Link>
-              </div>
+                <Button type="submit" className="bg-ircc-blue hover:bg-ircc-dark-blue w-full sm:w-auto">
+                  Accéder à mon dossier
+                  <ChevronRight size={18} />
+                </Button>
+              </form>
             </div>
             <div className="w-full md:w-1/2 flex justify-center">
               <img 
@@ -211,7 +232,7 @@ const Index = () => {
       </section>
       
       {/* FAQ */}
-      <section className="py-16 bg-gray-50">
+      <section id="faq" className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-800 mb-4">Questions fréquentes</h2>
@@ -272,7 +293,7 @@ const Index = () => {
       </section>
       
       {/* Contact */}
-      <section className="py-16 bg-white">
+      <section id="contact" className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-800 mb-4">Besoin d'aide ?</h2>
@@ -304,9 +325,11 @@ const Index = () => {
               </div>
               
               <div className="mt-8 text-center">
-                <Button className="bg-ircc-blue hover:bg-ircc-dark-blue">
-                  Nous contacter
-                </Button>
+                <a href="mailto:contact@irccstatut.ca">
+                  <Button className="bg-ircc-blue hover:bg-ircc-dark-blue">
+                    Nous contacter
+                  </Button>
+                </a>
               </div>
             </div>
           </div>
@@ -327,10 +350,10 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-3">Liens rapides</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Accueil</a></li>
-                <li><a href="/portal" className="text-gray-300 hover:text-white transition-colors">Suivi du dossier</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">FAQ</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Contact</a></li>
+                <li><Link to="/" className="text-gray-300 hover:text-white transition-colors">Accueil</Link></li>
+                <li><Link to="/portal" className="text-gray-300 hover:text-white transition-colors">Suivi du dossier</Link></li>
+                <li><a href="#faq" className="text-gray-300 hover:text-white transition-colors">FAQ</a></li>
+                <li><a href="#contact" className="text-gray-300 hover:text-white transition-colors">Contact</a></li>
               </ul>
             </div>
             

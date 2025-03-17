@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,17 @@ const CandidatePortal = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Check if there's an ID in the URL query parameters
+    const queryParams = new URLSearchParams(location.search);
+    const idFromUrl = queryParams.get('id');
+    
+    if (idFromUrl) {
+      setImmigrationId(idFromUrl);
+    }
+  }, [location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,7 +149,7 @@ const CandidatePortal = () => {
           
           <div className="text-center text-sm text-gray-500">
             <p>
-              Pour toute autre question, consultez notre <a href="#" className="font-medium text-ircc-blue hover:text-ircc-dark-blue">FAQ</a> ou <a href="#" className="font-medium text-ircc-blue hover:text-ircc-dark-blue">contactez-nous</a>.
+              Pour toute autre question, consultez notre <a href="/#faq" className="font-medium text-ircc-blue hover:text-ircc-dark-blue">FAQ</a> ou <a href="/#contact" className="font-medium text-ircc-blue hover:text-ircc-dark-blue">contactez-nous</a>.
             </p>
           </div>
         </div>

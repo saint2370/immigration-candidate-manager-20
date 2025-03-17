@@ -24,8 +24,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Layout><Outlet /></Layout>}>
-            <Route index element={<Index />} />
+          {/* Admin routes - with admin layout */}
+          <Route path="/admin" element={<Layout><Outlet /></Layout>}>
+            <Route index element={<Dashboard />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="candidates" element={<CandidatesList />} />
             <Route path="candidates/edit/:id" element={<CandidateDetail />} />
@@ -33,7 +34,8 @@ function App() {
             <Route path="settings" element={<Settings />} />
           </Route>
           
-          {/* Portal routes - no layout wrapper */}
+          {/* Public/Candidate routes - no admin layout */}
+          <Route path="/" element={<Index />} />
           <Route path="/portal" element={<CandidatePortal />} />
           <Route path="/portal/candidate/:id" element={<CandidatePortalDetail />} />
           
