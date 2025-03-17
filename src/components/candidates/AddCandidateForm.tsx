@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { format, parse } from 'date-fns';
+import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarIcon, Plus, X, Upload } from 'lucide-react';
+import { CalendarIcon, Plus, X } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from '@/integrations/supabase/types';
@@ -20,7 +21,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -990,4 +990,181 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                       </Button>
                       <Button
                         type="button"
-                        variant={residenceForm.getValues().
+                        variant={residenceForm.getValues().programmeImmigration === 'Arrima' ? 'default' : 'outline'}
+                        onClick={() => residenceForm.setValue('programmeImmigration', 'Arrima')}
+                        className="w-full"
+                      >
+                        Arrima
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={residenceForm.getValues().programmeImmigration === 'Autre' ? 'default' : 'outline'}
+                        onClick={() => residenceForm.setValue('programmeImmigration', 'Autre')}
+                        className="w-full"
+                      >
+                        Autre
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <FormLabel>Immigration familiale</FormLabel>
+                      <input
+                        type="checkbox"
+                        checked={residenceForm.getValues().immigrationFamiliale}
+                        onChange={(e) => {
+                          residenceForm.setValue('immigrationFamiliale', e.target.checked);
+                          if (e.target.checked) {
+                            residenceForm.setValue('nombrePersonnes', Math.max(2, residenceForm.getValues().nombrePersonnes));
+                          } else {
+                            residenceForm.setValue('nombrePersonnes', 1);
+                            // Réinitialiser les détails du conjoint
+                            residenceForm.setValue('conjointNom', '');
+                            residenceForm.setValue('conjointPrenom', '');
+                            residenceForm.setValue('conjointPassport', '');
+                            setEnfants([]);
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                    </div>
+                  </div>
+                  
+                  {residenceForm.getValues().immigrationFamiliale && (
+                    <>
+                      <div>
+                        <FormLabel>Nombre de personnes</FormLabel>
+                        <Input
+                          type="number"
+                          min="2"
+                          value={residenceForm.getValues().nombrePersonnes}
+                          onChange={(e) => residenceForm.setValue('nombrePersonnes', parseInt(e.target.value, 10) || 2)}
+                          className="w-full"
+                        />
+                      </div>
+                      
+                      <div className="border rounded-md p-4">
+                        <h4 className="font-medium mb-3">Informations du conjoint</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <FormLabel>Nom du conjoint</FormLabel>
+                            <Input
+                              placeholder="Nom"
+                              value={residenceForm.getValues().conjointNom || ''}
+                              onChange={(e) => residenceForm.setValue('conjointNom', e.target.value)}
+                            />
+                          </div>
+                          
+                          <div>
+                            <FormLabel>Prénom du conjoint</FormLabel>
+                            <Input
+                              placeholder="Prénom"
+                              value={residenceForm.getValues().conjointPrenom || ''}
+                              onChange={(e) => residenceForm.setValue('conjointPrenom', e.target.value)}
+                            />
+                          </div>
+                          
+                          <div className="md:col-span-2">
+                            <FormLabel>Numéro de passeport du conjoint</FormLabel>
+                            <Input
+                              placeholder="Numéro de passeport"
+                              value={residenceForm.getValues().conjointPassport || ''}
+                              onChange={(e) => residenceForm.setValue('conjointPassport', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {residenceForm.getValues().nombrePersonnes > 2 && (
+                        <div className="border rounded-md p-4">
+                          <h4 className="font-medium mb-3">Informations des enfants</h4>
+                          
+                          {enfants.length > 0 && (
+                            <div className="mb-4">
+                              <h5 className="text-sm font-medium mb-2">Enfants ajoutés:</h5>
+                              {enfants.map((enfant, index) => (
+                                <div key={index} className="flex items-center gap-2 mb-2 border p-2 rounded">
+                                  <span className="flex-1">
+                                    {enfant.prenom} {enfant.nom}, {enfant.age} ans
+                                  </span>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => removeEnfant(index)}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <FormLabel>Nom</FormLabel>
+                              <Input
+                                placeholder="Nom"
+                                value={newEnfant.nom}
+                                onChange={(e) => setNewEnfant({ ...newEnfant, nom: e.target.value })}
+                              />
+                            </div>
+                            
+                            <div>
+                              <FormLabel>Prénom</FormLabel>
+                              <Input
+                                placeholder="Prénom"
+                                value={newEnfant.prenom}
+                                onChange={(e) => setNewEnfant({ ...newEnfant, prenom: e.target.value })}
+                              />
+                            </div>
+                            
+                            <div>
+                              <FormLabel>Âge</FormLabel>
+                              <Input
+                                placeholder="Âge"
+                                type="number"
+                                min="0"
+                                max="25"
+                                value={newEnfant.age}
+                                onChange={(e) => setNewEnfant({ ...newEnfant, age: e.target.value })}
+                              />
+                            </div>
+                          </div>
+                          
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="mt-3 flex items-center gap-1"
+                            onClick={addEnfant}
+                            disabled={!newEnfant.nom || !newEnfant.prenom || !newEnfant.age}
+                          >
+                            <Plus className="h-4 w-4" />
+                            Ajouter un enfant
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  
+                  <div>
+                    <FormLabel>Autres détails</FormLabel>
+                    <Textarea
+                      placeholder="Détails supplémentaires concernant la demande de résidence permanente"
+                      className="min-h-[80px]"
+                      value={residenceForm.getValues().detailsAutresPersonnes || ''}
+                      onChange={(e) => residenceForm.setValue('detailsAutresPersonnes', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </form>
+            </TabsContent>
+          )}
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default AddCandidateForm;
