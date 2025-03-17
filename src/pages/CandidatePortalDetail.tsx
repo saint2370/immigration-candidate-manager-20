@@ -9,6 +9,9 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { FileDown, Clock, Calendar, MapPin, Phone, Mail, User, FileText, Download, ArrowLeft, MessageCircle, ExternalLink } from 'lucide-react';
 
 // Define a type for the documents with the nested document_types
@@ -197,18 +200,18 @@ const CandidatePortalDetail = () => {
               </div>
               
               <div className="mt-4 flex flex-wrap justify-center md:justify-start gap-2">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-0">
                   {candidate.visa_type}
-                </span>
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                  candidate.status === 'Approuvé' ? 'bg-green-100 text-green-800' :
-                  candidate.status === 'En cours' ? 'bg-blue-100 text-blue-800' :
-                  candidate.status === 'En attente' ? 'bg-yellow-100 text-yellow-800' :
-                  candidate.status === 'Rejeté' ? 'bg-red-100 text-red-800' :
-                  'bg-gray-100 text-gray-800'
+                </Badge>
+                <Badge className={`border-0 ${
+                  candidate.status === 'Approuvé' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
+                  candidate.status === 'En cours' ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' :
+                  candidate.status === 'En attente' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
+                  candidate.status === 'Rejeté' ? 'bg-red-100 text-red-800 hover:bg-red-200' :
+                  'bg-gray-100 text-gray-800 hover:bg-gray-200'
                 }`}>
                   {candidate.status}
-                </span>
+                </Badge>
               </div>
             </div>
           </div>
@@ -271,61 +274,155 @@ const CandidatePortalDetail = () => {
           </CardContent>
         </Card>
 
-        {/* Documents section */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <FileText className="mr-2 h-5 w-5" />
+        {/* Detailed information */}
+        <Tabs defaultValue="documents" className="mb-6">
+          <TabsList className="w-full grid grid-cols-2">
+            <TabsTrigger value="documents" className="flex items-center">
+              <FileText className="mr-2 h-4 w-4" />
               Documents
-            </CardTitle>
-            <CardDescription>
-              Consultez et téléchargez vos documents
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {documents.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {documents.map((doc) => (
-                  <div key={doc.id} className="border rounded-md p-4 flex justify-between items-center">
+            </TabsTrigger>
+            <TabsTrigger value="details" className="flex items-center">
+              <User className="mr-2 h-4 w-4" />
+              Détails
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="documents" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="mr-2 h-5 w-5" />
+                  Documents requis
+                </CardTitle>
+                <CardDescription>
+                  Consultez et téléchargez vos documents
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {documents.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Document</TableHead>
+                          <TableHead>Statut</TableHead>
+                          <TableHead className="text-right">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {documents.map((doc) => (
+                          <TableRow key={doc.id}>
+                            <TableCell className="font-medium">
+                              {doc.document_types?.nom || 'Document'}
+                              {doc.document_types?.required && (
+                                <Badge variant="outline" className="ml-2 text-xs bg-red-50 border-red-200 text-red-700">
+                                  Requis
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={`
+                                ${doc.status === 'uploaded' ? 'bg-green-100 text-green-800 hover:bg-green-200' : 
+                                  doc.status === 'verified' ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' : 
+                                  doc.status === 'pending' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
+                                  doc.status === 'rejected' ? 'bg-red-100 text-red-800 hover:bg-red-200' : 
+                                  'bg-gray-100 text-gray-800 hover:bg-gray-200'} border-0
+                              `}>
+                                {doc.status === 'uploaded' ? 'Téléversé' : 
+                                 doc.status === 'verified' ? 'Vérifié' : 
+                                 doc.status === 'pending' ? 'En attente' :
+                                 doc.status === 'rejected' ? 'Rejeté' : 
+                                 doc.status === 'expired' ? 'Expiré' : 'Statut inconnu'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {doc.file_path ? (
+                                <a 
+                                  href={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/documents/${doc.file_path}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                                >
+                                  <Download className="mr-1 h-4 w-4" />
+                                  Télécharger
+                                </a>
+                              ) : (
+                                <span className="text-sm text-gray-500">
+                                  Non disponible
+                                </span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-gray-500">
+                    Aucun document n'est disponible pour le moment.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="details" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Informations détaillées</CardTitle>
+                <CardDescription>
+                  Détails complets de votre dossier
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
                     <div>
-                      <span className="font-medium">{doc.document_types?.nom || 'Document'}</span>
-                      {doc.document_types?.required && (
-                        <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800">Requis</span>
-                      )}
-                      <div className="text-xs text-gray-500">
-                        {doc.status === 'uploaded' ? 'Téléversé' : 
-                         doc.status === 'verified' ? 'Vérifié' : 
-                         doc.status === 'pending' ? 'En attente' :
-                         doc.status === 'rejected' ? 'Rejeté' : 
-                         doc.status === 'expired' ? 'Expiré' : 'Statut inconnu'}
-                      </div>
+                      <h3 className="text-sm font-medium text-gray-500">Numéro de passeport</h3>
+                      <p className="mt-1">{candidate.numero_passport}</p>
                     </div>
-                    
-                    {doc.file_path ? (
-                      <a 
-                        href={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/documents/${doc.file_path}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-ircc-blue hover:bg-ircc-dark-blue focus:outline-none focus:border-ircc-dark-blue focus:shadow-outline-blue active:bg-ircc-dark-blue transition ease-in-out duration-150"
-                      >
-                        <Download className="mr-1 h-4 w-4" />
-                        Télécharger
-                      </a>
-                    ) : (
-                      <span className="text-xs px-3 py-1 rounded-md bg-gray-100 text-gray-600">
-                        Non disponible
-                      </span>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Lieu de naissance</h3>
+                      <p className="mt-1">{candidate.lieu_naissance}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Type de visa</h3>
+                      <p className="mt-1">{candidate.visa_type}</p>
+                    </div>
+                    {candidate.procedure && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">Procédure</h3>
+                        <p className="mt-1">{candidate.procedure}</p>
+                      </div>
                     )}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 text-gray-500">
-                Aucun document n'est disponible pour le moment.
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Status actuel</h3>
+                      <p className="mt-1">{candidate.status}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Bureau en charge</h3>
+                      <p className="mt-1">{candidate.bureau}</p>
+                    </div>
+                    {candidate.notes && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">Notes</h3>
+                        <p className="mt-1 text-sm text-gray-700">{candidate.notes}</p>
+                      </div>
+                    )}
+                    {candidate.adresse && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">Adresse</h3>
+                        <p className="mt-1">{candidate.adresse}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         {/* Contact and Support section */}
         <Card>
