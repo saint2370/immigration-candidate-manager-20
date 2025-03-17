@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import CandidatesList from "./pages/CandidatesList";
 import CandidateDetail from "./pages/CandidateDetail";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/work-visas" element={<Layout><CandidatesList /></Layout>} />
           <Route path="/visitor-visas" element={<Layout><CandidatesList /></Layout>} />
           <Route path="/permanent-residence" element={<Layout><CandidatesList /></Layout>} />
+          <Route path="/settings" element={<Layout><Settings /></Layout>} />
           
           {/* 404 page */}
           <Route path="*" element={<NotFound />} />
