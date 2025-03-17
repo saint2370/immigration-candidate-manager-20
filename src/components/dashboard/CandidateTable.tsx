@@ -13,19 +13,29 @@ import { cn } from '@/lib/utils';
 
 export interface Candidate {
   id: string;
-  name: string;
-  nationality: string;
-  visaType: string;
-  submissionDate: string;
-  status: string;
-  bureau: string;
+  name?: string;
+  nom?: string;
+  prenom?: string;
+  nationality?: string;
+  nationalite?: string;
+  visaType?: string;
+  visa_type?: string;
+  submissionDate?: string;
+  date_soumission?: string;
+  status?: string;
+  bureau?: string;
+  bureau_traitement?: string;
   identificationNumber?: string;
+  identifiant?: string;
 }
 
 interface CandidateTableProps {
   candidates: Candidate[];
-  title: string;
+  title?: string;
   showPagination?: boolean;
+  onViewCandidate?: (id: string) => void;
+  onEditCandidate?: (id: string) => void;
+  onDeleteCandidate?: (id: string) => void;
 }
 
 const getStatusBadge = (status: string) => {
@@ -47,7 +57,14 @@ const getStatusBadge = (status: string) => {
   );
 };
 
-const CandidateTable = ({ candidates, title, showPagination = true }: CandidateTableProps) => {
+const CandidateTable = ({ 
+  candidates, 
+  title = "Candidats", 
+  showPagination = true,
+  onViewCandidate,
+  onEditCandidate,
+  onDeleteCandidate
+}: CandidateTableProps) => {
   const [page, setPage] = useState(1);
   const pageSize = 5;
   const totalPages = Math.ceil(candidates.length / pageSize);
@@ -56,12 +73,61 @@ const CandidateTable = ({ candidates, title, showPagination = true }: CandidateT
     (page - 1) * pageSize,
     page * pageSize
   );
+
+  // Helper function to get the display name from either format
+  const getDisplayName = (candidate: Candidate): string => {
+    if (candidate.name) return candidate.name;
+    if (candidate.prenom && candidate.nom) return `${candidate.prenom} ${candidate.nom}`;
+    if (candidate.prenom) return candidate.prenom;
+    if (candidate.nom) return candidate.nom;
+    return "Nom inconnu";
+  };
+
+  // Helper function to get the first character for avatar
+  const getAvatarInitial = (candidate: Candidate): string => {
+    if (candidate.name) return candidate.name.charAt(0);
+    if (candidate.prenom) return candidate.prenom.charAt(0);
+    if (candidate.nom) return candidate.nom.charAt(0);
+    return "?";
+  };
+
+  // Helper function to get nationanlity from either format
+  const getNationality = (candidate: Candidate): string => {
+    return candidate.nationality || candidate.nationalite || "-";
+  };
+
+  // Helper function to get visa type from either format
+  const getVisaType = (candidate: Candidate): string => {
+    return candidate.visaType || candidate.visa_type || "-";
+  };
+
+  // Helper function to get submission date from either format
+  const getSubmissionDate = (candidate: Candidate): string => {
+    return candidate.submissionDate || candidate.date_soumission || "-";
+  };
+
+  // Helper function to get status
+  const getStatus = (candidate: Candidate): string => {
+    return candidate.status || "En attente";
+  };
+
+  // Helper function to get bureau from either format
+  const getBureau = (candidate: Candidate): string => {
+    return candidate.bureau || candidate.bureau_traitement || "-";
+  };
+
+  // Helper function to get ID number from either format
+  const getIdNumber = (candidate: Candidate): string => {
+    return candidate.identificationNumber || candidate.identifiant || "-";
+  };
   
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden animate-slide-up">
-      <div className="p-5 border-b border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-      </div>
+      {title && (
+        <div className="p-5 border-b border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        </div>
+      )}
       
       <div className="overflow-x-auto">
         <Table>
@@ -86,30 +152,39 @@ const CandidateTable = ({ candidates, title, showPagination = true }: CandidateT
                 <TableCell className="font-medium">
                   <div className="flex items-center">
                     <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 mr-2">
-                      {candidate.name.charAt(0)}
+                      {getAvatarInitial(candidate)}
                     </div>
-                    {candidate.name}
+                    {getDisplayName(candidate)}
                   </div>
                 </TableCell>
                 <TableCell>
                   <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-md font-mono">
-                    {candidate.identificationNumber || '-'}
+                    {getIdNumber(candidate)}
                   </span>
                 </TableCell>
-                <TableCell>{candidate.nationality}</TableCell>
-                <TableCell>{candidate.visaType}</TableCell>
-                <TableCell>{candidate.submissionDate}</TableCell>
-                <TableCell>{getStatusBadge(candidate.status)}</TableCell>
-                <TableCell>{candidate.bureau}</TableCell>
+                <TableCell>{getNationality(candidate)}</TableCell>
+                <TableCell>{getVisaType(candidate)}</TableCell>
+                <TableCell>{getSubmissionDate(candidate)}</TableCell>
+                <TableCell>{getStatusBadge(getStatus(candidate))}</TableCell>
+                <TableCell>{getBureau(candidate)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end space-x-2">
-                    <button className="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors">
+                    <button 
+                      className="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors"
+                      onClick={() => onViewCandidate && onViewCandidate(candidate.id)}
+                    >
                       <Eye size={16} />
                     </button>
-                    <button className="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors">
+                    <button 
+                      className="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors"
+                      onClick={() => onEditCandidate && onEditCandidate(candidate.id)}
+                    >
                       <Edit size={16} />
                     </button>
-                    <button className="p-1 rounded-md hover:bg-gray-100 text-red-500 transition-colors">
+                    <button 
+                      className="p-1 rounded-md hover:bg-gray-100 text-red-500 transition-colors"
+                      onClick={() => onDeleteCandidate && onDeleteCandidate(candidate.id)}
+                    >
                       <Trash2 size={16} />
                     </button>
                   </div>
@@ -120,7 +195,7 @@ const CandidateTable = ({ candidates, title, showPagination = true }: CandidateT
         </Table>
       </div>
       
-      {showPagination && (
+      {showPagination && candidates.length > 0 && (
         <div className="p-4 border-t border-gray-100 flex items-center justify-between">
           <div className="text-sm text-gray-500">
             Affichage de {(page - 1) * pageSize + 1} à {Math.min(page * pageSize, candidates.length)} sur {candidates.length} candidats
