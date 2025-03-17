@@ -41,19 +41,27 @@ const CandidatePortal = () => {
     setIsLoading(true);
     
     try {
-      // Search by identification_number
+      // Search by identification_number (which is the IMM-XXXX number)
       const { data: candidateData, error } = await supabase
         .from('candidates')
-        .select('id')
-        .eq('identification_number', immigrationId)
-        .single();
+        .select('id, identification_number')
+        .eq('identification_number', immigrationId.trim())
+        .maybeSingle();
       
-      if (error || !candidateData) {
+      if (error) {
+        console.error("Error fetching candidate:", error);
+        throw new Error("Erreur lors de la recherche du numéro d'identification.");
+      }
+      
+      if (!candidateData) {
         throw new Error("Numéro d'identification non trouvé.");
       }
       
+      console.log("Candidate found:", candidateData);
+      
       // Navigate to candidate portal detail view
-      navigate(`/portal/candidate/${candidateData.id}`);
+      // Using the candidate's identification_number for a more user-friendly URL
+      navigate(`/portal/candidate/${candidateData.identification_number}`);
       
     } catch (error) {
       console.error("Error fetching candidate:", error);

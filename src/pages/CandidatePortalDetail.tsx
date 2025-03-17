@@ -70,19 +70,36 @@ const CandidatePortalDetail = () => {
   const fetchCandidate = async () => {
     setIsLoading(true);
     try {
-      const { data: candidate, error } = await supabase
+      // First try to find by ID directly (UUID)
+      let { data: candidateData, error } = await supabase
         .from('candidates')
         .select('*')
         .eq('id', id as string)
-        .single();
+        .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching candidate:", error);
+      // If not found, try to find by identification_number
+      if (!candidateData && !error) {
+        const { data: candidateByNumber, error: idError } = await supabase
+          .from('candidates')
+          .select('*')
+          .eq('identification_number', id as string)
+          .maybeSingle();
+
+        if (idError) {
+          console.error("Error fetching candidate by identification number:", idError);
+        }
+
+        candidateData = candidateByNumber;
       }
 
-      if (candidate) {
-        setCandidate(candidate);
+      if (candidateData) {
+        setCandidate(candidateData);
+        console.log("Candidate data loaded:", candidateData);
+      } else {
+        console.error("No candidate found with ID or identification number:", id);
       }
+    } catch (error) {
+      console.error("Error fetching candidate:", error);
     } finally {
       setIsLoading(false);
     }
@@ -90,17 +107,37 @@ const CandidatePortalDetail = () => {
 
   const fetchDocuments = async () => {
     try {
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*, document_types(nom, required)')
-        .eq('candidate_id', id as string);
-
-      if (error) {
-        console.error("Error fetching documents:", error);
+      // First try to find by candidate ID directly
+      let candidateIdToUse = id;
+      
+      // If the id parameter is actually an identification_number, we need to get the actual ID
+      if (id && id.includes("IMM-")) {
+        const { data: candidateData } = await supabase
+          .from('candidates')
+          .select('id')
+          .eq('identification_number', id as string)
+          .maybeSingle();
+        
+        if (candidateData) {
+          candidateIdToUse = candidateData.id;
+        }
       }
+      
+      // Now fetch documents with the correct candidate ID
+      if (candidateIdToUse) {
+        const { data, error } = await supabase
+          .from('documents')
+          .select('*, document_types(nom, required)')
+          .eq('candidate_id', candidateIdToUse);
 
-      if (data) {
-        setDocuments(data as DocumentWithTypeName[]);
+        if (error) {
+          console.error("Error fetching documents:", error);
+        }
+
+        if (data) {
+          console.log("Documents loaded:", data);
+          setDocuments(data as DocumentWithTypeName[]);
+        }
       }
     } catch (error) {
       console.error("Unexpected error fetching documents:", error);
