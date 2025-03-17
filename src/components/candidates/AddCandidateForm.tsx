@@ -68,11 +68,26 @@ const statuses = [
   'En cours', 'Approuvé', 'En attente', 'Rejeté', 'Complété', 'Expiré'
 ];
 
-// Documents requis par type de visa
+// Documents requis par type de visa - Mis à jour selon les exigences spécifiques
 const requiredDocuments = {
-  travail: ['Contrat de travail', 'CV', 'Passeport', 'Diplômes', 'Certificat médical'],
-  visiteur: ['Passeport', 'Attestation d\'hébergement', 'Relevés bancaires', 'Assurance voyage'],
-  residence: ['Passeport', 'Diplômes', 'Résultats de tests linguistiques', 'Expérience professionnelle', 'Certificat médical', 'Extrait de casier judiciaire']
+  visiteur: ['Visa', 'Billet d\'avion'],
+  travail: [
+    'Contrat de travail', 
+    'Lettre d\'offre d\'emploi', 
+    'EIMT', 
+    'Permis de travail', 
+    'Visa', 
+    'Billet d\'avion'
+  ],
+  residence: [
+    'Contrat de travail', 
+    'Lettre d\'offre d\'emploi', 
+    'EIMT', 
+    'Permis de travail', 
+    'Visa', 
+    'Billet d\'avion',
+    'Lettre de recommandation'
+  ]
 };
 
 // Schéma de validation du formulaire principal
@@ -93,9 +108,12 @@ const formSchema = z.object({
 
 // Schéma pour les détails spécifiques à la résidence permanente
 const residenceSchema = z.object({
-  programmeImmigration: z.enum(['Express Entry', 'Arrima', 'Autre']),
+  programmeImmigration: z.enum(['Express Entry', 'Arrima']),
   immigrationFamiliale: z.boolean().default(false),
   nombrePersonnes: z.number().min(1).default(1),
+  conjointNom: z.string().optional(),
+  conjointPrenom: z.string().optional(),
+  conjointPassport: z.string().optional(),
   detailsAutresPersonnes: z.string().optional(),
 });
 
@@ -105,12 +123,19 @@ interface AddCandidateFormProps {
   onAddCandidate: (data: any) => void;
 }
 
+// Type pour les membres de la famille (enfants)
+interface EnfantType {
+  nom: string;
+  prenom: string;
+  age: string;
+}
+
 const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, onAddCandidate }) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('general');
   const [uploadedDocuments, setUploadedDocuments] = useState<Record<string, File | null>>({});
-  const [familyMembers, setFamilyMembers] = useState<{nom: string, prenom: string}[]>([]);
-  const [newFamilyMember, setNewFamilyMember] = useState({nom: '', prenom: ''});
+  const [enfants, setEnfants] = useState<EnfantType[]>([]);
+  const [newEnfant, setNewEnfant] = useState<EnfantType>({nom: '', prenom: '', age: ''});
 
   // Formulaire principal
   const form = useForm<z.infer<typeof formSchema>>({
@@ -135,6 +160,9 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
       programmeImmigration: 'Express Entry',
       immigrationFamiliale: false,
       nombrePersonnes: 1,
+      conjointNom: '',
+      conjointPrenom: '',
+      conjointPassport: '',
       detailsAutresPersonnes: '',
     },
   });
@@ -152,19 +180,19 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
     }));
   };
 
-  // Ajouter un membre de la famille
-  const addFamilyMember = () => {
-    if (newFamilyMember.nom && newFamilyMember.prenom) {
-      setFamilyMembers([...familyMembers, newFamilyMember]);
-      setNewFamilyMember({nom: '', prenom: ''});
+  // Ajouter un enfant
+  const addEnfant = () => {
+    if (newEnfant.nom && newEnfant.prenom && newEnfant.age) {
+      setEnfants([...enfants, newEnfant]);
+      setNewEnfant({nom: '', prenom: '', age: ''});
     }
   };
 
-  // Supprimer un membre de la famille
-  const removeFamilyMember = (index: number) => {
-    const updatedMembers = [...familyMembers];
-    updatedMembers.splice(index, 1);
-    setFamilyMembers(updatedMembers);
+  // Supprimer un enfant
+  const removeEnfant = (index: number) => {
+    const updatedEnfants = [...enfants];
+    updatedEnfants.splice(index, 1);
+    setEnfants(updatedEnfants);
   };
 
   // Soumission du formulaire
@@ -174,7 +202,7 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
       ...data,
       id: Math.random().toString(36).substring(2, 11),
       photo: '',
-      nationality: data.lieuNaissance, // Utilisons le lieu de naissance comme nationalité par défaut
+      nationality: data.lieuNaissance,
       visaType: visaTypes.find(t => t.id === data.typeVisa)?.label || data.typeVisa,
       submissionDate: format(data.dateSoumission, 'dd MMMM yyyy', { locale: fr }),
       documents: uploadedDocuments,
@@ -187,7 +215,12 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
         programmeImmigration: residenceData.programmeImmigration,
         immigrationFamiliale: residenceData.immigrationFamiliale,
         nombrePersonnes: residenceData.nombrePersonnes,
-        familyMembers: familyMembers,
+        conjoint: residenceData.immigrationFamiliale ? {
+          nom: residenceData.conjointNom,
+          prenom: residenceData.conjointPrenom,
+          numeroPassport: residenceData.conjointPassport
+        } : null,
+        enfants: enfants,
         detailsAutresPersonnes: residenceData.detailsAutresPersonnes,
       });
     }
@@ -359,6 +392,9 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                             field.onChange(value);
                             // Réinitialiser les documents si le type de visa change
                             setUploadedDocuments({});
+                            
+                            // Si le type change, mettre à jour l'onglet actif
+                            setActiveTab('general');
                           }}
                           defaultValue={field.value}
                         >
@@ -607,7 +643,7 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                 <div className="space-y-4">
                   <div>
                     <FormLabel>Programme d'immigration</FormLabel>
-                    <div className="grid grid-cols-3 gap-2 mt-1">
+                    <div className="grid grid-cols-2 gap-2 mt-1">
                       <Button
                         type="button"
                         variant={residenceForm.getValues().programmeImmigration === 'Express Entry' ? 'default' : 'outline'}
@@ -624,14 +660,6 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                       >
                         Arrima
                       </Button>
-                      <Button
-                        type="button"
-                        variant={residenceForm.getValues().programmeImmigration === 'Autre' ? 'default' : 'outline'}
-                        onClick={() => residenceForm.setValue('programmeImmigration', 'Autre')}
-                        className="w-full"
-                      >
-                        Autre
-                      </Button>
                     </div>
                   </div>
 
@@ -644,7 +672,10 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                         onChange={(e) => {
                           residenceForm.setValue('immigrationFamiliale', e.target.checked);
                           if (!e.target.checked) {
-                            setFamilyMembers([]);
+                            setEnfants([]);
+                            residenceForm.setValue('conjointNom', '');
+                            residenceForm.setValue('conjointPrenom', '');
+                            residenceForm.setValue('conjointPassport', '');
                           }
                         }}
                         className="form-checkbox h-4 w-4"
@@ -657,45 +688,89 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
 
                   {residenceForm.getValues().immigrationFamiliale && (
                     <div className="space-y-4 border rounded-md p-4">
-                      <h4 className="font-medium">Membres de la famille</h4>
+                      <h4 className="font-medium">Informations du conjoint/de la conjointe</h4>
                       
-                      <div className="space-y-2">
-                        {familyMembers.map((member, index) => (
-                          <div key={index} className="flex items-center justify-between p-2 border rounded-md bg-gray-50">
-                            <span>{member.prenom} {member.nom}</span>
-                            <Button 
-                              type="button" 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => removeFamilyMember(index)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <FormLabel htmlFor="conjointPrenom">Prénom du conjoint</FormLabel>
+                          <Input 
+                            id="conjointPrenom"
+                            placeholder="Prénom" 
+                            value={residenceForm.getValues().conjointPrenom}
+                            onChange={(e) => residenceForm.setValue('conjointPrenom', e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                        
+                        <div>
+                          <FormLabel htmlFor="conjointNom">Nom du conjoint</FormLabel>
+                          <Input 
+                            id="conjointNom"
+                            placeholder="Nom" 
+                            value={residenceForm.getValues().conjointNom}
+                            onChange={(e) => residenceForm.setValue('conjointNom', e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                        
+                        <div className="md:col-span-2">
+                          <FormLabel htmlFor="conjointPassport">Numéro de passeport du conjoint</FormLabel>
+                          <Input 
+                            id="conjointPassport"
+                            placeholder="Numéro de passeport" 
+                            value={residenceForm.getValues().conjointPassport}
+                            onChange={(e) => residenceForm.setValue('conjointPassport', e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-2">
-                        <Input 
-                          placeholder="Prénom" 
-                          value={newFamilyMember.prenom}
-                          onChange={(e) => setNewFamilyMember({...newFamilyMember, prenom: e.target.value})}
-                        />
-                        <Input 
-                          placeholder="Nom" 
-                          value={newFamilyMember.nom}
-                          onChange={(e) => setNewFamilyMember({...newFamilyMember, nom: e.target.value})}
-                        />
+                      <div className="mt-6">
+                        <h4 className="font-medium mb-3">Enfants</h4>
+                        
+                        <div className="space-y-2">
+                          {enfants.map((enfant, index) => (
+                            <div key={index} className="flex items-center justify-between p-2 border rounded-md bg-gray-50">
+                              <span>{enfant.prenom} {enfant.nom} - {enfant.age} ans</span>
+                              <Button 
+                                type="button" 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => removeEnfant(index)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <div className="grid grid-cols-3 gap-2 mt-3">
+                          <Input 
+                            placeholder="Prénom" 
+                            value={newEnfant.prenom}
+                            onChange={(e) => setNewEnfant({...newEnfant, prenom: e.target.value})}
+                          />
+                          <Input 
+                            placeholder="Nom" 
+                            value={newEnfant.nom}
+                            onChange={(e) => setNewEnfant({...newEnfant, nom: e.target.value})}
+                          />
+                          <Input 
+                            placeholder="Âge" 
+                            value={newEnfant.age}
+                            onChange={(e) => setNewEnfant({...newEnfant, age: e.target.value})}
+                          />
+                        </div>
+                        
+                        <Button 
+                          type="button" 
+                          onClick={addEnfant}
+                          variant="outline"
+                          className="w-full mt-2"
+                        >
+                          <Plus className="mr-2 h-4 w-4" /> Ajouter un enfant
+                        </Button>
                       </div>
-                      
-                      <Button 
-                        type="button" 
-                        onClick={addFamilyMember}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        <Plus className="mr-2 h-4 w-4" /> Ajouter un membre
-                      </Button>
                       
                       <div>
                         <FormLabel htmlFor="nombrePersonnes">Nombre total de personnes</FormLabel>
