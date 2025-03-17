@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import IRCCHeader from './IRCCHeader';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -32,18 +33,22 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <IRCCHeader />
       
-      <div className={cn(
-        "flex-1 flex flex-col min-h-screen transition-all duration-300",
-        isSidebarOpen ? (isMobile ? "ml-0" : "ml-64") : "ml-0 md:ml-20"
-      )}>
-        <Header toggleSidebar={toggleSidebar} />
+      <div className="flex flex-1">
+        <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         
-        <main className="flex-1 px-4 md:px-6 py-6 animate-fade-in">
-          {children}
-        </main>
+        <div className={cn(
+          "flex-1 flex flex-col min-h-screen transition-all duration-300",
+          isSidebarOpen ? (isMobile ? "ml-0" : "ml-64") : "ml-0 md:ml-20"
+        )}>
+          <Header toggleSidebar={toggleSidebar} />
+          
+          <main className="flex-1 px-4 md:px-6 py-6 animate-fade-in">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );
