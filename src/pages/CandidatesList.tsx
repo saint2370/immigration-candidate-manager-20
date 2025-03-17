@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   Users, Search, Filter, Download, 
@@ -41,6 +40,7 @@ interface Candidate {
   date_soumission: string;
   status: 'En cours' | 'Approuvé' | 'En attente' | 'Rejeté' | 'Complété' | 'Expiré';
   bureau: string;
+  identification_number?: string; // Ajout de l'identifiant unique
 }
 
 // Format candidate data for display
@@ -58,7 +58,8 @@ const formatCandidateForDisplay = (candidate: any): Candidate => {
     visa_type: candidate.visa_type,
     date_soumission: formattedDate,
     status: candidate.status,
-    bureau: candidate.bureau
+    bureau: candidate.bureau,
+    identification_number: candidate.identification_number // Ajout de l'identifiant unique
   };
 };
 
@@ -295,6 +296,7 @@ const CandidatesList = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[200px]">Nom</TableHead>
+                <TableHead>ID</TableHead>
                 <TableHead>Nationalité</TableHead>
                 <TableHead>Type de visa</TableHead>
                 <TableHead>Date de soumission</TableHead>
@@ -306,7 +308,7 @@ const CandidatesList = () => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
+                  <TableCell colSpan={8} className="h-24 text-center">
                     <div className="flex flex-col items-center py-4">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ircc-blue"></div>
                       <p className="mt-2 text-gray-500">Chargement des candidats...</p>
@@ -315,7 +317,7 @@ const CandidatesList = () => {
                 </TableRow>
               ) : isError ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
+                  <TableCell colSpan={8} className="h-24 text-center">
                     <div className="flex flex-col items-center py-4">
                       <p className="text-red-500">Erreur lors du chargement des candidats</p>
                       <Button 
@@ -342,6 +344,11 @@ const CandidatesList = () => {
                         {candidate.prenom} {candidate.nom}
                       </div>
                     </TableCell>
+                    <TableCell>
+                      <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-md font-mono">
+                        {candidate.identification_number || '-'}
+                      </span>
+                    </TableCell>
                     <TableCell>{candidate.nationalite}</TableCell>
                     <TableCell>{candidate.visa_type}</TableCell>
                     <TableCell>{candidate.date_soumission}</TableCell>
@@ -364,7 +371,7 @@ const CandidatesList = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
+                  <TableCell colSpan={8} className="h-24 text-center">
                     {searchTerm || selectedFilters.status.length > 0 || selectedFilters.visaType.length > 0 ? (
                       <div className="flex flex-col items-center py-4">
                         <p className="text-gray-500">Aucun candidat ne correspond à votre recherche</p>

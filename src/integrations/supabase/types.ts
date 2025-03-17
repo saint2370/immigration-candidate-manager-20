@@ -20,6 +20,7 @@ export type Database = {
           delai_traitement: string | null
           email: string | null
           id: string
+          identification_number: string | null
           lieu_naissance: string
           nationalite: string
           nom: string
@@ -42,6 +43,7 @@ export type Database = {
           delai_traitement?: string | null
           email?: string | null
           id?: string
+          identification_number?: string | null
           lieu_naissance: string
           nationalite: string
           nom: string
@@ -64,6 +66,7 @@ export type Database = {
           delai_traitement?: string | null
           email?: string | null
           id?: string
+          identification_number?: string | null
           lieu_naissance?: string
           nationalite?: string
           nom?: string

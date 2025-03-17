@@ -20,6 +20,7 @@ interface Candidate {
   submissionDate: string;
   status: string;
   bureau: string;
+  identificationNumber?: string; // Ajout de l'identifiant unique
 }
 
 interface CandidateTableProps {
@@ -67,6 +68,7 @@ const CandidateTable = ({ candidates, title }: CandidateTableProps) => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[200px]">Nom</TableHead>
+              <TableHead>ID</TableHead>
               <TableHead>Nationalité</TableHead>
               <TableHead>Type de visa</TableHead>
               <TableHead>Date de soumission</TableHead>
@@ -88,6 +90,11 @@ const CandidateTable = ({ candidates, title }: CandidateTableProps) => {
                     </div>
                     {candidate.name}
                   </div>
+                </TableCell>
+                <TableCell>
+                  <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-md font-mono">
+                    {candidate.identificationNumber || '-'}
+                  </span>
                 </TableCell>
                 <TableCell>{candidate.nationality}</TableCell>
                 <TableCell>{candidate.visaType}</TableCell>
