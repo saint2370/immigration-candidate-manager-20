@@ -80,11 +80,28 @@ const Index = () => {
               </form>
             </div>
             <div className="w-full md:w-1/2 flex justify-center">
-              <img 
-                src="/lovable-uploads/558584bc-ea53-41a4-af28-c62cd053ac50.png" 
-                alt="Immigration Canada" 
-                className="max-w-full h-auto rounded-lg shadow-xl"
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <img 
+                  src="/lovable-uploads/8723bfa1-a246-4a52-a6aa-e6917ee1059f.png" 
+                  alt="Nouveau arrivant" 
+                  className="rounded-lg shadow-md"
+                />
+                <img 
+                  src="/lovable-uploads/6741185c-18b1-4058-a6ab-670479ba19e7.png" 
+                  alt="Arrivée à l'aéroport" 
+                  className="rounded-lg shadow-md"
+                />
+                <img 
+                  src="/lovable-uploads/2c6012c5-1aeb-427c-9537-6464053f3b55.png" 
+                  alt="Groupe d'immigrants" 
+                  className="rounded-lg shadow-md"
+                />
+                <img 
+                  src="/lovable-uploads/a7798152-6004-45cd-82ac-015273e182fb.png" 
+                  alt="Immigrant avec bagages" 
+                  className="rounded-lg shadow-md"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -191,7 +208,7 @@ const Index = () => {
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-blue-50 p-6 rounded-lg">
               <div className="flex items-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-gray-300 mr-3"></div>
+                <img src="/lovable-uploads/a7798152-6004-45cd-82ac-015273e182fb.png" alt="Candidat" className="w-12 h-12 rounded-full object-cover mr-3" />
                 <div>
                   <h4 className="font-semibold">Marc Dupont</h4>
                   <p className="text-sm text-gray-600">Visa de travail</p>
@@ -204,7 +221,7 @@ const Index = () => {
             
             <div className="bg-blue-50 p-6 rounded-lg">
               <div className="flex items-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-gray-300 mr-3"></div>
+                <img src="/lovable-uploads/2c6012c5-1aeb-427c-9537-6464053f3b55.png" alt="Candidat" className="w-12 h-12 rounded-full object-cover mr-3" />
                 <div>
                   <h4 className="font-semibold">Sophie Martin</h4>
                   <p className="text-sm text-gray-600">Résidence permanente</p>
@@ -217,7 +234,7 @@ const Index = () => {
             
             <div className="bg-blue-50 p-6 rounded-lg">
               <div className="flex items-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-gray-300 mr-3"></div>
+                <img src="/lovable-uploads/6741185c-18b1-4058-a6ab-670479ba19e7.png" alt="Candidat" className="w-12 h-12 rounded-full object-cover mr-3" />
                 <div>
                   <h4 className="font-semibold">Ahmed Khalil</h4>
                   <p className="text-sm text-gray-600">Regroupement familial</p>
@@ -248,7 +265,9 @@ const Index = () => {
                   Comment retrouver mon ID d'immigration ?
                 </AccordionTrigger>
                 <AccordionContent className="px-6 pb-4">
-                  Votre ID d'immigration se trouve sur tous les documents officiels que vous avez reçus de l'IRCC. Il commence généralement par "IMM-" suivi d'une série de chiffres et de lettres. Si vous ne le trouvez pas, contactez notre service client.
+                  Votre ID d'immigration se trouve sur votre récépissé d'immigration au niveau de la mention "ID". 
+                  Il est présent sur tous les documents officiels que vous avez reçus de l'IRCC. Il commence généralement 
+                  par "IMM-" suivi d'une série de chiffres et de lettres. Si vous ne le trouvez pas, contactez notre service client.
                 </AccordionContent>
               </AccordionItem>
               
