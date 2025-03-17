@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { 
   Users, Search, Filter, Download, 
@@ -24,9 +23,11 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Eye, Edit, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from "@/hooks/use-toast";
+import AddCandidateForm from '@/components/candidates/AddCandidateForm';
 
 // Mocked data
-const candidates = [
+const initialCandidates = [
   {
     id: '1',
     photo: '',
@@ -149,15 +150,90 @@ const getStatusBadge = (status: string) => {
 };
 
 const CandidatesList = () => {
+  const { toast } = useToast();
+  const [candidates, setCandidates] = useState(initialCandidates);
   const [page, setPage] = useState(1);
+  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilters, setSelectedFilters] = useState<{
+    status: string[];
+    visaType: string[];
+  }>({
+    status: [],
+    visaType: []
+  });
+  
   const pageSize = 7;
-  const totalCandidates = candidates.length;
+  
+  // Filtrer les candidats en fonction de la recherche et des filtres
+  const filteredCandidates = candidates.filter(candidate => {
+    const matchesSearch = searchTerm === '' || 
+      candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      candidate.nationality.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      candidate.bureau.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = selectedFilters.status.length === 0 || 
+      selectedFilters.status.includes(candidate.status);
+    
+    const matchesVisaType = selectedFilters.visaType.length === 0 || 
+      selectedFilters.visaType.includes(candidate.visaType);
+    
+    return matchesSearch && matchesStatus && matchesVisaType;
+  });
+  
+  const totalCandidates = filteredCandidates.length;
   const totalPages = Math.ceil(totalCandidates / pageSize);
   
-  const paginatedCandidates = candidates.slice(
+  const paginatedCandidates = filteredCandidates.slice(
     (page - 1) * pageSize,
     page * pageSize
   );
+
+  // Fonction pour ajouter un nouveau candidat
+  const handleAddCandidate = (candidateData: any) => {
+    // Adapter les données pour correspondre à la structure attendue
+    const newCandidate = {
+      id: candidateData.id,
+      photo: '',
+      name: `${candidateData.prenom} ${candidateData.nom}`,
+      nationality: candidateData.lieuNaissance,
+      visaType: candidateData.visaType,
+      submissionDate: candidateData.submissionDate,
+      status: candidateData.status,
+      bureau: candidateData.bureau
+    };
+    
+    // Ajouter le candidat à la liste
+    setCandidates(prev => [newCandidate, ...prev]);
+    
+    // Afficher un toast de confirmation
+    toast({
+      title: "Candidat ajouté",
+      description: `${newCandidate.name} a été ajouté avec succès.`,
+    });
+  };
+
+  // Fonction pour appliquer un filtre
+  const toggleFilter = (type: 'status' | 'visaType', value: string) => {
+    setSelectedFilters(prev => {
+      const current = [...prev[type]];
+      const index = current.indexOf(value);
+      
+      if (index === -1) {
+        current.push(value);
+      } else {
+        current.splice(index, 1);
+      }
+      
+      return {
+        ...prev,
+        [type]: current
+      };
+    });
+    
+    // Reset to first page when filtering
+    setPage(1);
+  };
 
   return (
     <div className="space-y-6">
@@ -177,6 +253,11 @@ const CandidatesList = () => {
             <Input 
               placeholder="Rechercher un candidat..." 
               className="pl-10 pr-4 h-10 w-full sm:w-64"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPage(1); // Reset to first page when searching
+              }}
             />
           </div>
           
@@ -193,19 +274,45 @@ const CandidatesList = () => {
                   <div className="p-2">
                     <p className="text-sm font-medium mb-2">Statut</p>
                     <div className="space-y-1">
-                      <DropdownMenuItem className="cursor-pointer">En cours</DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">Approuvé</DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">En attente</DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">Rejeté</DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">Complété</DropdownMenuItem>
+                      {['En cours', 'Approuvé', 'En attente', 'Rejeté', 'Complété'].map(status => (
+                        <DropdownMenuItem 
+                          key={status}
+                          className={cn(
+                            "cursor-pointer flex items-center",
+                            selectedFilters.status.includes(status) && "bg-muted"
+                          )}
+                          onClick={() => toggleFilter('status', status)}
+                        >
+                          <div className="w-4 h-4 mr-2 flex items-center justify-center">
+                            {selectedFilters.status.includes(status) && (
+                              <div className="w-2 h-2 rounded-full bg-primary" />
+                            )}
+                          </div>
+                          {status}
+                        </DropdownMenuItem>
+                      ))}
                     </div>
                   </div>
                   <div className="p-2 border-t">
                     <p className="text-sm font-medium mb-2">Type de visa</p>
                     <div className="space-y-1">
-                      <DropdownMenuItem className="cursor-pointer">Travail</DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">Visiteur</DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">Résidence Permanente</DropdownMenuItem>
+                      {['Travail', 'Visiteur', 'Résidence Permanente'].map(type => (
+                        <DropdownMenuItem 
+                          key={type}
+                          className={cn(
+                            "cursor-pointer flex items-center",
+                            selectedFilters.visaType.includes(type) && "bg-muted"
+                          )}
+                          onClick={() => toggleFilter('visaType', type)}
+                        >
+                          <div className="w-4 h-4 mr-2 flex items-center justify-center">
+                            {selectedFilters.visaType.includes(type) && (
+                              <div className="w-2 h-2 rounded-full bg-primary" />
+                            )}
+                          </div>
+                          {type}
+                        </DropdownMenuItem>
+                      ))}
                     </div>
                   </div>
                 </DropdownMenuGroup>
@@ -217,7 +324,10 @@ const CandidatesList = () => {
               Exporter
             </Button>
             
-            <Button className="bg-ircc-blue hover:bg-ircc-dark-blue btn-hover">
+            <Button 
+              className="bg-ircc-blue hover:bg-ircc-dark-blue btn-hover"
+              onClick={() => setIsAddFormOpen(true)}
+            >
               <Plus size={18} className="mr-2" />
               Ajouter
             </Button>
@@ -241,39 +351,63 @@ const CandidatesList = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedCandidates.map((candidate) => (
-                <TableRow 
-                  key={candidate.id}
-                  className="transition-colors hover:bg-gray-50"
-                >
-                  <TableCell className="font-medium">
-                    <div className="flex items-center">
-                      <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 mr-3">
-                        {candidate.name.charAt(0)}
+              {paginatedCandidates.length > 0 ? (
+                paginatedCandidates.map((candidate) => (
+                  <TableRow 
+                    key={candidate.id}
+                    className="transition-colors hover:bg-gray-50"
+                  >
+                    <TableCell className="font-medium">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 mr-3">
+                          {candidate.name.charAt(0)}
+                        </div>
+                        {candidate.name}
                       </div>
-                      {candidate.name}
-                    </div>
-                  </TableCell>
-                  <TableCell>{candidate.nationality}</TableCell>
-                  <TableCell>{candidate.visaType}</TableCell>
-                  <TableCell>{candidate.submissionDate}</TableCell>
-                  <TableCell>{getStatusBadge(candidate.status)}</TableCell>
-                  <TableCell>{candidate.bureau}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button className="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors">
-                        <Eye size={18} />
-                      </button>
-                      <button className="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors">
-                        <Edit size={18} />
-                      </button>
-                      <button className="p-1 rounded-md hover:bg-gray-100 text-red-500 transition-colors">
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
+                    </TableCell>
+                    <TableCell>{candidate.nationality}</TableCell>
+                    <TableCell>{candidate.visaType}</TableCell>
+                    <TableCell>{candidate.submissionDate}</TableCell>
+                    <TableCell>{getStatusBadge(candidate.status)}</TableCell>
+                    <TableCell>{candidate.bureau}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end space-x-2">
+                        <button className="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors">
+                          <Eye size={18} />
+                        </button>
+                        <button className="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors">
+                          <Edit size={18} />
+                        </button>
+                        <button className="p-1 rounded-md hover:bg-gray-100 text-red-500 transition-colors">
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-24 text-center">
+                    {searchTerm || selectedFilters.status.length > 0 || selectedFilters.visaType.length > 0 ? (
+                      <div className="flex flex-col items-center py-4">
+                        <p className="text-gray-500">Aucun candidat ne correspond à votre recherche</p>
+                        <Button 
+                          variant="outline" 
+                          className="mt-2"
+                          onClick={() => {
+                            setSearchTerm('');
+                            setSelectedFilters({ status: [], visaType: [] });
+                          }}
+                        >
+                          Réinitialiser les filtres
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">Aucun candidat trouvé</p>
+                    )}
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </div>
@@ -281,29 +415,33 @@ const CandidatesList = () => {
         {/* Pagination */}
         <div className="p-4 border-t border-gray-100 flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            Affichage de {(page - 1) * pageSize + 1} à {Math.min(page * pageSize, totalCandidates)} sur {totalCandidates} candidats
+            {totalCandidates > 0 ? (
+              <>Affichage de {(page - 1) * pageSize + 1} à {Math.min(page * pageSize, totalCandidates)} sur {totalCandidates} candidats</>
+            ) : (
+              <>0 candidat</>
+            )}
           </div>
           
           <div className="flex items-center space-x-2">
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
+              disabled={page === 1 || totalCandidates === 0}
               className={cn(
                 "p-2 rounded-md transition-colors",
-                page === 1 
+                (page === 1 || totalCandidates === 0)
                   ? "text-gray-300 cursor-not-allowed" 
                   : "text-gray-500 hover:bg-gray-100"
               )}
             >
               <ChevronLeft size={18} />
             </button>
-            <span className="text-sm text-gray-600">{page} / {totalPages}</span>
+            <span className="text-sm text-gray-600">{totalPages > 0 ? `${page} / ${totalPages}` : '0 / 0'}</span>
             <button 
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
+              disabled={page === totalPages || totalCandidates === 0}
               className={cn(
                 "p-2 rounded-md transition-colors",
-                page === totalPages
+                (page === totalPages || totalCandidates === 0)
                   ? "text-gray-300 cursor-not-allowed"
                   : "text-gray-500 hover:bg-gray-100"
               )}
@@ -313,6 +451,13 @@ const CandidatesList = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de formulaire d'ajout */}
+      <AddCandidateForm 
+        isOpen={isAddFormOpen}
+        onClose={() => setIsAddFormOpen(false)}
+        onAddCandidate={handleAddCandidate}
+      />
     </div>
   );
 };
