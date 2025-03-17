@@ -1,188 +1,222 @@
 
-import { 
-  Users, Briefcase, Plane, CreditCard, 
-  Clock, AlertCircle 
-} from 'lucide-react';
+import React from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { CalendarCheck, Clock, FolderOpen, Users } from 'lucide-react';
 import StatCard from '@/components/dashboard/StatCard';
 import StatusChart from '@/components/dashboard/StatusChart';
 import CandidateTable from '@/components/dashboard/CandidateTable';
 import DeadlineCard from '@/components/dashboard/DeadlineCard';
-import { Button } from '@/components/ui/button';
 
-// Mock data
-const statusData = [
-  { name: 'En cours', value: 42, color: '#3B82F6' },
-  { name: 'Approuvé', value: 25, color: '#10B981' },
-  { name: 'En attente', value: 18, color: '#F59E0B' },
-  { name: 'Rejeté', value: 5, color: '#EF4444' },
-  { name: 'Complété', value: 10, color: '#8B5CF6' }
+// Sample data for the dashboard
+const statusChartData = [
+  { name: 'En cours', value: 32, color: '#0E65C9' },
+  { name: 'En attente', value: 18, color: '#FFC107' },
+  { name: 'Approuvé', value: 45, color: '#4CAF50' },
+  { name: 'Rejeté', value: 5, color: '#F44336' },
 ];
 
-const visaTypeData = [
-  { name: 'Travail', value: 38, color: '#3B82F6' },
-  { name: 'Visiteur', value: 27, color: '#F59E0B' },
-  { name: 'Résidence', value: 35, color: '#10B981' }
-];
-
-const deadlines = [
-  { 
-    id: '1', 
-    candidateName: 'Jean Dupont', 
-    document: 'Permis de travail - Renouvellement', 
-    dueDate: '20 mai 2023', 
-    daysLeft: 2 
-  },
-  { 
-    id: '2', 
-    candidateName: 'Marie Lambert', 
-    document: 'Visa visiteur - Documents complémentaires', 
-    dueDate: '25 mai 2023', 
-    daysLeft: 7 
-  },
-  { 
-    id: '3', 
-    candidateName: 'Ahmed Hassan', 
-    document: 'Résidence permanente - Examen médical', 
-    dueDate: '3 juin 2023', 
-    daysLeft: 16 
-  }
+const visaTypeChartData = [
+  { name: 'Travail', value: 40, color: '#3F51B5' },
+  { name: 'Visiteur', value: 35, color: '#FF9800' },
+  { name: 'Résidence Permanente', value: 25, color: '#9C27B0' },
 ];
 
 const recentCandidates = [
   {
-    id: '1',
-    name: 'Sophie Martin',
-    nationality: 'France',
-    visaType: 'Travail',
-    submissionDate: '12 avril 2023',
-    status: 'En cours',
+    id: '1', 
+    nom: 'Tremblay', 
+    prenom: 'Jean', 
+    nationalite: 'France', 
+    visa_type: 'Travail', 
+    date_soumission: '2023-05-15', 
+    status: 'En cours', 
     bureau: 'Paris'
   },
   {
-    id: '2',
-    name: 'Mohamed Ali',
-    nationality: 'Maroc',
-    visaType: 'Visiteur',
-    submissionDate: '5 avril 2023',
-    status: 'En attente',
-    bureau: 'Rabat'
+    id: '2', 
+    nom: 'Patel', 
+    prenom: 'Raj', 
+    nationalite: 'Inde', 
+    visa_type: 'Résidence Permanente', 
+    date_soumission: '2023-06-10', 
+    status: 'En attente', 
+    bureau: 'New Delhi'
   },
   {
-    id: '3',
-    name: 'John Smith',
-    nationality: 'USA',
-    visaType: 'Résidence Permanente',
-    submissionDate: '2 avril 2023',
-    status: 'Approuvé',
-    bureau: 'New York'
-  },
-  {
-    id: '4',
-    name: 'Aisha Patel',
-    nationality: 'Inde',
-    visaType: 'Travail',
-    submissionDate: '28 mars 2023',
-    status: 'En cours',
-    bureau: 'Mumbai'
-  },
-  {
-    id: '5',
-    name: 'Carlos Rodriguez',
-    nationality: 'Mexique',
-    visaType: 'Résidence Permanente',
-    submissionDate: '25 mars 2023',
-    status: 'Rejeté',
+    id: '3', 
+    nom: 'Martinez', 
+    prenom: 'Ana', 
+    nationalite: 'Mexique', 
+    visa_type: 'Visiteur', 
+    date_soumission: '2023-07-25', 
+    status: 'Approuvé', 
     bureau: 'Mexico'
   },
   {
-    id: '6',
-    name: 'Yuki Tanaka',
-    nationality: 'Japon',
-    visaType: 'Visiteur',
-    submissionDate: '20 mars 2023',
-    status: 'Complété',
-    bureau: 'Tokyo'
+    id: '4', 
+    nom: 'Chen', 
+    prenom: 'Wei', 
+    nationalite: 'Chine', 
+    visa_type: 'Travail', 
+    date_soumission: '2023-08-05', 
+    status: 'En cours', 
+    bureau: 'Beijing'
   },
   {
-    id: '7',
-    name: 'Elena Petrova',
-    nationality: 'Russie',
-    visaType: 'Travail',
-    submissionDate: '15 mars 2023',
-    status: 'En attente',
-    bureau: 'Moscou'
+    id: '5', 
+    nom: 'Kowalski', 
+    prenom: 'Marta', 
+    nationalite: 'Pologne', 
+    visa_type: 'Résidence Permanente', 
+    date_soumission: '2023-09-18', 
+    status: 'En cours', 
+    bureau: 'Warsaw'
+  }
+];
+
+const upcomingDeadlines = [
+  {
+    id: '1',
+    candidateName: 'Jean Tremblay',
+    deadline: '2023-12-15',
+    description: 'Expiration du permis de travail',
+    daysLeft: 14,
+    type: 'Travail'
+  },
+  {
+    id: '2',
+    candidateName: 'Ana Martinez',
+    deadline: '2023-12-18',
+    description: 'Date limite pour soumission des documents',
+    daysLeft: 17,
+    type: 'Visiteur'
+  },
+  {
+    id: '3',
+    candidateName: 'Raj Patel',
+    deadline: '2023-12-05',
+    description: 'Entrevue au bureau d\'immigration',
+    daysLeft: 4,
+    type: 'Résidence Permanente'
+  },
+  {
+    id: '4',
+    candidateName: 'Wei Chen',
+    deadline: '2023-11-30',
+    description: 'Date d\'expiration du visa',
+    daysLeft: -1,
+    type: 'Travail'
   }
 ];
 
 const Dashboard = () => {
+  // These stats would typically come from API calls
+  const statCards = [
+    {
+      title: "Total de candidats",
+      icon: <Users className="h-5 w-5 text-white" />,
+      value: { value: "586", isPositive: true },
+      description: "Augmentation de 12% depuis le mois dernier",
+      color: "bg-ircc-blue",
+    },
+    {
+      title: "Dossiers actifs",
+      icon: <FolderOpen className="h-5 w-5 text-white" />,
+      value: { value: "423", isPositive: true },
+      description: "68 nouveaux dossiers ce mois-ci",
+      color: "bg-[#FB8C00]", // Orange
+    },
+    {
+      title: "Temps moyen de traitement",
+      icon: <Clock className="h-5 w-5 text-white" />,
+      value: { value: "47 jours", isPositive: false },
+      description: "Augmentation de 3 jours par rapport à la normale",
+      color: "bg-[#E53935]", // Red
+    },
+    {
+      title: "Dossiers complétés",
+      icon: <CalendarCheck className="h-5 w-5 text-white" />,
+      value: { value: "163", isPositive: true },
+      description: "12% de plus que le mois dernier",
+      color: "bg-[#43A047]", // Green
+    },
+  ];
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Tableau de bord</h2>
-          <p className="text-gray-500 mt-1">Vue d'ensemble de vos candidats et demandes</p>
-        </div>
-        <Button className="bg-ircc-blue hover:bg-ircc-dark-blue btn-hover">
-          Ajouter un candidat
-        </Button>
+    <div className="px-4 py-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-800">Tableau de bord</h1>
       </div>
-      
-      {/* Stats */}
+
+      {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard 
-          title="Total des candidats" 
-          value="120" 
-          icon={<Users size={20} className="text-ircc-blue" />}
-          trend={{ value: "12%", isPositive: true }}
-          description="vs mois précédent"
+        {statCards.map((stat, index) => (
+          <StatCard
+            key={index}
+            title={stat.title}
+            icon={stat.icon}
+            value={stat.value}
+            description={stat.description}
+            color={stat.color}
+          />
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Status distribution chart */}
+        <StatusChart 
+          data={statusChartData} 
+          title="Répartition par status"
         />
-        <StatCard 
-          title="Visas Travail" 
-          value="45" 
-          icon={<Briefcase size={20} className="text-blue-500" />}
-          description="38% du total"
-        />
-        <StatCard 
-          title="Visas Visiteur" 
-          value="32" 
-          icon={<Plane size={20} className="text-yellow-500" />}
-          description="27% du total"
-        />
-        <StatCard 
-          title="Résidence Permanente" 
-          value="43" 
-          icon={<CreditCard size={20} className="text-green-500" />}
-          description="35% du total"
+
+        {/* Visa type distribution chart */}
+        <StatusChart 
+          data={visaTypeChartData} 
+          title="Répartition par type de visa"
         />
       </div>
-      
-      {/* Middle section */}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <CandidateTable candidates={recentCandidates} title="Candidats récents" />
-        </div>
-        <div>
-          <DeadlineCard deadlines={deadlines} />
-        </div>
-      </div>
-      
-      {/* Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <StatusChart data={statusData} title="Répartition par statut" />
-        <StatusChart data={visaTypeData} title="Répartition par type de visa" />
-      </div>
-      
-      {/* Alerts */}
-      <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-start animate-slide-up">
-        <AlertCircle size={20} className="text-orange-500 mt-0.5 mr-3 flex-shrink-0" />
-        <div>
-          <h4 className="font-medium text-orange-800">Attention</h4>
-          <p className="text-sm text-orange-700 mt-1">
-            5 candidats ont des documents qui expireront dans les 30 prochains jours. 
-            <a href="#" className="underline ml-1 font-medium">Consulter la liste</a>
-          </p>
-        </div>
+        {/* Recent candidates */}
+        <Card className="col-span-2">
+          <CardHeader>
+            <CardTitle>Candidats récents</CardTitle>
+            <CardDescription>
+              Les 5 dossiers les plus récemment mis à jour
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CandidateTable candidates={recentCandidates} showPagination={false} />
+          </CardContent>
+        </Card>
+
+        {/* Upcoming deadlines */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Échéances à venir</CardTitle>
+            <CardDescription>
+              Prochaines dates importantes
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {upcomingDeadlines.map((deadline) => (
+              <DeadlineCard
+                key={deadline.id}
+                candidateName={deadline.candidateName}
+                deadline={deadline.deadline}
+                description={deadline.description}
+                daysLeft={deadline.daysLeft}
+                type={deadline.type}
+              />
+            ))}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
