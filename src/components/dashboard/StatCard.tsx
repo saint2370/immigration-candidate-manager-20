@@ -11,6 +11,7 @@ interface StatCardProps {
     value: string | number;
     isPositive: boolean;
   };
+  color?: string;
   className?: string;
 }
 
@@ -20,6 +21,7 @@ const StatCard = ({
   icon, 
   description, 
   trend, 
+  color,
   className 
 }: StatCardProps) => {
   return (
@@ -51,7 +53,7 @@ const StatCard = ({
           )}
         </div>
         
-        <div className="p-2 rounded-lg bg-gray-50">
+        <div className={cn("p-2 rounded-lg", color || "bg-gray-50")}>
           {icon}
         </div>
       </div>

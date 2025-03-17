@@ -27,56 +27,57 @@ const visaTypeChartData = [
   { name: 'Résidence Permanente', value: 25, color: '#9C27B0' },
 ];
 
+// Transform recentCandidates to match the expected Candidate interface
 const recentCandidates = [
   {
     id: '1', 
-    nom: 'Tremblay', 
-    prenom: 'Jean', 
-    nationalite: 'France', 
-    visa_type: 'Travail', 
-    date_soumission: '2023-05-15', 
+    name: 'Jean Tremblay', 
+    nationality: 'France', 
+    visaType: 'Travail', 
+    submissionDate: '2023-05-15', 
     status: 'En cours', 
-    bureau: 'Paris'
+    bureau: 'Paris',
+    identificationNumber: 'IMM-2023-A1B2C3'
   },
   {
     id: '2', 
-    nom: 'Patel', 
-    prenom: 'Raj', 
-    nationalite: 'Inde', 
-    visa_type: 'Résidence Permanente', 
-    date_soumission: '2023-06-10', 
+    name: 'Raj Patel', 
+    nationality: 'Inde', 
+    visaType: 'Résidence Permanente', 
+    submissionDate: '2023-06-10', 
     status: 'En attente', 
-    bureau: 'New Delhi'
+    bureau: 'New Delhi',
+    identificationNumber: 'IMM-2023-D4E5F6'
   },
   {
     id: '3', 
-    nom: 'Martinez', 
-    prenom: 'Ana', 
-    nationalite: 'Mexique', 
-    visa_type: 'Visiteur', 
-    date_soumission: '2023-07-25', 
+    name: 'Ana Martinez', 
+    nationality: 'Mexique', 
+    visaType: 'Visiteur', 
+    submissionDate: '2023-07-25', 
     status: 'Approuvé', 
-    bureau: 'Mexico'
+    bureau: 'Mexico',
+    identificationNumber: 'IMM-2023-G7H8I9'
   },
   {
     id: '4', 
-    nom: 'Chen', 
-    prenom: 'Wei', 
-    nationalite: 'Chine', 
-    visa_type: 'Travail', 
-    date_soumission: '2023-08-05', 
+    name: 'Wei Chen', 
+    nationality: 'Chine', 
+    visaType: 'Travail', 
+    submissionDate: '2023-08-05', 
     status: 'En cours', 
-    bureau: 'Beijing'
+    bureau: 'Beijing',
+    identificationNumber: 'IMM-2023-J0K1L2'
   },
   {
     id: '5', 
-    nom: 'Kowalski', 
-    prenom: 'Marta', 
-    nationalite: 'Pologne', 
-    visa_type: 'Résidence Permanente', 
-    date_soumission: '2023-09-18', 
+    name: 'Marta Kowalski', 
+    nationality: 'Pologne', 
+    visaType: 'Résidence Permanente', 
+    submissionDate: '2023-09-18', 
     status: 'En cours', 
-    bureau: 'Warsaw'
+    bureau: 'Warsaw',
+    identificationNumber: 'IMM-2023-M3N4O5'
   }
 ];
 
@@ -121,29 +122,33 @@ const Dashboard = () => {
     {
       title: "Total de candidats",
       icon: <Users className="h-5 w-5 text-white" />,
-      value: { value: "586", isPositive: true },
+      value: "586",
       description: "Augmentation de 12% depuis le mois dernier",
+      trend: { value: "12%", isPositive: true },
       color: "bg-ircc-blue",
     },
     {
       title: "Dossiers actifs",
       icon: <FolderOpen className="h-5 w-5 text-white" />,
-      value: { value: "423", isPositive: true },
+      value: "423",
       description: "68 nouveaux dossiers ce mois-ci",
+      trend: { value: "68", isPositive: true },
       color: "bg-[#FB8C00]", // Orange
     },
     {
       title: "Temps moyen de traitement",
       icon: <Clock className="h-5 w-5 text-white" />,
-      value: { value: "47 jours", isPositive: false },
+      value: "47 jours",
       description: "Augmentation de 3 jours par rapport à la normale",
+      trend: { value: "3 jours", isPositive: false },
       color: "bg-[#E53935]", // Red
     },
     {
       title: "Dossiers complétés",
       icon: <CalendarCheck className="h-5 w-5 text-white" />,
-      value: { value: "163", isPositive: true },
+      value: "163",
       description: "12% de plus que le mois dernier",
+      trend: { value: "12%", isPositive: true },
       color: "bg-[#43A047]", // Green
     },
   ];
@@ -163,6 +168,7 @@ const Dashboard = () => {
             icon={stat.icon}
             value={stat.value}
             description={stat.description}
+            trend={stat.trend}
             color={stat.color}
           />
         ))}
@@ -192,7 +198,7 @@ const Dashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <CandidateTable candidates={recentCandidates} showPagination={false} />
+            <CandidateTable candidates={recentCandidates} title="Candidats récents" />
           </CardContent>
         </Card>
 

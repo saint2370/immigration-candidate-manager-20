@@ -8,11 +8,10 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Eye, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface Candidate {
+export interface Candidate {
   id: string;
   name: string;
   nationality: string;
@@ -26,6 +25,7 @@ interface Candidate {
 interface CandidateTableProps {
   candidates: Candidate[];
   title: string;
+  showPagination?: boolean;
 }
 
 const getStatusBadge = (status: string) => {
@@ -47,7 +47,7 @@ const getStatusBadge = (status: string) => {
   );
 };
 
-const CandidateTable = ({ candidates, title }: CandidateTableProps) => {
+const CandidateTable = ({ candidates, title, showPagination = true }: CandidateTableProps) => {
   const [page, setPage] = useState(1);
   const pageSize = 5;
   const totalPages = Math.ceil(candidates.length / pageSize);
@@ -120,39 +120,41 @@ const CandidateTable = ({ candidates, title }: CandidateTableProps) => {
         </Table>
       </div>
       
-      <div className="p-4 border-t border-gray-100 flex items-center justify-between">
-        <div className="text-sm text-gray-500">
-          Affichage de {(page - 1) * pageSize + 1} à {Math.min(page * pageSize, candidates.length)} sur {candidates.length} candidats
+      {showPagination && (
+        <div className="p-4 border-t border-gray-100 flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            Affichage de {(page - 1) * pageSize + 1} à {Math.min(page * pageSize, candidates.length)} sur {candidates.length} candidats
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <button 
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className={cn(
+                "p-1 rounded-md transition-colors",
+                page === 1 
+                  ? "text-gray-300 cursor-not-allowed" 
+                  : "text-gray-500 hover:bg-gray-100"
+              )}
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <span className="text-sm text-gray-600">{page} / {totalPages}</span>
+            <button 
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className={cn(
+                "p-1 rounded-md transition-colors",
+                page === totalPages
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-500 hover:bg-gray-100"
+              )}
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
         </div>
-        
-        <div className="flex items-center space-x-2">
-          <button 
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className={cn(
-              "p-1 rounded-md transition-colors",
-              page === 1 
-                ? "text-gray-300 cursor-not-allowed" 
-                : "text-gray-500 hover:bg-gray-100"
-            )}
-          >
-            <ChevronLeft size={20} />
-          </button>
-          <span className="text-sm text-gray-600">{page} / {totalPages}</span>
-          <button 
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className={cn(
-              "p-1 rounded-md transition-colors",
-              page === totalPages
-                ? "text-gray-300 cursor-not-allowed"
-                : "text-gray-500 hover:bg-gray-100"
-            )}
-          >
-            <ChevronRight size={20} />
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
