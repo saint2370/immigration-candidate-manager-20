@@ -23,7 +23,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   }, []);
 
   const navItems = [
-    { name: 'Tableau de bord', path: '/', icon: Home },
+    { name: 'Tableau de bord', path: '/dashboard', icon: Home },
     { name: 'Candidats', path: '/candidates', icon: Users },
     { name: 'Visas Travail', path: '/work-visas', icon: Briefcase },
     { name: 'Visas Visiteur', path: '/visitor-visas', icon: Plane },

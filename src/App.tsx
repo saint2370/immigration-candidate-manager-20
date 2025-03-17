@@ -25,7 +25,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Admin routes - with admin layout */}
-          <Route path="/admin" element={<Layout><Outlet /></Layout>}>
+          <Route path="/" element={<Layout><Outlet /></Layout>}>
             <Route index element={<Dashboard />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="candidates" element={<CandidatesList />} />
@@ -35,7 +35,7 @@ function App() {
           </Route>
           
           {/* Public/Candidate routes - no admin layout */}
-          <Route path="/" element={<Index />} />
+          <Route path="/index" element={<Index />} />
           <Route path="/portal" element={<CandidatePortal />} />
           <Route path="/portal/candidate/:id" element={<CandidatePortalDetail />} />
           
