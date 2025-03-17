@@ -1,6 +1,5 @@
-
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Edit, Trash2, Download, User, FileClock, 
   FileText, History, Activity, Calendar, Info
@@ -13,51 +12,8 @@ import {
   TabsTrigger 
 } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-
-// Mock data
-const candidateData = {
-  id: '1',
-  photo: '',
-  name: 'Sophie Martin',
-  dateOfBirth: '15/04/1990',
-  placeOfBirth: 'Lyon, France',
-  nationality: 'France',
-  passportNumber: 'P123456789',
-  phone: '+33 6 12 34 56 78',
-  email: 'sophie.martin@example.com',
-  address: '23 Rue de la Paix, 75001 Paris, France',
-  visaType: 'Travail',
-  procedure: 'Entrée express',
-  submissionDate: '12/04/2023',
-  processingTime: '8-12 semaines',
-  status: 'En cours',
-  travelDate: '01/09/2023',
-  office: 'Paris',
-  notes: 'Candidate avec un profil intéressant, maîtrise parfaitement l\'anglais et le français.',
-  documents: [
-    { id: '1', name: 'Contrat de travail', status: 'uploaded', date: '12/04/2023' },
-    { id: '2', name: 'EIMT', status: 'pending', date: '' },
-    { id: '3', name: 'Permis de travail', status: 'pending', date: '' },
-    { id: '4', name: 'Lettre d\'offre d\'emploi', status: 'uploaded', date: '12/04/2023' },
-    { id: '5', name: 'CAQ', status: 'pending', date: '' },
-    { id: '6', name: 'Visa', status: 'pending', date: '' },
-    { id: '7', name: 'Billet d\'avion', status: 'pending', date: '' }
-  ],
-  history: [
-    { id: '1', date: '12/04/2023 14:30', action: 'Dossier créé', user: 'Admin' },
-    { id: '2', date: '12/04/2023 14:35', action: 'Documents téléversés: Contrat de travail, Lettre d\'offre d\'emploi', user: 'Admin' },
-    { id: '3', date: '15/04/2023 09:15', action: 'Statut mis à jour: En cours', user: 'Agent IRCC' },
-    { id: '4', date: '20/04/2023 11:45', action: 'Courriel envoyé au candidat concernant des documents manquants', user: 'Agent IRCC' }
-  ],
-  timeline: [
-    { id: '1', stage: 'Soumission', date: '12/04/2023', status: 'completed' },
-    { id: '2', stage: 'Documents vérifiés', date: '15/04/2023', status: 'completed' },
-    { id: '3', stage: 'Entrevue', date: 'À programmer', status: 'pending' },
-    { id: '4', stage: 'Décision', date: '', status: 'upcoming' },
-    { id: '5', stage: 'Visa émis', date: '', status: 'upcoming' },
-    { id: '6', stage: 'Voyage', date: '01/09/2023 (prévisionnel)', status: 'upcoming' }
-  ]
-};
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const getDocumentStatusBadge = (status: string) => {
   const statusMap: Record<string, { variant: string; label: string }> = {
@@ -80,30 +36,125 @@ const getDocumentStatusBadge = (status: string) => {
 const CandidateDetail = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('personal');
+  const [candidate, setCandidate] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [documents, setDocuments] = useState<any[]>([]);
+  const { toast } = useToast();
   
-  // In a real application, you would fetch the candidate data based on the ID
-  const candidate = candidateData;
+  useEffect(() => {
+    const fetchCandidateData = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        
+        // Récupérer les informations du candidat
+        const { data: candidateData, error } = await supabase
+          .from('candidates')
+          .select('*')
+          .eq('id', id)
+          .single();
+          
+        if (error) throw error;
+        
+        if (candidateData) {
+          setCandidate(candidateData);
+          
+          // Récupérer les documents du candidat
+          const { data: documentData, error: documentError } = await supabase
+            .from('documents')
+            .select(`
+              *,
+              document_types(*)
+            `)
+            .eq('candidate_id', id);
+            
+          if (documentError) throw documentError;
+          setDocuments(documentData || []);
+        }
+      } catch (error) {
+        console.error('Error fetching candidate data:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les données du candidat.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCandidateData();
+  }, [id, toast]);
+  
+  const downloadDocument = async (filePath: string, fileName: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .download(filePath);
+        
+      if (error) throw error;
+      
+      // Créer un lien de téléchargement
+      const url = URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de télécharger le document.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ircc-blue"></div>
+      </div>
+    );
+  }
+
+  if (!candidate) {
+    return (
+      <div className="text-center p-8">
+        <h2 className="text-xl font-semibold text-gray-700">Candidat non trouvé</h2>
+        <p className="mt-2 text-gray-500">Le candidat que vous recherchez n'existe pas ou a été supprimé.</p>
+        <Link to="/candidates" className="mt-4 inline-flex items-center text-ircc-blue hover:underline">
+          <ArrowLeft size={16} className="mr-1" />
+          <span>Retour à la liste</span>
+        </Link>
+      </div>
+    );
+  }
+  
   
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <a 
-            href="/candidates" 
+          <Link 
+            to="/candidates" 
             className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4"
           >
             <ArrowLeft size={16} className="mr-1" />
             <span>Retour à la liste</span>
-          </a>
+          </Link>
           <div className="flex items-center">
             <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 mr-4 text-2xl">
-              {candidate.name.charAt(0)}
+              {`${candidate.prenom?.charAt(0) || ''}${candidate.nom?.charAt(0) || ''}`}
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">{candidate.name}</h2>
+              <h2 className="text-2xl font-bold text-gray-900">{`${candidate.prenom} ${candidate.nom}`}</h2>
               <p className="text-gray-500">
-                {candidate.visaType} • {candidate.nationality} • 
+                {candidate.visa_type} • {candidate.nationalite} • 
                 <span className={cn(
                   "ml-1 px-2 py-0.5 rounded-full text-xs font-medium",
                   candidate.status === 'En cours' 
@@ -115,6 +166,11 @@ const CandidateDetail = () => {
                   {candidate.status}
                 </span>
               </p>
+              {candidate.identification_number && (
+                <p className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-md font-mono mt-1 inline-block">
+                  {candidate.identification_number}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -205,27 +261,27 @@ const CandidateDetail = () => {
             <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Nom complet</p>
-                <p className="text-gray-900">{candidate.name}</p>
+                <p className="text-gray-900">{`${candidate.prenom} ${candidate.nom}`}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Date de naissance</p>
-                <p className="text-gray-900">{candidate.dateOfBirth}</p>
+                <p className="text-gray-900">{candidate.date_naissance}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Lieu de naissance</p>
-                <p className="text-gray-900">{candidate.placeOfBirth}</p>
+                <p className="text-gray-900">{candidate.lieu_naissance}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Nationalité</p>
-                <p className="text-gray-900">{candidate.nationality}</p>
+                <p className="text-gray-900">{candidate.nationalite}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Numéro de passeport</p>
-                <p className="text-gray-900">{candidate.passportNumber}</p>
+                <p className="text-gray-900">{candidate.numero_passport}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Téléphone</p>
-                <p className="text-gray-900">{candidate.phone}</p>
+                <p className="text-gray-900">{candidate.telephone}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Email</p>
@@ -233,7 +289,7 @@ const CandidateDetail = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Adresse</p>
-                <p className="text-gray-900">{candidate.address}</p>
+                <p className="text-gray-900">{candidate.adresse}</p>
               </div>
             </div>
           </div>
@@ -249,7 +305,7 @@ const CandidateDetail = () => {
             <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Type de visa</p>
-                <p className="text-gray-900">{candidate.visaType}</p>
+                <p className="text-gray-900">{candidate.visa_type}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Procédure</p>
@@ -257,11 +313,11 @@ const CandidateDetail = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Date de soumission</p>
-                <p className="text-gray-900">{candidate.submissionDate}</p>
+                <p className="text-gray-900">{candidate.date_soumission}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Délai de traitement</p>
-                <p className="text-gray-900">{candidate.processingTime}</p>
+                <p className="text-gray-900">{candidate.delai_traitement}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Statut actuel</p>
@@ -278,11 +334,11 @@ const CandidateDetail = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Date prévue du voyage</p>
-                <p className="text-gray-900">{candidate.travelDate}</p>
+                <p className="text-gray-900">{candidate.date_voyage}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Bureau en charge</p>
-                <p className="text-gray-900">{candidate.office}</p>
+                <p className="text-gray-900">{candidate.bureau}</p>
               </div>
             </div>
             
@@ -298,7 +354,7 @@ const CandidateDetail = () => {
             <div className="p-5 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center">
                 <FileText size={20} className="text-gray-400 mr-2" />
-                <h3 className="text-lg font-semibold text-gray-900">Documents ({candidate.documents.length})</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Documents ({documents.length})</h3>
               </div>
               <Button size="sm" className="bg-ircc-blue hover:bg-ircc-dark-blue btn-hover">
                 Ajouter un document
@@ -306,41 +362,50 @@ const CandidateDetail = () => {
             </div>
             
             <div className="divide-y divide-gray-100">
-              {candidate.documents.map((document) => (
-                <div 
-                  key={document.id} 
-                  className="p-4 flex items-center justify-between transition-colors hover:bg-gray-50"
-                >
-                  <div>
-                    <div className="flex items-center">
-                      <FileText size={18} className="text-gray-400 mr-2" />
-                      <span className="font-medium text-gray-900">{document.name}</span>
+              {documents.length > 0 ? (
+                documents.map((document) => (
+                  <div 
+                    key={document.id} 
+                    className="p-4 flex items-center justify-between transition-colors hover:bg-gray-50"
+                  >
+                    <div>
+                      <div className="flex items-center">
+                        <FileText size={18} className="text-gray-400 mr-2" />
+                        <span className="font-medium text-gray-900">{document.document_types?.nom || 'Document'}</span>
+                      </div>
+                      {document.upload_date && (
+                        <p className="text-xs text-gray-500 mt-1 ml-6">
+                          Téléversé le {new Date(document.upload_date).toLocaleDateString('fr-FR')}
+                        </p>
+                      )}
                     </div>
-                    {document.date && (
-                      <p className="text-xs text-gray-500 mt-1 ml-6">
-                        Téléversé le {document.date}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center">
-                    {getDocumentStatusBadge(document.status)}
                     
-                    <div className="flex ml-3">
-                      {document.status === 'uploaded' && (
-                        <button className="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors">
-                          <Download size={18} />
-                        </button>
-                      )}
-                      {document.status === 'pending' && (
-                        <button className="py-1 px-2 text-xs font-medium text-ircc-blue hover:underline">
-                          Téléverser
-                        </button>
-                      )}
+                    <div className="flex items-center">
+                      {getDocumentStatusBadge(document.status)}
+                      
+                      <div className="flex ml-3">
+                        {document.status === 'uploaded' && document.file_path && (
+                          <button 
+                            className="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors"
+                            onClick={() => downloadDocument(document.file_path, document.filename || 'document')}
+                          >
+                            <Download size={18} />
+                          </button>
+                        )}
+                        {document.status === 'pending' && (
+                          <button className="py-1 px-2 text-xs font-medium text-ircc-blue hover:underline">
+                            Téléverser
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className="p-6 text-center text-gray-500">
+                  Aucun document n'a été téléversé pour ce candidat.
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </TabsContent>

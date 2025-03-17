@@ -20,7 +20,7 @@ interface Candidate {
   submissionDate: string;
   status: string;
   bureau: string;
-  identificationNumber?: string; // Ajout de l'identifiant unique
+  identificationNumber?: string;
 }
 
 interface CandidateTableProps {

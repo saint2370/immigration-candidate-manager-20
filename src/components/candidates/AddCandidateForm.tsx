@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -235,30 +234,48 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
 
   // Téléverser un fichier dans le storage Supabase
   const uploadFile = async (file: File, candidateId: string, documentTypeId: string) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${candidateId}/${documentTypeId}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `${fileName}`;
-    
-    const { data, error } = await supabase.storage
-      .from('documents')
-      .upload(filePath, file);
-    
-    if (error) throw error;
-    
-    return { filePath, fileName: file.name };
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${candidateId}/${documentTypeId}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${fileName}`;
+      
+      console.log('Uploading file:', fileName, 'to path:', filePath);
+      
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      if (error) {
+        console.error('Error uploading to storage:', error);
+        throw error;
+      }
+      
+      console.log('Upload successful:', data);
+      return { filePath, fileName: file.name };
+    } catch (error) {
+      console.error('Exception during upload:', error);
+      throw error;
+    }
   };
 
   // Insérer des documents dans la base de données
   const insertDocuments = async (candidateId: string) => {
+    const documentsPromises = [];
+    
     for (const [documentTypeId, file] of Object.entries(uploadedDocuments)) {
       if (!file) continue;
       
       try {
+        console.log('Processing document:', documentTypeId, 'for candidate:', candidateId);
+        
         // Upload the file
         const { filePath, fileName } = await uploadFile(file, candidateId, documentTypeId);
         
         // Insert document record
-        const { error } = await supabase
+        const insertPromise = supabase
           .from('documents')
           .insert({
             candidate_id: candidateId,
@@ -269,10 +286,25 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
             upload_date: new Date().toISOString()
           });
         
-        if (error) throw error;
+        documentsPromises.push(insertPromise);
       } catch (error) {
         console.error('Error uploading document:', error);
+        toast({
+          title: "Avertissement",
+          description: `Échec du téléversement d'un document: ${file.name}`,
+          variant: "destructive"
+        });
         // Continue with other documents even if one fails
+      }
+    }
+    
+    // Wait for all document inserts to complete
+    if (documentsPromises.length > 0) {
+      try {
+        await Promise.all(documentsPromises);
+        console.log('All documents inserted successfully');
+      } catch (error) {
+        console.error('Error inserting documents:', error);
       }
     }
   };
@@ -395,6 +427,7 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
         throw insertError;
       }
       
+      console.log('Candidate inserted:', insertedCandidate);
       const candidateId = insertedCandidate[0].id;
       
       // Insérer l'historique de création du candidat
@@ -411,7 +444,14 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
       }
       
       // Insérer les documents téléversés
+      console.log('Uploading documents for candidate:', candidateId);
       await insertDocuments(candidateId);
+      
+      toast({
+        title: "Succès",
+        description: "Le candidat a été ajouté avec succès",
+        variant: "default"
+      });
       
       // Appeler la fonction pour notifier que le candidat a été ajouté
       onAddCandidate({
@@ -950,164 +990,4 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                       </Button>
                       <Button
                         type="button"
-                        variant={residenceForm.getValues().programmeImmigration === 'Arrima' ? 'default' : 'outline'}
-                        onClick={() => residenceForm.setValue('programmeImmigration', 'Arrima')}
-                        className="w-full"
-                      >
-                        Arrima
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={residenceForm.getValues().programmeImmigration === 'Autre' ? 'default' : 'outline'}
-                        onClick={() => residenceForm.setValue('programmeImmigration', 'Autre')}
-                        className="w-full"
-                      >
-                        Autre
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="immigrationFamiliale"
-                        checked={residenceForm.getValues().immigrationFamiliale}
-                        onChange={(e) => {
-                          residenceForm.setValue('immigrationFamiliale', e.target.checked);
-                          if (!e.target.checked) {
-                            setEnfants([]);
-                            residenceForm.setValue('conjointNom', '');
-                            residenceForm.setValue('conjointPrenom', '');
-                            residenceForm.setValue('conjointPassport', '');
-                          }
-                        }}
-                        className="form-checkbox h-4 w-4"
-                      />
-                      <FormLabel htmlFor="immigrationFamiliale" className="cursor-pointer">
-                        Immigration familiale
-                      </FormLabel>
-                    </div>
-                  </div>
-
-                  {residenceForm.getValues().immigrationFamiliale && (
-                    <div className="space-y-4 border rounded-md p-4">
-                      <h4 className="font-medium">Informations du conjoint/de la conjointe</h4>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <FormLabel htmlFor="conjointPrenom">Prénom du conjoint</FormLabel>
-                          <Input 
-                            id="conjointPrenom"
-                            placeholder="Prénom" 
-                            value={residenceForm.getValues().conjointPrenom}
-                            onChange={(e) => residenceForm.setValue('conjointPrenom', e.target.value)}
-                            className="mt-1"
-                          />
-                        </div>
-                        
-                        <div>
-                          <FormLabel htmlFor="conjointNom">Nom du conjoint</FormLabel>
-                          <Input 
-                            id="conjointNom"
-                            placeholder="Nom" 
-                            value={residenceForm.getValues().conjointNom}
-                            onChange={(e) => residenceForm.setValue('conjointNom', e.target.value)}
-                            className="mt-1"
-                          />
-                        </div>
-                        
-                        <div className="md:col-span-2">
-                          <FormLabel htmlFor="conjointPassport">Numéro de passeport du conjoint</FormLabel>
-                          <Input 
-                            id="conjointPassport"
-                            placeholder="Numéro de passeport" 
-                            value={residenceForm.getValues().conjointPassport}
-                            onChange={(e) => residenceForm.setValue('conjointPassport', e.target.value)}
-                            className="mt-1"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="mt-6">
-                        <h4 className="font-medium mb-3">Enfants</h4>
-                        
-                        <div className="space-y-2">
-                          {enfants.map((enfant, index) => (
-                            <div key={index} className="flex items-center justify-between p-2 border rounded-md bg-gray-50">
-                              <span>{enfant.prenom} {enfant.nom} - {enfant.age} ans</span>
-                              <Button 
-                                type="button" 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => removeEnfant(index)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                        
-                        <div className="grid grid-cols-3 gap-2 mt-3">
-                          <Input 
-                            placeholder="Prénom" 
-                            value={newEnfant.prenom}
-                            onChange={(e) => setNewEnfant({...newEnfant, prenom: e.target.value})}
-                          />
-                          <Input 
-                            placeholder="Nom" 
-                            value={newEnfant.nom}
-                            onChange={(e) => setNewEnfant({...newEnfant, nom: e.target.value})}
-                          />
-                          <Input 
-                            placeholder="Âge" 
-                            value={newEnfant.age}
-                            onChange={(e) => setNewEnfant({...newEnfant, age: e.target.value})}
-                          />
-                        </div>
-                        
-                        <Button 
-                          type="button" 
-                          onClick={addEnfant}
-                          variant="outline"
-                          className="w-full mt-2"
-                        >
-                          <Plus className="mr-2 h-4 w-4" /> Ajouter un enfant
-                        </Button>
-                      </div>
-                      
-                      <div>
-                        <FormLabel htmlFor="nombrePersonnes">Nombre total de personnes</FormLabel>
-                        <Input 
-                          id="nombrePersonnes"
-                          type="number" 
-                          min="1"
-                          value={residenceForm.getValues().nombrePersonnes}
-                          onChange={(e) => residenceForm.setValue('nombrePersonnes', parseInt(e.target.value) || 1)}
-                          className="mt-1"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <FormLabel htmlFor="detailsAutresPersonnes">Informations supplémentaires</FormLabel>
-                    <Textarea 
-                      id="detailsAutresPersonnes"
-                      placeholder="Détails additionnels concernant la demande de résidence permanente"
-                      value={residenceForm.getValues().detailsAutresPersonnes}
-                      onChange={(e) => residenceForm.setValue('detailsAutresPersonnes', e.target.value)}
-                      className="mt-1 min-h-[100px]"
-                    />
-                  </div>
-                </div>
-              </form>
-            </TabsContent>
-          )}
-        </Tabs>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-export default AddCandidateForm;
+                        variant={residenceForm.getValues().

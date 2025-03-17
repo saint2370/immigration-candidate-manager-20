@@ -17,5 +17,10 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     headers: {
       'X-Client-Info': 'supabase-js-web/2.49.1'
     }
+  },
+  storage: {
+    // Configuration spécifique pour le stockage
+    retryIntervalMs: 500, // Temps entre les tentatives en cas d'échec
+    maxRetryCount: 3 // Nombre maximum de tentatives en cas d'échec
   }
 });
