@@ -55,6 +55,7 @@ import { cn } from "@/lib/utils";
 type VisaType = Database['public']['Enums']['visa_type'];
 type StatusType = Database['public']['Enums']['status_type'];
 type ImmigrationProgram = Database['public']['Enums']['immigration_program'];
+type DocumentStatus = Database['public']['Enums']['document_status'];
 
 // Types de visa disponibles
 const visaTypes = [
@@ -128,7 +129,7 @@ interface EnfantType {
 interface DocumentType {
   id: string;
   nom: string;
-  visa_type: string;
+  visa_type: VisaType;
   required: boolean;
 }
 
@@ -178,7 +179,7 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
   });
 
   // Surveiller le type de visa pour afficher les documents appropriés
-  const visaType = form.watch('typeVisa');
+  const visaType = form.watch('typeVisa') as VisaType;
 
   // Charger les types de documents en fonction du visa sélectionné
   useEffect(() => {
@@ -190,10 +191,19 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
         const { data, error } = await supabase
           .from('document_types')
           .select('*')
-          .eq('visa_type', visaType);
+          .eq('visa_type', visaType as VisaType);
         
         if (error) throw error;
-        setDocumentTypes(data);
+        if (data) {
+          // Ensure data conforms to our DocumentType interface
+          const typedDocuments = data.map(doc => ({
+            id: doc.id,
+            nom: doc.nom,
+            visa_type: doc.visa_type,
+            required: doc.required
+          }));
+          setDocumentTypes(typedDocuments);
+        }
       } catch (error) {
         console.error('Error fetching document types:', error);
         toast({
@@ -282,7 +292,7 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
             document_type_id: documentTypeId,
             file_path: filePath,
             filename: fileName,
-            status: 'uploaded',
+            status: 'uploaded' as DocumentStatus,
             upload_date: new Date().toISOString()
           });
         
@@ -366,7 +376,7 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
       if (error) throw error;
       
       // Si nous avons des enfants, les insérer également
-      if (enfants.length > 0 && data && data[0]) {
+      if (enfants.length > 0 && data && data.length > 0) {
         const permanentResidenceId = data[0].id;
         
         for (const enfant of enfants) {
@@ -383,7 +393,7 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
         }
       }
       
-      return data ? data[0]?.id : null;
+      return data && data.length > 0 ? data[0].id : null;
     } catch (error) {
       console.error('Error inserting residence details:', error);
       return null;
@@ -425,6 +435,10 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
       if (insertError) {
         console.error('Insert error:', insertError);
         throw insertError;
+      }
+      
+      if (!insertedCandidate || insertedCandidate.length === 0) {
+        throw new Error('No candidate data returned after insert');
       }
       
       console.log('Candidate inserted:', insertedCandidate);
