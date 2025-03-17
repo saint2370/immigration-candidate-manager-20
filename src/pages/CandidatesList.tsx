@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { 
   Users, Search, Filter, Download, 
@@ -29,6 +30,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
+import { Link, useNavigate } from 'react-router-dom';
 
 // Types based on our database schema
 interface Candidate {
@@ -99,6 +101,7 @@ const getStatusBadge = (status: string) => {
 
 const CandidatesList = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -164,6 +167,45 @@ const CandidatesList = () => {
         description: "Une erreur s'est produite lors de l'ajout du candidat.",
         variant: "destructive"
       });
+    }
+  };
+
+  // View candidate details
+  const handleViewCandidate = (candidateId: string) => {
+    navigate(`/candidate/${candidateId}`);
+  };
+
+  // Edit candidate
+  const handleEditCandidate = (candidateId: string) => {
+    navigate(`/candidates/edit/${candidateId}`);
+  };
+
+  // Delete candidate
+  const handleDeleteCandidate = async (candidateId: string) => {
+    // Implement confirmation dialog and deletion logic here
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer ce candidat ?")) {
+      try {
+        const { error } = await supabase
+          .from('candidates')
+          .delete()
+          .eq('id', candidateId as string);
+        
+        if (error) throw error;
+        
+        await refetch();
+        
+        toast({
+          title: "Candidat supprimé",
+          description: "Le candidat a été supprimé avec succès.",
+        });
+      } catch (error) {
+        console.error('Error deleting candidate:', error);
+        toast({
+          title: "Erreur",
+          description: "Une erreur s'est produite lors de la suppression du candidat.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -356,13 +398,25 @@ const CandidatesList = () => {
                     <TableCell>{candidate.bureau}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end space-x-2">
-                        <button className="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors">
+                        <button 
+                          className="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors"
+                          onClick={() => handleViewCandidate(candidate.id)}
+                          title="Voir le candidat"
+                        >
                           <Eye size={18} />
                         </button>
-                        <button className="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors">
+                        <button 
+                          className="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors"
+                          onClick={() => handleEditCandidate(candidate.id)}
+                          title="Modifier le candidat"
+                        >
                           <Edit size={18} />
                         </button>
-                        <button className="p-1 rounded-md hover:bg-gray-100 text-red-500 transition-colors">
+                        <button 
+                          className="p-1 rounded-md hover:bg-gray-100 text-red-500 transition-colors"
+                          onClick={() => handleDeleteCandidate(candidate.id)}
+                          title="Supprimer le candidat"
+                        >
                           <Trash2 size={18} />
                         </button>
                       </div>
