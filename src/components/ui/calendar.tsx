@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker, DropdownProps } from "react-day-picker";
+import { DayPicker, type CaptionProps } from "react-day-picker";
 import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
@@ -25,7 +25,7 @@ function Calendar({
   const [currentMonth, setCurrentMonth] = React.useState<Date>(props.defaultMonth || new Date());
   
   // Composant personnalisé pour le titre du calendrier avec sélecteurs déroulants
-  function CustomCaption(captionProps: React.PropsWithChildren<{ date: Date }>) {
+  function CustomCaption({ displayMonth }: CaptionProps) {
     const months = [
       "Janvier", "Février", "Mars", "Avril", 
       "Mai", "Juin", "Juillet", "Août", 
@@ -38,14 +38,14 @@ function Calendar({
     );
     
     const handleMonthChange = (monthIndex: string) => {
-      const newDate = new Date(captionProps.date);
+      const newDate = new Date(displayMonth);
       newDate.setMonth(parseInt(monthIndex));
       setCurrentMonth(newDate);
       props.onMonthChange?.(newDate);
     };
     
     const handleYearChange = (year: string) => {
-      const newDate = new Date(captionProps.date);
+      const newDate = new Date(displayMonth);
       newDate.setFullYear(parseInt(year));
       setCurrentMonth(newDate);
       props.onMonthChange?.(newDate);
@@ -54,7 +54,7 @@ function Calendar({
     return (
       <div className="flex justify-center space-x-2 items-center">
         <Select
-          value={captionProps.date.getMonth().toString()}
+          value={displayMonth.getMonth().toString()}
           onValueChange={handleMonthChange}
         >
           <SelectTrigger className="w-[110px] h-8">
@@ -70,7 +70,7 @@ function Calendar({
         </Select>
         
         <Select
-          value={captionProps.date.getFullYear().toString()}
+          value={displayMonth.getFullYear().toString()}
           onValueChange={handleYearChange}
         >
           <SelectTrigger className="w-[90px] h-8">
