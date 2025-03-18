@@ -14,6 +14,8 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  selected,
+  onSelect,
   ...props
 }: CalendarProps) {
   // État local pour suivre le mois affiché
@@ -76,11 +78,10 @@ function Calendar({
     setManualDateInput(input);
     
     const parsedDate = parseManualDate(input);
-    if (parsedDate) {
-      // Si la date est valide, mettre à jour la sélection et afficher ce mois
-      if (props.onSelect) {
-        props.onSelect(parsedDate);
-      }
+    if (parsedDate && onSelect) {
+      // Si la date est valide et onSelect est disponible, mettre à jour la sélection
+      onSelect(parsedDate);
+      // Afficher ce mois
       handleMonthChange(parsedDate);
     }
   };
@@ -156,6 +157,8 @@ function Calendar({
       <DayPicker
         month={month}
         onMonthChange={handleMonthChange}
+        selected={selected}
+        onSelect={onSelect}
         showOutsideDays={showOutsideDays}
         className={cn("p-3 pointer-events-auto", className)}
         classNames={{
