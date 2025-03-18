@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker, CaptionProps, useNavigation } from "react-day-picker";
+import { DayPicker } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -9,90 +9,98 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
-// Composant Caption personnalisé pour ajouter des sélecteurs de mois et d'année
-function CustomCaption({ displayMonth }: CaptionProps) {
-  // Utiliser le hook useNavigation pour obtenir la fonction goToMonth
-  const { goToMonth } = useNavigation();
-  
-  const handleMonthChange = (newMonth: string) => {
-    const newDate = new Date(displayMonth);
-    newDate.setMonth(parseInt(newMonth));
-    goToMonth(newDate);
-  };
-  
-  const handleYearChange = (newYear: string) => {
-    const newDate = new Date(displayMonth);
-    newDate.setFullYear(parseInt(newYear));
-    goToMonth(newDate);
-  };
-  
-  // Générer la liste des mois avec le bon locale
-  const months = Array.from({ length: 12 }).map((_, i) => {
-    const month = new Date();
-    month.setMonth(i);
-    return {
-      value: i.toString(),
-      label: month.toLocaleString('fr-FR', { month: 'long' })
-    };
-  });
-  
-  // Générer la liste des années (10 ans avant et après l'année actuelle)
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 21 }).map((_, i) => {
-    const year = currentYear - 10 + i;
-    return {
-      value: year.toString(),
-      label: year.toString()
-    };
-  });
-  
-  return (
-    <div className="flex justify-center pt-1 relative items-center">
-      <div className="flex space-x-2 items-center">
-        <Select
-          value={displayMonth.getMonth().toString()}
-          onValueChange={handleMonthChange}
-        >
-          <SelectTrigger className="h-7 w-24 text-xs">
-            <SelectValue placeholder="Mois" />
-          </SelectTrigger>
-          <SelectContent>
-            {months.map((month) => (
-              <SelectItem key={month.value} value={month.value} className="text-xs">
-                {month.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        <Select
-          value={displayMonth.getFullYear().toString()}
-          onValueChange={handleYearChange}
-        >
-          <SelectTrigger className="h-7 w-20 text-xs">
-            <SelectValue placeholder="Année" />
-          </SelectTrigger>
-          <SelectContent>
-            {years.map((year) => (
-              <SelectItem key={year.value} value={year.value} className="text-xs">
-                {year.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
-}
-
 function Calendar({
   className,
   classNames,
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
+  // État local pour suivre le mois affiché
+  const [month, setMonth] = React.useState<Date>(props.defaultMonth || new Date());
+  
+  // Fonction pour changer de mois
+  const handleMonthChange = React.useCallback((date: Date) => {
+    setMonth(date);
+    props.onMonthChange?.(date);
+  }, [props.onMonthChange]);
+
+  // Générer la liste des mois avec le bon locale
+  const months = React.useMemo(() => Array.from({ length: 12 }).map((_, i) => {
+    const date = new Date();
+    date.setMonth(i);
+    return {
+      value: i.toString(),
+      label: date.toLocaleString('fr-FR', { month: 'long' })
+    };
+  }), []);
+  
+  // Générer la liste des années (10 ans avant et après l'année actuelle)
+  const currentYear = new Date().getFullYear();
+  const years = React.useMemo(() => Array.from({ length: 21 }).map((_, i) => {
+    const year = currentYear - 10 + i;
+    return {
+      value: year.toString(),
+      label: year.toString()
+    };
+  }), [currentYear]);
+
+  // Composant de navigation personnalisé
+  const CustomCaption = React.useCallback(({ displayMonth }: { displayMonth: Date }) => {
+    const handleSelectMonth = (value: string) => {
+      const newDate = new Date(displayMonth);
+      newDate.setMonth(parseInt(value));
+      handleMonthChange(newDate);
+    };
+    
+    const handleSelectYear = (value: string) => {
+      const newDate = new Date(displayMonth);
+      newDate.setFullYear(parseInt(value));
+      handleMonthChange(newDate);
+    };
+    
+    return (
+      <div className="flex justify-center pt-1 relative items-center">
+        <div className="flex space-x-2 items-center">
+          <Select
+            value={displayMonth.getMonth().toString()}
+            onValueChange={handleSelectMonth}
+          >
+            <SelectTrigger className="h-7 w-24 text-xs">
+              <SelectValue placeholder="Mois" />
+            </SelectTrigger>
+            <SelectContent>
+              {months.map((month) => (
+                <SelectItem key={month.value} value={month.value} className="text-xs">
+                  {month.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Select
+            value={displayMonth.getFullYear().toString()}
+            onValueChange={handleSelectYear}
+          >
+            <SelectTrigger className="h-7 w-20 text-xs">
+              <SelectValue placeholder="Année" />
+            </SelectTrigger>
+            <SelectContent>
+              {years.map((year) => (
+                <SelectItem key={year.value} value={year.value} className="text-xs">
+                  {year.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    );
+  }, [months, years, handleMonthChange]);
+
   return (
     <DayPicker
+      month={month}
+      onMonthChange={handleMonthChange}
       showOutsideDays={showOutsideDays}
       className={cn("p-3 pointer-events-auto", className)}
       classNames={{
