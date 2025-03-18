@@ -11,7 +11,10 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
 // Customisation du composant Caption pour ajouter des sélecteurs de mois et d'année
 function CustomCaption(props: CaptionProps) {
-  const { displayMonth, goToMonth, locale } = props;
+  const { displayMonth } = props;
+  // Access goToMonth and locale safely through the navigation prop
+  const goToMonth = props.displayMonth ? (newDate: Date) => props.onMonthChange?.(newDate) : undefined;
+  const locale = props.locale || undefined;
   
   // Générer la liste des mois
   const months = Array.from({ length: 12 }).map((_, i) => {
@@ -35,12 +38,14 @@ function CustomCaption(props: CaptionProps) {
   
   // Fonctions pour changer le mois et l'année
   const handleMonthChange = (newMonth: string) => {
+    if (!goToMonth) return;
     const newDate = new Date(displayMonth);
     newDate.setMonth(parseInt(newMonth));
     goToMonth(newDate);
   };
   
   const handleYearChange = (newYear: string) => {
+    if (!goToMonth) return;
     const newDate = new Date(displayMonth);
     newDate.setFullYear(parseInt(newYear));
     goToMonth(newDate);
@@ -94,7 +99,7 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn("p-3 pointer-events-auto", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
