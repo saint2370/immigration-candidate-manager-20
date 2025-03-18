@@ -12,17 +12,29 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 // Customisation du composant Caption pour ajouter des sélecteurs de mois et d'année
 function CustomCaption(props: CaptionProps) {
   const { displayMonth } = props;
-  // Access goToMonth and locale safely through the navigation prop
-  const goToMonth = props.displayMonth ? (newDate: Date) => props.onMonthChange?.(newDate) : undefined;
-  const locale = props.locale || undefined;
   
-  // Générer la liste des mois
+  // Utiliser les propriétés correctes de CaptionProps pour la navigation
+  const handleMonthChange = (newMonth: string) => {
+    if (!props.onMonthChange) return;
+    const newDate = new Date(displayMonth);
+    newDate.setMonth(parseInt(newMonth));
+    props.onMonthChange(newDate);
+  };
+  
+  const handleYearChange = (newYear: string) => {
+    if (!props.onMonthChange) return;
+    const newDate = new Date(displayMonth);
+    newDate.setFullYear(parseInt(newYear));
+    props.onMonthChange(newDate);
+  };
+  
+  // Générer la liste des mois avec le bon locale
   const months = Array.from({ length: 12 }).map((_, i) => {
     const month = new Date();
     month.setMonth(i);
     return {
       value: i.toString(),
-      label: month.toLocaleString(locale, { month: 'long' })
+      label: month.toLocaleString(props.displayMonth.toLocaleString('fr-FR'), { month: 'long' })
     };
   });
   
@@ -35,21 +47,6 @@ function CustomCaption(props: CaptionProps) {
       label: year.toString()
     };
   });
-  
-  // Fonctions pour changer le mois et l'année
-  const handleMonthChange = (newMonth: string) => {
-    if (!goToMonth) return;
-    const newDate = new Date(displayMonth);
-    newDate.setMonth(parseInt(newMonth));
-    goToMonth(newDate);
-  };
-  
-  const handleYearChange = (newYear: string) => {
-    if (!goToMonth) return;
-    const newDate = new Date(displayMonth);
-    newDate.setFullYear(parseInt(newYear));
-    goToMonth(newDate);
-  };
   
   return (
     <div className="flex justify-center pt-1 relative items-center">
