@@ -9,16 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
-// Customisation du composant Caption pour ajouter des sélecteurs de mois et d'année
-function CustomCaption({ displayMonth, id, ...captionProps }: CaptionProps) {
-  // Utiliser l'API correcte pour naviguer entre les mois
+// Composant Caption personnalisé pour ajouter des sélecteurs de mois et d'année
+function CustomCaption({ displayMonth, id, ...props }: CaptionProps) {
+  // Récupérer les fonctions nécessaires du contexte DayPicker
   const handleMonthChange = (newMonth: string) => {
     const newDate = new Date(displayMonth);
     newDate.setMonth(parseInt(newMonth));
     
-    // Accéder aux méthodes disponibles dans captionProps
-    if (captionProps.onMonthChange) {
-      captionProps.onMonthChange(newDate);
+    // Utiliser les props du DayPicker pour changer de mois
+    if (props.actions && props.actions.goToMonth) {
+      props.actions.goToMonth(newDate);
     }
   };
   
@@ -26,9 +26,9 @@ function CustomCaption({ displayMonth, id, ...captionProps }: CaptionProps) {
     const newDate = new Date(displayMonth);
     newDate.setFullYear(parseInt(newYear));
     
-    // Accéder aux méthodes disponibles dans captionProps
-    if (captionProps.onMonthChange) {
-      captionProps.onMonthChange(newDate);
+    // Utiliser les props du DayPicker pour changer d'année
+    if (props.actions && props.actions.goToMonth) {
+      props.actions.goToMonth(newDate);
     }
   };
   
