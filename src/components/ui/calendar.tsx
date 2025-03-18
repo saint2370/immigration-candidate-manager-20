@@ -79,8 +79,15 @@ function Calendar({
     const parsedDate = parseManualDate(input);
     if (parsedDate) {
       // Si la date est valide, mettre à jour la sélection et afficher ce mois
-      if (props.mode === "single" && (props as DayPickerSingleProps).onSelect) {
-        (props as DayPickerSingleProps).onSelect(parsedDate);
+      if (props.mode === "single" && 'onSelect' in props) {
+        // Cast props to the correct type and check if onSelect is available
+        const singleProps = props as DayPickerSingleProps;
+        if (singleProps.onSelect) {
+          // onSelect expects a Date | undefined, a boolean for selected, a 
+          // DaySelectEventHandler, and a name string, but in v8 it's often 
+          // called with just the Date
+          singleProps.onSelect(parsedDate);
+        }
       }
       // Afficher ce mois
       handleMonthChange(parsedDate);
