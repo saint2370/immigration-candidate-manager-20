@@ -663,7 +663,7 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                     )}
                   />
 
-                  {/* Date de naissance - Improved version */}
+                  {/* Date de naissance */}
                   <FormField
                     control={form.control}
                     name="dateNaissance"
@@ -690,9 +690,6 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                             </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
-                            <div className="flex items-center justify-between p-2 border-b">
-                              <div className="text-sm font-medium">Date de naissance</div>
-                            </div>
                             <Calendar
                               mode="single"
                               selected={field.value}
@@ -701,9 +698,6 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                                 date > new Date() || date < new Date("1900-01-01")
                               }
                               initialFocus
-                              captionLayout="dropdown-buttons"
-                              fromYear={1900}
-                              toYear={new Date().getFullYear()}
                               className={cn("p-3 pointer-events-auto")}
                             />
                           </PopoverContent>
@@ -873,9 +867,6 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                               disabled={(date) => date > new Date()}
                               initialFocus
                               className={cn("p-3 pointer-events-auto")}
-                              captionLayout="dropdown-buttons"
-                              fromYear={1900}
-                              toYear={new Date().getFullYear()}
                             />
                           </PopoverContent>
                         </Popover>
@@ -933,9 +924,6 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                               disabled={(date) => date < new Date()}
                               initialFocus
                               className={cn("p-3 pointer-events-auto")}
-                              captionLayout="dropdown-buttons"
-                              fromYear={1900}
-                              toYear={new Date().getFullYear()}
                             />
                           </PopoverContent>
                         </Popover>
@@ -1001,340 +989,325 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                       </FormItem>
                     )}
                   />
-
-                  {/* Notes (optionnelles) */}
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormLabel>Notes (optionnelles)</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Notes supplémentaires sur le candidat" 
-                            className="resize-none h-20"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Détails du billet (optionnels) */}
-                  <FormField
-                    control={form.control}
-                    name="detailsBillet"
-                    render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormLabel>Détails du billet (optionnels)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Ex: Numéro de vol, compagnie aérienne" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
 
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button
+                {/* Notes (optionnelles) */}
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes (optionnelles)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Notes supplémentaires"
+                          className="resize-none min-h-[100px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Détails du billet (optionnels) */}
+                <FormField
+                  control={form.control}
+                  name="detailsBillet"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Détails du billet (optionnels)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Numéro de vol, compagnie aérienne, etc." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <DialogFooter className="mt-6">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => onClose()} 
                     type="button"
-                    variant="outline"
-                    onClick={onClose}
                     disabled={isSubmitting}
                   >
                     Annuler
                   </Button>
-                  <Button
-                    type="submit"
-                    className="bg-ircc-blue hover:bg-ircc-dark-blue"
+                  <Button 
+                    type="submit" 
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? (
-                      <div className="flex items-center">
-                        <div className="animate-spin mr-2 h-4 w-4 border-t-2 border-b-2 border-white rounded-full"></div>
-                        Traitement...
-                      </div>
-                    ) : (
-                      "Ajouter le candidat"
-                    )}
+                    {isSubmitting ? "Ajout en cours..." : "Ajouter le candidat"}
                   </Button>
-                </div>
+                </DialogFooter>
               </form>
             </Form>
           </TabsContent>
 
-          <TabsContent value="documents" className="space-y-4">
-            {isLoadingDocTypes ? (
-              <div className="flex justify-center items-center py-8">
-                <div className="animate-spin h-8 w-8 border-t-2 border-b-2 border-ircc-blue rounded-full"></div>
-                <p className="ml-3 text-gray-600">Chargement des documents...</p>
-              </div>
-            ) : documentTypes.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Aucun document requis pour ce type de visa.</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <p className="text-sm text-gray-500">
-                  Les documents marqués d'un astérisque (*) sont obligatoires.
-                </p>
-                
-                <div className="space-y-4">
-                  {documentTypes.map((docType) => (
-                    <div key={docType.id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-medium">
-                            {docType.nom} {docType.required && <span className="text-red-500">*</span>}
-                          </h3>
-                          <p className="text-sm text-gray-500">Format PDF, JPG ou PNG</p>
+          <TabsContent value="documents" className="space-y-6">
+            <div className="rounded-md border p-4">
+              <h3 className="text-lg font-medium">Documents requis pour {visaTypes.find(t => t.id === visaType)?.label}</h3>
+              
+              {isLoadingDocTypes ? (
+                <p className="text-sm text-muted-foreground mt-2">Chargement des documents...</p>
+              ) : documentTypes.length === 0 ? (
+                <p className="text-sm text-muted-foreground mt-2">Aucun document trouvé pour ce type de visa</p>
+              ) : (
+                <div className="space-y-4 mt-4">
+                  {documentTypes.map((doc) => (
+                    <div key={doc.id} className="flex flex-col space-y-2">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">{doc.nom}</span>
+                          {doc.required && (
+                            <Badge variant="destructive" className="text-xs">Requis</Badge>
+                          )}
                         </div>
-                        {uploadedDocuments[docType.id] && (
-                          <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
-                            Document ajouté
+                        {uploadedDocuments[doc.id] && (
+                          <Badge variant="outline" className="text-xs">
+                            {uploadedDocuments[doc.id]?.name}
                           </Badge>
                         )}
                       </div>
-                      
-                      <div className="flex items-center space-x-3 mt-3">
-                        <Button variant="outline" asChild className="w-full">
-                          <Label htmlFor={`doc-${docType.id}`} className="cursor-pointer justify-center">
+                      <div className="flex space-x-2 items-center">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1"
+                          asChild
+                        >
+                          <Label htmlFor={`doc-${doc.id}`} className="cursor-pointer">
                             <Upload className="h-4 w-4 mr-2" />
-                            {uploadedDocuments[docType.id] ? 'Changer le fichier' : 'Téléverser'}
+                            Téléverser
                             <Input
-                              id={`doc-${docType.id}`}
+                              id={`doc-${doc.id}`}
                               type="file"
-                              accept=".pdf,.jpg,.jpeg,.png"
                               className="hidden"
                               onChange={(e) => {
-                                handleFileUpload(docType.id, e.target.files?.[0] || null);
+                                const file = e.target.files?.[0] || null;
+                                handleFileUpload(doc.id, file);
                               }}
                             />
                           </Label>
                         </Button>
-                        
-                        {uploadedDocuments[docType.id] && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => handleFileUpload(docType.id, null)}
+                        {uploadedDocuments[doc.id] && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleFileUpload(doc.id, null)}
                           >
                             <X className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
-                      
-                      {uploadedDocuments[docType.id] && (
-                        <p className="text-xs text-gray-500 mt-2 truncate">
-                          Fichier: {uploadedDocuments[docType.id]?.name}
-                        </p>
-                      )}
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </TabsContent>
 
           {visaType === 'Résidence Permanente' && (
-            <TabsContent value="residence" className="space-y-6">
+            <TabsContent value="residence" className="space-y-4">
               <Form {...residenceForm}>
                 <form className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Programme d'immigration */}
-                    <FormField
-                      control={residenceForm.control}
-                      name="programmeImmigration"
-                      render={({ field }) => (
-                        <FormItem className="col-span-2">
-                          <FormLabel>Programme d'immigration</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Sélectionner un programme" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Entrée express">Entrée express</SelectItem>
-                              <SelectItem value="Arrima">Arrima (Québec)</SelectItem>
-                              <SelectItem value="Autre">Autre</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    {/* Nombre de personnes */}
-                    <FormField
-                      control={residenceForm.control}
-                      name="nombrePersonnes"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nombre de personnes</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="1"
-                              placeholder="1"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    {/* Information sur le conjoint */}
-                    <div className="col-span-2 border-t pt-4 mt-2">
-                      <h3 className="font-medium mb-4">Information sur le conjoint</h3>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={residenceForm.control}
-                          name="conjointNom"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Nom du conjoint</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Nom" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={residenceForm.control}
-                          name="conjointPrenom"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Prénom du conjoint</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Prénom" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={residenceForm.control}
-                          name="conjointPassport"
-                          render={({ field }) => (
-                            <FormItem className="col-span-2">
-                              <FormLabel>Numéro de passeport du conjoint</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Numéro de passeport" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Enfants */}
-                    <div className="col-span-2 border-t pt-4">
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-medium">Enfants ({enfants.length})</h3>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center"
-                          onClick={addEnfant}
-                          disabled={!newEnfant.nom || !newEnfant.prenom || !newEnfant.age}
+                  {/* Programme d'immigration */}
+                  <FormField
+                    control={residenceForm.control}
+                    name="programmeImmigration"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Programme d'immigration</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
                         >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Ajouter
-                        </Button>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner un programme" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Entrée express">Entrée express</SelectItem>
+                            <SelectItem value="Arrima">Arrima (Québec)</SelectItem>
+                            <SelectItem value="Autre">Autre programme</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Immigration familiale */}
+                  <FormField
+                    control={residenceForm.control}
+                    name="immigrationFamiliale"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={(e) => field.onChange(e.target.checked)}
+                            className="h-4 w-4 mt-1"
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Immigration avec famille</FormLabel>
+                          <p className="text-sm text-muted-foreground">
+                            Cochez cette case si le candidat immigre avec sa famille
+                          </p>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  {residenceForm.watch('immigrationFamiliale') && (
+                    <>
+                      {/* Nombre de personnes */}
+                      <FormField
+                        control={residenceForm.control}
+                        name="nombrePersonnes"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nombre total de personnes</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                min={1} 
+                                value={field.value} 
+                                onChange={(e) => field.onChange(parseInt(e.target.value, 10))} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Conjoint */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Informations du conjoint</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={residenceForm.control}
+                            name="conjointNom"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Nom du conjoint</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Nom du conjoint" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={residenceForm.control}
+                            name="conjointPrenom"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Prénom du conjoint</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Prénom du conjoint" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={residenceForm.control}
+                            name="conjointPassport"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Numéro de passeport du conjoint</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Numéro de passeport" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div>
-                          <Label>Nom</Label>
-                          <Input
-                            placeholder="Nom"
+
+                      {/* Enfants */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Enfants</h3>
+                        
+                        {enfants.length > 0 ? (
+                          <div className="space-y-2">
+                            {enfants.map((enfant, index) => (
+                              <div key={index} className="flex items-center space-x-2 p-2 rounded-md border">
+                                <div className="flex-1">
+                                  <p className="font-medium">{enfant.prenom} {enfant.nom}</p>
+                                  <p className="text-sm text-muted-foreground">Age: {enfant.age}</p>
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => removeEnfant(index)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">Aucun enfant ajouté</p>
+                        )}
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border p-3 rounded-md">
+                          <Input 
+                            placeholder="Nom" 
                             value={newEnfant.nom}
                             onChange={(e) => setNewEnfant({...newEnfant, nom: e.target.value})}
                           />
-                        </div>
-                        <div>
-                          <Label>Prénom</Label>
-                          <Input
-                            placeholder="Prénom"
+                          <Input 
+                            placeholder="Prénom" 
                             value={newEnfant.prenom}
                             onChange={(e) => setNewEnfant({...newEnfant, prenom: e.target.value})}
                           />
-                        </div>
-                        <div>
-                          <Label>Âge</Label>
-                          <Input
-                            type="number"
-                            placeholder="Âge"
-                            min="0"
-                            max="100"
-                            value={newEnfant.age}
-                            onChange={(e) => setNewEnfant({...newEnfant, age: e.target.value})}
-                          />
+                          <div className="flex space-x-2">
+                            <Input 
+                              placeholder="Age" 
+                              type="number"
+                              min={0}
+                              value={newEnfant.age}
+                              onChange={(e) => setNewEnfant({...newEnfant, age: e.target.value})}
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="icon"
+                              onClick={addEnfant}
+                              type="button"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                      
-                      {enfants.length > 0 ? (
-                        <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                          {enfants.map((enfant, index) => (
-                            <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                              <div>
-                                <span className="font-medium">{enfant.prenom} {enfant.nom}</span>
-                                <span className="ml-2 text-sm text-gray-500">{enfant.age} ans</span>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                onClick={() => removeEnfant(index)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-center text-gray-500 py-4">Aucun enfant ajouté</p>
-                      )}
-                    </div>
-                    
-                    {/* Informations additionnelles */}
-                    <FormField
-                      control={residenceForm.control}
-                      name="detailsAutresPersonnes"
-                      render={({ field }) => (
-                        <FormItem className="col-span-2">
-                          <FormLabel>Informations additionnelles</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Autres informations pertinentes sur les personnes accompagnant le candidat"
-                              className="resize-none h-24"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+
+                      {/* Autres détails */}
+                      <FormField
+                        control={residenceForm.control}
+                        name="detailsAutresPersonnes"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Autres détails (optionnels)</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Détails supplémentaires sur les personnes à charge"
+                                className="resize-none min-h-[100px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
                 </form>
               </Form>
             </TabsContent>
