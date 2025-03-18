@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -446,6 +445,41 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
     }
   };
 
+  // Fonction pour valider et formater une date entrée manuellement
+  const parseDateString = (value: string): Date | null => {
+    // Format attendu: JJ/MM/AAAA
+    const parts = value.split('/');
+    if (parts.length !== 3) return null;
+    
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // Les mois commencent à 0
+    const year = parseInt(parts[2], 10);
+    
+    // Vérifier que les valeurs sont des nombres valides
+    if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+    
+    // Vérifier que la date est valide
+    const date = new Date(year, month, day);
+    if (
+      date.getDate() !== day ||
+      date.getMonth() !== month ||
+      date.getFullYear() !== year
+    ) {
+      return null; // Date invalide (ex: 31/02/2023)
+    }
+    
+    return date;
+  };
+
+  // Formatter une date en chaîne de caractères (JJ/MM/AAAA)
+  const formatDateString = (date: Date | null): string => {
+    if (!date) return '';
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   // Soumission du formulaire
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
@@ -663,45 +697,54 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                     )}
                   />
 
-                  {/* Date de naissance */}
+                  {/* Date de naissance - Modified for manual input */}
                   <FormField
                     control={form.control}
                     name="dateNaissance"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel>Date de naissance</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, 'dd MMMM yyyy', { locale: fr })
-                                ) : (
-                                  <span>Sélectionner une date</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) =>
-                                date > new Date() || date < new Date("1900-01-01")
+                        <div className="flex w-full items-center space-x-2">
+                          <Input
+                            placeholder="JJ/MM/AAAA"
+                            value={formatDateString(field.value)}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === '') {
+                                field.onChange(undefined);
+                              } else {
+                                const date = parseDateString(value);
+                                if (date) {
+                                  field.onChange(date);
+                                }
+                                // Si la date est invalide, ne pas mettre à jour le champ
                               }
-                              initialFocus
-                              className={cn("p-3 pointer-events-auto")}
-                            />
-                          </PopoverContent>
-                        </Popover>
+                            }}
+                            className="w-full"
+                          />
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="px-2"
+                                type="button"
+                              >
+                                <CalendarIcon className="h-4 w-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="end">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) =>
+                                  date > new Date() || date < new Date("1900-01-01")
+                                }
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -833,43 +876,51 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                     )}
                   />
 
-                  {/* Date de soumission */}
+                  {/* Date de soumission - Modified for manual input */}
                   <FormField
                     control={form.control}
                     name="dateSoumission"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel>Date de soumission</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
+                        <div className="flex w-full items-center space-x-2">
+                          <Input
+                            placeholder="JJ/MM/AAAA"
+                            value={formatDateString(field.value)}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === '') {
+                                field.onChange(undefined);
+                              } else {
+                                const date = parseDateString(value);
+                                if (date) {
+                                  field.onChange(date);
+                                }
+                              }
+                            }}
+                            className="w-full"
+                          />
+                          <Popover>
+                            <PopoverTrigger asChild>
                               <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
+                                variant="outline"
+                                className="px-2"
+                                type="button"
                               >
-                                {field.value ? (
-                                  format(field.value, 'dd MMMM yyyy', { locale: fr })
-                                ) : (
-                                  <span>Sélectionner une date</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                <CalendarIcon className="h-4 w-4" />
                               </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) => date > new Date()}
-                              initialFocus
-                              className={cn("p-3 pointer-events-auto")}
-                            />
-                          </PopoverContent>
-                        </Popover>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="end">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) => date > new Date()}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -890,432 +941,36 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                     )}
                   />
 
-                  {/* Date prévue du voyage */}
+                  {/* Date prévue du voyage - Modified for manual input */}
                   <FormField
                     control={form.control}
                     name="dateVoyagePrevue"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel>Date prévue du voyage</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
+                        <div className="flex w-full items-center space-x-2">
+                          <Input
+                            placeholder="JJ/MM/AAAA"
+                            value={formatDateString(field.value)}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === '') {
+                                field.onChange(undefined);
+                              } else {
+                                const date = parseDateString(value);
+                                if (date) {
+                                  field.onChange(date);
+                                }
+                              }
+                            }}
+                            className="w-full"
+                          />
+                          <Popover>
+                            <PopoverTrigger asChild>
                               <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
+                                variant="outline"
+                                className="px-2"
+                                type="button"
                               >
-                                {field.value ? (
-                                  format(field.value, 'dd MMMM yyyy', { locale: fr })
-                                ) : (
-                                  <span>Sélectionner une date</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                <CalendarIcon className="h-4 w-4" />
                               </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) => date < new Date()}
-                              initialFocus
-                              className={cn("p-3 pointer-events-auto")}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Bureau en charge */}
-                  <FormField
-                    control={form.control}
-                    name="bureau"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bureau en charge</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner un bureau" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {bureaux.map((bureau) => (
-                              <SelectItem key={bureau} value={bureau}>
-                                {bureau}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Statut */}
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Statut</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner un statut" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {statuses.map((status) => (
-                              <SelectItem key={status} value={status}>
-                                {status}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                {/* Notes (optionnelles) */}
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes (optionnelles)</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Notes supplémentaires"
-                          className="resize-none min-h-[100px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Détails du billet (optionnels) */}
-                <FormField
-                  control={form.control}
-                  name="detailsBillet"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Détails du billet (optionnels)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Numéro de vol, compagnie aérienne, etc." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <DialogFooter className="mt-6">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => onClose()} 
-                    type="button"
-                    disabled={isSubmitting}
-                  >
-                    Annuler
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Ajout en cours..." : "Ajouter le candidat"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </TabsContent>
-
-          <TabsContent value="documents" className="space-y-6">
-            <div className="rounded-md border p-4">
-              <h3 className="text-lg font-medium">Documents requis pour {visaTypes.find(t => t.id === visaType)?.label}</h3>
-              
-              {isLoadingDocTypes ? (
-                <p className="text-sm text-muted-foreground mt-2">Chargement des documents...</p>
-              ) : documentTypes.length === 0 ? (
-                <p className="text-sm text-muted-foreground mt-2">Aucun document trouvé pour ce type de visa</p>
-              ) : (
-                <div className="space-y-4 mt-4">
-                  {documentTypes.map((doc) => (
-                    <div key={doc.id} className="flex flex-col space-y-2">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium">{doc.nom}</span>
-                          {doc.required && (
-                            <Badge variant="destructive" className="text-xs">Requis</Badge>
-                          )}
-                        </div>
-                        {uploadedDocuments[doc.id] && (
-                          <Badge variant="outline" className="text-xs">
-                            {uploadedDocuments[doc.id]?.name}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex space-x-2 items-center">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="flex-1"
-                          asChild
-                        >
-                          <Label htmlFor={`doc-${doc.id}`} className="cursor-pointer">
-                            <Upload className="h-4 w-4 mr-2" />
-                            Téléverser
-                            <Input
-                              id={`doc-${doc.id}`}
-                              type="file"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0] || null;
-                                handleFileUpload(doc.id, file);
-                              }}
-                            />
-                          </Label>
-                        </Button>
-                        {uploadedDocuments[doc.id] && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleFileUpload(doc.id, null)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          {visaType === 'Résidence Permanente' && (
-            <TabsContent value="residence" className="space-y-4">
-              <Form {...residenceForm}>
-                <form className="space-y-4">
-                  {/* Programme d'immigration */}
-                  <FormField
-                    control={residenceForm.control}
-                    name="programmeImmigration"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Programme d'immigration</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner un programme" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Entrée express">Entrée express</SelectItem>
-                            <SelectItem value="Arrima">Arrima (Québec)</SelectItem>
-                            <SelectItem value="Autre">Autre programme</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Immigration familiale */}
-                  <FormField
-                    control={residenceForm.control}
-                    name="immigrationFamiliale"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                        <FormControl>
-                          <input
-                            type="checkbox"
-                            checked={field.value}
-                            onChange={(e) => field.onChange(e.target.checked)}
-                            className="h-4 w-4 mt-1"
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Immigration avec famille</FormLabel>
-                          <p className="text-sm text-muted-foreground">
-                            Cochez cette case si le candidat immigre avec sa famille
-                          </p>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-
-                  {residenceForm.watch('immigrationFamiliale') && (
-                    <>
-                      {/* Nombre de personnes */}
-                      <FormField
-                        control={residenceForm.control}
-                        name="nombrePersonnes"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nombre total de personnes</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                min={1} 
-                                value={field.value} 
-                                onChange={(e) => field.onChange(parseInt(e.target.value, 10))} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Conjoint */}
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Informations du conjoint</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <FormField
-                            control={residenceForm.control}
-                            name="conjointNom"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Nom du conjoint</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Nom du conjoint" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={residenceForm.control}
-                            name="conjointPrenom"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Prénom du conjoint</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Prénom du conjoint" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={residenceForm.control}
-                            name="conjointPassport"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Numéro de passeport du conjoint</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Numéro de passeport" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Enfants */}
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Enfants</h3>
-                        
-                        {enfants.length > 0 ? (
-                          <div className="space-y-2">
-                            {enfants.map((enfant, index) => (
-                              <div key={index} className="flex items-center space-x-2 p-2 rounded-md border">
-                                <div className="flex-1">
-                                  <p className="font-medium">{enfant.prenom} {enfant.nom}</p>
-                                  <p className="text-sm text-muted-foreground">Age: {enfant.age}</p>
-                                </div>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  onClick={() => removeEnfant(index)}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">Aucun enfant ajouté</p>
-                        )}
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border p-3 rounded-md">
-                          <Input 
-                            placeholder="Nom" 
-                            value={newEnfant.nom}
-                            onChange={(e) => setNewEnfant({...newEnfant, nom: e.target.value})}
-                          />
-                          <Input 
-                            placeholder="Prénom" 
-                            value={newEnfant.prenom}
-                            onChange={(e) => setNewEnfant({...newEnfant, prenom: e.target.value})}
-                          />
-                          <div className="flex space-x-2">
-                            <Input 
-                              placeholder="Age" 
-                              type="number"
-                              min={0}
-                              value={newEnfant.age}
-                              onChange={(e) => setNewEnfant({...newEnfant, age: e.target.value})}
-                            />
-                            <Button 
-                              variant="outline" 
-                              size="icon"
-                              onClick={addEnfant}
-                              type="button"
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Autres détails */}
-                      <FormField
-                        control={residenceForm.control}
-                        name="detailsAutresPersonnes"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Autres détails (optionnels)</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Détails supplémentaires sur les personnes à charge"
-                                className="resize-none min-h-[100px]"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </>
-                  )}
-                </form>
-              </Form>
-            </TabsContent>
-          )}
-        </Tabs>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-export default AddCandidateForm;
