@@ -24,8 +24,14 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          {/* Admin routes - with admin layout */}
-          <Route path="/" element={<Layout><Outlet /></Layout>}>
+          {/* Public/Candidate routes as main routes */}
+          <Route path="/" element={<Navigate to="/index" replace />} />
+          <Route path="/index" element={<Index />} />
+          <Route path="/portal" element={<CandidatePortal />} />
+          <Route path="/portal/candidate/:id" element={<CandidatePortalDetail />} />
+          
+          {/* Admin routes - with admin layout - now under /tableaudebord prefix */}
+          <Route path="/tableaudebord" element={<Layout><Outlet /></Layout>}>
             <Route index element={<Dashboard />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="candidates" element={<CandidatesList />} />
@@ -34,13 +40,9 @@ function App() {
             <Route path="settings" element={<Settings />} />
           </Route>
           
-          {/* Public/Candidate routes - no admin layout */}
-          <Route path="/index" element={<Index />} />
-          <Route path="/portal" element={<CandidatePortal />} />
-          <Route path="/portal/candidate/:id" element={<CandidatePortalDetail />} />
-          
-          {/* Redirect to index if trying to access admin dashboard from public portal */}
-          <Route path="/admin" element={<Navigate to="/index" replace />} />
+          {/* Legacy redirects to maintain backward compatibility */}
+          <Route path="/dashboard" element={<Navigate to="/tableaudebord" replace />} />
+          <Route path="/admin" element={<Navigate to="/tableaudebord" replace />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>
