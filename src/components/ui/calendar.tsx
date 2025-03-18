@@ -13,19 +13,17 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 function CustomCaption(props: CaptionProps) {
   const { displayMonth } = props;
   
-  // Utiliser les propriétés correctes de CaptionProps pour la navigation
+  // Utiliser goToMonth depuis props, qui est disponible dans le contexte du composant Caption
   const handleMonthChange = (newMonth: string) => {
-    if (!props.onMonthChange) return;
     const newDate = new Date(displayMonth);
     newDate.setMonth(parseInt(newMonth));
-    props.onMonthChange(newDate);
+    props.goToMonth?.(newDate);
   };
   
   const handleYearChange = (newYear: string) => {
-    if (!props.onMonthChange) return;
     const newDate = new Date(displayMonth);
     newDate.setFullYear(parseInt(newYear));
-    props.onMonthChange(newDate);
+    props.goToMonth?.(newDate);
   };
   
   // Générer la liste des mois avec le bon locale
@@ -34,7 +32,7 @@ function CustomCaption(props: CaptionProps) {
     month.setMonth(i);
     return {
       value: i.toString(),
-      label: month.toLocaleString(props.displayMonth.toLocaleString('fr-FR'), { month: 'long' })
+      label: month.toLocaleString('fr-FR', { month: 'long' })
     };
   });
   
