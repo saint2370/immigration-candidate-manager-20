@@ -25,7 +25,7 @@ const IRCCHeader = () => {
         <div className="flex flex-col md:flex-row items-center justify-between py-3">
           <div className="flex items-center mb-4 md:mb-0">
             {/* Logo and site title */}
-            <Link to="/" className="flex items-center">
+            <Link to="/index" className="flex items-center">
               <div className="mr-4">
                 <img 
                   src="https://www.canada.ca/etc/designs/canada/wet-boew/assets/sig-blk-fr.svg" 
@@ -79,7 +79,7 @@ const IRCCHeader = () => {
                 <div className="absolute top-full left-0 w-64 bg-white shadow-lg z-50 border border-gray-200">
                   <div className="py-2">
                     <Link 
-                      to="/" 
+                      to="/index" 
                       className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
                       onClick={toggleMenu}
                     >
@@ -92,36 +92,36 @@ const IRCCHeader = () => {
                     >
                       {language === 'fr' ? 'Suivi du dossier' : 'Track Application'}
                     </Link>
-                    <Link 
-                      to="#faq" 
+                    <a 
+                      href="/index#faq" 
                       className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
                       onClick={toggleMenu}
                     >
                       FAQ
-                    </Link>
-                    <Link 
-                      to="#contact" 
+                    </a>
+                    <a 
+                      href="/index#contact" 
                       className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
                       onClick={toggleMenu}
                     >
                       {language === 'fr' ? 'Contact' : 'Contact'}
-                    </Link>
+                    </a>
                   </div>
                 </div>
               )}
             </div>
             
             <nav className="hidden md:flex">
-              <Link to="/" className={`py-3 px-4 hover:bg-[#1C2A38] transition-colors ${location.pathname === '/' ? 'bg-[#1C2A38]' : ''}`}>
+              <Link to="/index" className={`py-3 px-4 hover:bg-[#1C2A38] transition-colors ${location.pathname === '/index' ? 'bg-[#1C2A38]' : ''}`}>
                 {language === 'fr' ? 'Accueil' : 'Home'}
               </Link>
               <Link to="/portal" className={`py-3 px-4 hover:bg-[#1C2A38] transition-colors ${location.pathname.includes('/portal') ? 'bg-[#1C2A38]' : ''}`}>
                 {language === 'fr' ? 'Suivi du dossier' : 'Track Application'}
               </Link>
-              <a href="/#faq" className="py-3 px-4 hover:bg-[#1C2A38] transition-colors">
+              <a href="/index#faq" className="py-3 px-4 hover:bg-[#1C2A38] transition-colors">
                 FAQ
               </a>
-              <a href="/#contact" className="py-3 px-4 hover:bg-[#1C2A38] transition-colors">
+              <a href="/index#contact" className="py-3 px-4 hover:bg-[#1C2A38] transition-colors">
                 {language === 'fr' ? 'Contact' : 'Contact'}
               </a>
             </nav>
@@ -137,8 +137,8 @@ const IRCCHeader = () => {
       <div className="bg-gray-100 py-2">
         <div className="container mx-auto px-4">
           <nav className="text-sm">
-            <Link to="/" className="text-ircc-blue hover:underline">IRCC Statut</Link>
-            {location.pathname !== '/' && (
+            <Link to="/index" className="text-ircc-blue hover:underline">IRCC Statut</Link>
+            {location.pathname !== '/index' && (
               <>
                 <span className="mx-2">›</span>
                 <span className="font-medium">

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import Layout from '@/components/layout/Layout';
@@ -38,6 +38,9 @@ function App() {
           <Route path="/index" element={<Index />} />
           <Route path="/portal" element={<CandidatePortal />} />
           <Route path="/portal/candidate/:id" element={<CandidatePortalDetail />} />
+          
+          {/* Redirect to index if trying to access admin dashboard from public portal */}
+          <Route path="/admin" element={<Navigate to="/index" replace />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>
