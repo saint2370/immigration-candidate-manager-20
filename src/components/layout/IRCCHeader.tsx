@@ -57,7 +57,7 @@ const IRCCHeader = () => {
             <form onSubmit={handleSearchSubmit} className="relative">
               <Input 
                 placeholder={t('enter_immigration_id')} 
-                className="pl-10 pr-4 h-10 w-64 border-gray-300"
+                className="pl-10 pr-4 h-10 w-64 border-red-200 focus:ring-red-500"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
               />
@@ -68,7 +68,7 @@ const IRCCHeader = () => {
             </form>
             <Button 
               variant="ghost" 
-              className="text-ircc-blue"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
               onClick={toggleLanguage}
             >
               {language === 'fr' ? 'English' : 'Français'}
@@ -78,7 +78,7 @@ const IRCCHeader = () => {
       </div>
       
       {/* Main navigation */}
-      <div className="bg-[#26374A] text-white">
+      <div className="bg-red-700 text-white">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center">
             <div className="relative">
@@ -96,28 +96,28 @@ const IRCCHeader = () => {
                   <div className="py-2">
                     <Link 
                       to="/index" 
-                      className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                      className="block px-4 py-2 text-gray-800 hover:bg-red-50"
                       onClick={toggleMenu}
                     >
                       {t('home')}
                     </Link>
                     <Link 
                       to="/portal" 
-                      className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                      className="block px-4 py-2 text-gray-800 hover:bg-red-50"
                       onClick={toggleMenu}
                     >
                       {t('track_application')}
                     </Link>
                     <a 
                       href="/index#faq" 
-                      className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                      className="block px-4 py-2 text-gray-800 hover:bg-red-50"
                       onClick={toggleMenu}
                     >
                       FAQ
                     </a>
                     <a 
                       href="/index#contact" 
-                      className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                      className="block px-4 py-2 text-gray-800 hover:bg-red-50"
                       onClick={toggleMenu}
                     >
                       {t('contact')}
@@ -128,22 +128,22 @@ const IRCCHeader = () => {
             </div>
             
             <nav className="hidden md:flex">
-              <Link to="/index" className={`py-3 px-4 hover:bg-[#1C2A38] transition-colors ${location.pathname === '/index' ? 'bg-[#1C2A38]' : ''}`}>
+              <Link to="/index" className={`py-3 px-4 hover:bg-red-800 transition-colors ${location.pathname === '/index' ? 'bg-red-800' : ''}`}>
                 {t('home')}
               </Link>
-              <Link to="/portal" className={`py-3 px-4 hover:bg-[#1C2A38] transition-colors ${location.pathname.includes('/portal') ? 'bg-[#1C2A38]' : ''}`}>
+              <Link to="/portal" className={`py-3 px-4 hover:bg-red-800 transition-colors ${location.pathname.includes('/portal') ? 'bg-red-800' : ''}`}>
                 {t('track_application')}
               </Link>
-              <a href="/index#faq" className="py-3 px-4 hover:bg-[#1C2A38] transition-colors">
+              <a href="/index#faq" className="py-3 px-4 hover:bg-red-800 transition-colors">
                 FAQ
               </a>
-              <a href="/index#contact" className="py-3 px-4 hover:bg-[#1C2A38] transition-colors">
+              <a href="/index#contact" className="py-3 px-4 hover:bg-red-800 transition-colors">
                 {t('contact')}
               </a>
             </nav>
             
             <Button 
-              className="py-3 px-4 bg-ircc-blue hover:bg-ircc-dark-blue transition-colors hidden md:block"
+              className="py-3 px-4 bg-white text-red-600 hover:bg-gray-100 transition-colors hidden md:block font-medium"
               onClick={handleAccessFile}
             >
               {t('access_file')}
@@ -156,7 +156,7 @@ const IRCCHeader = () => {
       <div className="bg-gray-100 py-2">
         <div className="container mx-auto px-4">
           <nav className="text-sm">
-            <Link to="/index" className="text-ircc-blue hover:underline">IRCC Statut</Link>
+            <Link to="/index" className="text-red-600 hover:underline">IRCC Statut</Link>
             {location.pathname !== '/index' && (
               <>
                 <span className="mx-2">›</span>
