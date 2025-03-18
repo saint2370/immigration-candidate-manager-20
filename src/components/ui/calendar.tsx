@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker, type DayPickerSingleProps } from "react-day-picker";
@@ -83,10 +82,14 @@ function Calendar({
         // Cast props to the correct type and check if onSelect is available
         const singleProps = props as DayPickerSingleProps;
         if (singleProps.onSelect) {
-          // onSelect expects a Date | undefined, a boolean for selected, a 
-          // DaySelectEventHandler, and a name string, but in v8 it's often 
-          // called with just the Date
-          singleProps.onSelect(parsedDate);
+          // In react-day-picker v8, onSelect expects 4 arguments but is often called with just 1
+          // We need to provide all required arguments: date, selectedDays, activeModifiers, e
+          singleProps.onSelect(
+            parsedDate,     // date
+            undefined,      // selectedDays (can be undefined in single mode)
+            {},             // activeModifiers (empty object as placeholder)
+            {} as React.MouseEvent // event (mock as MouseEvent)
+          );
         }
       }
       // Afficher ce mois
