@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   Users, Search, Filter, Download, 
@@ -172,12 +171,12 @@ const CandidatesList = () => {
 
   // View candidate details
   const handleViewCandidate = (candidateId: string) => {
-    navigate(`/candidate/${candidateId}`);
+    navigate(`/tableaudebord/candidate/${candidateId}`);
   };
 
   // Edit candidate
   const handleEditCandidate = (candidateId: string) => {
-    navigate(`/candidates/edit/${candidateId}`);
+    navigate(`/tableaudebord/candidates/edit/${candidateId}`);
   };
 
   // Delete candidate

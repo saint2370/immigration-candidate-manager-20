@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { 
   Table, 
@@ -10,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Eye, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Link, useNavigate } from 'react-router-dom';
 
 export interface Candidate {
   id: string;
@@ -68,12 +68,14 @@ const CandidateTable = ({
   const [page, setPage] = useState(1);
   const pageSize = 5;
   const totalPages = Math.ceil(candidates.length / pageSize);
+  const navigate = useNavigate();
   
   const paginatedCandidates = candidates.slice(
     (page - 1) * pageSize,
     page * pageSize
   );
 
+  // Helper functions to get display values
   // Helper function to get the display name from either format
   const getDisplayName = (candidate: Candidate): string => {
     if (candidate.name) return candidate.name;
@@ -119,6 +121,32 @@ const CandidateTable = ({
   // Helper function to get ID number from either format
   const getIdNumber = (candidate: Candidate): string => {
     return candidate.identificationNumber || candidate.identifiant || "-";
+  };
+  
+  const handleViewClick = (id: string) => {
+    if (onViewCandidate) {
+      // If it's a function that returns a path, navigate to that path
+      const result = onViewCandidate(id);
+      if (typeof result === 'string') {
+        navigate(result);
+      }
+      // Otherwise assume it's a callback that handles navigation itself
+    }
+  };
+
+  const handleEditClick = (id: string) => {
+    if (onEditCandidate) {
+      const result = onEditCandidate(id);
+      if (typeof result === 'string') {
+        navigate(result);
+      }
+    }
+  };
+
+  const handleDeleteClick = (id: string) => {
+    if (onDeleteCandidate) {
+      onDeleteCandidate(id);
+    }
   };
   
   return (
@@ -171,19 +199,19 @@ const CandidateTable = ({
                   <div className="flex items-center justify-end space-x-2">
                     <button 
                       className="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors"
-                      onClick={() => onViewCandidate && onViewCandidate(candidate.id)}
+                      onClick={() => handleViewClick(candidate.id)}
                     >
                       <Eye size={16} />
                     </button>
                     <button 
                       className="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors"
-                      onClick={() => onEditCandidate && onEditCandidate(candidate.id)}
+                      onClick={() => handleEditClick(candidate.id)}
                     >
                       <Edit size={16} />
                     </button>
                     <button 
                       className="p-1 rounded-md hover:bg-gray-100 text-red-500 transition-colors"
-                      onClick={() => onDeleteCandidate && onDeleteCandidate(candidate.id)}
+                      onClick={() => handleDeleteClick(candidate.id)}
                     >
                       <Trash2 size={16} />
                     </button>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Card,
@@ -12,6 +11,7 @@ import StatCard from '@/components/dashboard/StatCard';
 import StatusChart from '@/components/dashboard/StatusChart';
 import CandidateTable from '@/components/dashboard/CandidateTable';
 import DeadlineCard from '@/components/dashboard/DeadlineCard';
+import { Link } from 'react-router-dom';
 
 // Sample data for the dashboard
 const statusChartData = [
@@ -157,6 +157,9 @@ const Dashboard = () => {
     <div className="px-4 py-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Tableau de bord</h1>
+        <Link to="/tableaudebord/candidates" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+          Voir tous les candidats →
+        </Link>
       </div>
 
       {/* Statistics Cards */}
@@ -198,7 +201,12 @@ const Dashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <CandidateTable candidates={recentCandidates} title="Candidats récents" />
+            <CandidateTable 
+              candidates={recentCandidates} 
+              title="Candidats récents"
+              onViewCandidate={(id) => `/tableaudebord/candidate/${id}`}
+              onEditCandidate={(id) => `/tableaudebord/candidates/edit/${id}`}
+            />
           </CardContent>
         </Card>
 

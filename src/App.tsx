@@ -32,13 +32,13 @@ function App() {
             <Route path="/portal" element={<CandidatePortal />} />
             <Route path="/portal/candidate/:id" element={<CandidatePortalDetail />} />
             
-            {/* Admin routes - with admin layout - now under /tableaudebord prefix */}
+            {/* Admin routes - with admin layout */}
             <Route path="/tableaudebord" element={<Layout><Outlet /></Layout>}>
               <Route index element={<Dashboard />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="candidates" element={<CandidatesList />} />
-              <Route path="candidates/edit/:id" element={<CandidateDetail />} />
               <Route path="candidate/:id" element={<CandidateDetail />} />
+              <Route path="candidates/edit/:id" element={<CandidateDetail />} />
               <Route path="settings" element={<Settings />} />
             </Route>
             

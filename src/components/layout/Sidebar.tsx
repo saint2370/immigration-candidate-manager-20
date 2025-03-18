@@ -23,14 +23,14 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   }, []);
 
   const navItems = [
-    { name: 'Tableau de bord', path: '/dashboard', icon: Home },
-    { name: 'Candidats', path: '/candidates', icon: Users },
-    { name: 'Visas Travail', path: '/work-visas', icon: Briefcase },
-    { name: 'Visas Visiteur', path: '/visitor-visas', icon: Plane },
-    { name: 'Résidence Permanente', path: '/permanent-residence', icon: CreditCard },
-    { name: 'Calendrier', path: '/calendar', icon: Calendar },
-    { name: 'Rapports', path: '/reports', icon: BarChart2 },
-    { name: 'Paramètres', path: '/settings', icon: Settings },
+    { name: 'Tableau de bord', path: '/tableaudebord/dashboard', icon: Home },
+    { name: 'Candidats', path: '/tableaudebord/candidates', icon: Users },
+    { name: 'Visas Travail', path: '/tableaudebord/work-visas', icon: Briefcase },
+    { name: 'Visas Visiteur', path: '/tableaudebord/visitor-visas', icon: Plane },
+    { name: 'Résidence Permanente', path: '/tableaudebord/permanent-residence', icon: CreditCard },
+    { name: 'Calendrier', path: '/tableaudebord/calendar', icon: Calendar },
+    { name: 'Rapports', path: '/tableaudebord/reports', icon: BarChart2 },
+    { name: 'Paramètres', path: '/tableaudebord/settings', icon: Settings },
   ];
 
   if (!mounted) return null;
