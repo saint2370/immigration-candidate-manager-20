@@ -18,24 +18,27 @@ function Calendar({
   ...props
 }: CalendarProps) {
   const CustomCaption = (captionProps: CaptionProps) => {
-    const { displayMonth, fromMonth, toMonth } = captionProps;
+    const { displayMonth } = captionProps;
+    
+    // Get min/max years from props or use defaults
+    const fromYear = props.fromYear || 1900;
+    const toYear = props.toYear || new Date().getFullYear();
     
     const handleYearChange = (year: string) => {
       const newDate = new Date(displayMonth);
       newDate.setFullYear(parseInt(year));
-      captionProps.onMonthChange(newDate);
+      const monthChange = captionProps.onMonthSelect ? captionProps.onMonthSelect : () => {};
+      monthChange(newDate);
     };
     
     const handleMonthChange = (month: string) => {
       const newDate = new Date(displayMonth);
       newDate.setMonth(parseInt(month));
-      captionProps.onMonthChange(newDate);
+      const monthChange = captionProps.onMonthSelect ? captionProps.onMonthSelect : () => {};
+      monthChange(newDate);
     };
     
     const years = [];
-    const fromYear = fromMonth?.getFullYear() || 1900;
-    const toYear = toMonth?.getFullYear() || new Date().getFullYear();
-    
     for (let year = fromYear; year <= toYear; year++) {
       years.push(year);
     }
