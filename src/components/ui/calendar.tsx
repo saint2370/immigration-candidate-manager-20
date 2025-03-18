@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker, CaptionProps } from "react-day-picker";
+import { DayPicker, CaptionProps, useNavigation } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -10,26 +10,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
 // Composant Caption personnalisé pour ajouter des sélecteurs de mois et d'année
-function CustomCaption({ displayMonth, id, ...props }: CaptionProps) {
-  // Récupérer les fonctions nécessaires du contexte DayPicker
+function CustomCaption({ displayMonth }: CaptionProps) {
+  // Utiliser le hook useNavigation pour obtenir la fonction goToMonth
+  const { goToMonth } = useNavigation();
+  
   const handleMonthChange = (newMonth: string) => {
     const newDate = new Date(displayMonth);
     newDate.setMonth(parseInt(newMonth));
-    
-    // Utiliser les props du DayPicker pour changer de mois
-    if (props.actions && props.actions.goToMonth) {
-      props.actions.goToMonth(newDate);
-    }
+    goToMonth(newDate);
   };
   
   const handleYearChange = (newYear: string) => {
     const newDate = new Date(displayMonth);
     newDate.setFullYear(parseInt(newYear));
-    
-    // Utiliser les props du DayPicker pour changer d'année
-    if (props.actions && props.actions.goToMonth) {
-      props.actions.goToMonth(newDate);
-    }
+    goToMonth(newDate);
   };
   
   // Générer la liste des mois avec le bon locale
