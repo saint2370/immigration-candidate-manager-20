@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import IRCCHeader from '@/components/layout/IRCCHeader';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   Search, 
   Check, 
@@ -33,14 +33,15 @@ const Index = () => {
   const [immigrationId, setImmigrationId] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t, language } = useLanguage();
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!immigrationId.trim()) {
       toast({
-        title: "Erreur",
-        description: "Veuillez entrer votre numéro d'identification d'immigration.",
+        title: language === 'fr' ? "Erreur" : "Error",
+        description: t('error_missing_id'),
         variant: "destructive"
       });
       return;
@@ -61,20 +62,20 @@ const Index = () => {
           <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="w-full md:w-1/2 space-y-6">
               <h1 className="text-3xl md:text-5xl font-bold text-gray-800">
-                Suivez votre dossier d'immigration en toute simplicité !
+                {t('hero_title')}
               </h1>
               <p className="text-lg md:text-xl text-gray-600">
-                Consultez en temps réel l'état de votre demande et téléchargez vos documents en quelques clics.
+                {t('hero_subtitle')}
               </p>
               <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3">
                 <Input 
-                  placeholder="Entrez votre ID d'immigration" 
+                  placeholder={t('enter_immigration_id')} 
                   className="flex-1"
                   value={immigrationId}
                   onChange={(e) => setImmigrationId(e.target.value)}
                 />
                 <Button type="submit" className="bg-ircc-blue hover:bg-ircc-dark-blue w-full sm:w-auto">
-                  Accéder à mon dossier
+                  {t('access_my_file')}
                   <ChevronRight size={18} />
                 </Button>
               </form>
@@ -111,10 +112,9 @@ const Index = () => {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Notre Plateforme de Suivi de Dossier</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">{t('platform_title')}</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Notre plateforme sécurisée vous permet de suivre l'état d'avancement de votre dossier d'immigration, 
-              d'accéder à vos documents et de rester informé des prochaines étapes de votre procédure.
+              {t('platform_subtitle')}
             </p>
           </div>
           
@@ -123,9 +123,9 @@ const Index = () => {
               <div className="bg-ircc-blue w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Clock className="text-white" size={32} />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Consultation rapide</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('quick_consultation')}</h3>
               <p className="text-gray-600">
-                Accédez instantanément aux informations de votre dossier et consultez son état d'avancement.
+                {t('quick_consultation_desc')}
               </p>
             </div>
             
@@ -133,9 +133,9 @@ const Index = () => {
               <div className="bg-ircc-blue w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Lock className="text-white" size={32} />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Accès sécurisé</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('secure_access')}</h3>
               <p className="text-gray-600">
-                Vos documents et informations sont protégés et accessibles uniquement avec votre identifiant personnel.
+                {t('secure_access_desc')}
               </p>
             </div>
             
@@ -143,9 +143,9 @@ const Index = () => {
               <div className="bg-ircc-blue w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <UserCheck className="text-white" size={32} />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Suivi personnalisé</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('personalized_tracking')}</h3>
               <p className="text-gray-600">
-                Bénéficiez d'un accompagnement sur mesure et recevez des notifications sur l'évolution de votre dossier.
+                {t('personalized_tracking_desc')}
               </p>
             </div>
           </div>
@@ -156,17 +156,17 @@ const Index = () => {
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Comment ça marche ?</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">{t('how_it_works')}</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              En seulement 3 étapes simples, accédez à toutes les informations de votre dossier d'immigration
+              {t('how_it_works_subtitle')}
             </p>
           </div>
           
           <div className="flex flex-col md:flex-row justify-between items-center gap-8 mt-8">
             <div className="bg-white p-8 rounded-lg shadow-md text-center flex-1 max-w-xs">
               <div className="bg-ircc-blue text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">1</div>
-              <h3 className="text-xl font-semibold mb-2">Entrez votre ID</h3>
-              <p className="text-gray-600">Saisissez votre numéro d'identification d'immigration unique</p>
+              <h3 className="text-xl font-semibold mb-2">{t('enter_id')}</h3>
+              <p className="text-gray-600">{t('enter_id_desc')}</p>
             </div>
             
             <div className="hidden md:block">
@@ -175,8 +175,8 @@ const Index = () => {
             
             <div className="bg-white p-8 rounded-lg shadow-md text-center flex-1 max-w-xs">
               <div className="bg-ircc-blue text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
-              <h3 className="text-xl font-semibold mb-2">Consultez votre dossier</h3>
-              <p className="text-gray-600">Accédez à toutes vos informations et téléchargez vos documents</p>
+              <h3 className="text-xl font-semibold mb-2">{t('view_file')}</h3>
+              <p className="text-gray-600">{t('view_file_desc')}</p>
             </div>
             
             <div className="hidden md:block">
@@ -185,18 +185,19 @@ const Index = () => {
             
             <div className="bg-white p-8 rounded-lg shadow-md text-center flex-1 max-w-xs">
               <div className="bg-ircc-blue text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">3</div>
-              <h3 className="text-xl font-semibold mb-2">Suivez les mises à jour</h3>
-              <p className="text-gray-600">Restez informé de l'évolution de votre dossier à chaque étape</p>
+              <h3 className="text-xl font-semibold mb-2">{t('follow_updates')}</h3>
+              <p className="text-gray-600">{t('follow_updates_desc')}</p>
             </div>
           </div>
         </div>
       </section>
       
+      {/* Keep the rest of the file as is - Testimonials, FAQ, Contact, Footer */}
       {/* Testimonials */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Ce que disent nos utilisateurs</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">{t('testimonials_title')}</h2>
             <div className="flex items-center justify-center mb-4">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="text-yellow-400 fill-yellow-400" size={24} />
@@ -252,9 +253,9 @@ const Index = () => {
       <section id="faq" className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Questions fréquentes</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">{t('faq_title')}</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Trouvez rapidement des réponses aux questions les plus courantes
+              {t('faq_subtitle')}
             </p>
           </div>
           
@@ -315,9 +316,9 @@ const Index = () => {
       <section id="contact" className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Besoin d'aide ?</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">{t('need_help')}</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Notre équipe est à votre disposition pour répondre à toutes vos questions
+              {t('need_help_subtitle')}
             </p>
           </div>
           
@@ -326,13 +327,13 @@ const Index = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-gray-50 p-6 rounded-lg text-center hover:shadow-md transition-all duration-300">
                   <Phone size={28} className="text-ircc-blue mx-auto mb-3" />
-                  <h3 className="font-semibold mb-2">Téléphone</h3>
+                  <h3 className="font-semibold mb-2">{t('phone')}</h3>
                   <p className="text-gray-600">+1 (514) 123-4567</p>
                 </div>
                 
                 <div className="bg-gray-50 p-6 rounded-lg text-center hover:shadow-md transition-all duration-300">
                   <Mail size={28} className="text-ircc-blue mx-auto mb-3" />
-                  <h3 className="font-semibold mb-2">Email</h3>
+                  <h3 className="font-semibold mb-2">{t('email')}</h3>
                   <p className="text-gray-600">contact@irccstatut.ca</p>
                 </div>
                 
@@ -346,7 +347,7 @@ const Index = () => {
               <div className="mt-8 text-center">
                 <a href="mailto:contact@irccstatut.ca">
                   <Button className="bg-ircc-blue hover:bg-ircc-dark-blue">
-                    Nous contacter
+                    {t('contact_us')}
                   </Button>
                 </a>
               </div>
@@ -362,31 +363,33 @@ const Index = () => {
             <div>
               <h3 className="text-xl font-bold mb-4">IRCC Statut</h3>
               <p className="text-gray-300">
-                Votre plateforme de suivi des dossiers d'immigration canadienne
+                {language === 'fr' 
+                  ? 'Votre plateforme de suivi des dossiers d\'immigration canadienne' 
+                  : 'Your Canadian immigration file tracking platform'}
               </p>
             </div>
             
             <div>
-              <h4 className="font-semibold mb-3">Liens rapides</h4>
+              <h4 className="font-semibold mb-3">{t('quick_links')}</h4>
               <ul className="space-y-2">
-                <li><Link to="/" className="text-gray-300 hover:text-white transition-colors">Accueil</Link></li>
-                <li><Link to="/portal" className="text-gray-300 hover:text-white transition-colors">Suivi du dossier</Link></li>
+                <li><Link to="/index" className="text-gray-300 hover:text-white transition-colors">{t('home')}</Link></li>
+                <li><Link to="/portal" className="text-gray-300 hover:text-white transition-colors">{t('track_application')}</Link></li>
                 <li><a href="#faq" className="text-gray-300 hover:text-white transition-colors">FAQ</a></li>
-                <li><a href="#contact" className="text-gray-300 hover:text-white transition-colors">Contact</a></li>
+                <li><a href="#contact" className="text-gray-300 hover:text-white transition-colors">{t('contact')}</a></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="font-semibold mb-3">Informations légales</h4>
+              <h4 className="font-semibold mb-3">{t('legal_info')}</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Mentions légales</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Politique de confidentialité</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Conditions d'utilisation</a></li>
+                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">{t('legal_notice')}</a></li>
+                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">{t('privacy_policy')}</a></li>
+                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">{t('terms_of_use')}</a></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="font-semibold mb-3">Suivez-nous</h4>
+              <h4 className="font-semibold mb-3">{t('follow_us')}</h4>
               <div className="flex space-x-4">
                 <a href="#" className="text-gray-300 hover:text-white transition-colors">
                   <Facebook size={24} />
@@ -402,7 +405,7 @@ const Index = () => {
           </div>
           
           <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
-            <p>© 2024 IRCC Statut. Tous droits réservés.</p>
+            <p>© 2024 IRCC Statut. {t('all_rights_reserved')}</p>
           </div>
         </div>
       </footer>
