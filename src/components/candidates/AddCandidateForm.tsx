@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -979,4 +980,369 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Statut</FormLabel>
-                        <Select
+                        <Select 
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner un statut" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {statuses.map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {status}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Notes (optionnelles) */}
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <FormLabel>Notes (optionnelles)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Notes supplémentaires sur le candidat" 
+                            className="resize-none h-20"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Détails du billet (optionnels) */}
+                  <FormField
+                    control={form.control}
+                    name="detailsBillet"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <FormLabel>Détails du billet (optionnels)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Ex: Numéro de vol, compagnie aérienne" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onClose}
+                    disabled={isSubmitting}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-ircc-blue hover:bg-ircc-dark-blue"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin mr-2 h-4 w-4 border-t-2 border-b-2 border-white rounded-full"></div>
+                        Traitement...
+                      </div>
+                    ) : (
+                      "Ajouter le candidat"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </TabsContent>
+
+          <TabsContent value="documents" className="space-y-4">
+            {isLoadingDocTypes ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin h-8 w-8 border-t-2 border-b-2 border-ircc-blue rounded-full"></div>
+                <p className="ml-3 text-gray-600">Chargement des documents...</p>
+              </div>
+            ) : documentTypes.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Aucun document requis pour ce type de visa.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <p className="text-sm text-gray-500">
+                  Les documents marqués d'un astérisque (*) sont obligatoires.
+                </p>
+                
+                <div className="space-y-4">
+                  {documentTypes.map((docType) => (
+                    <div key={docType.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="font-medium">
+                            {docType.nom} {docType.required && <span className="text-red-500">*</span>}
+                          </h3>
+                          <p className="text-sm text-gray-500">Format PDF, JPG ou PNG</p>
+                        </div>
+                        {uploadedDocuments[docType.id] && (
+                          <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
+                            Document ajouté
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center space-x-3 mt-3">
+                        <Button variant="outline" asChild className="w-full">
+                          <Label htmlFor={`doc-${docType.id}`} className="cursor-pointer justify-center">
+                            <Upload className="h-4 w-4 mr-2" />
+                            {uploadedDocuments[docType.id] ? 'Changer le fichier' : 'Téléverser'}
+                            <Input
+                              id={`doc-${docType.id}`}
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              className="hidden"
+                              onChange={(e) => {
+                                handleFileUpload(docType.id, e.target.files?.[0] || null);
+                              }}
+                            />
+                          </Label>
+                        </Button>
+                        
+                        {uploadedDocuments[docType.id] && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => handleFileUpload(docType.id, null)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                      
+                      {uploadedDocuments[docType.id] && (
+                        <p className="text-xs text-gray-500 mt-2 truncate">
+                          Fichier: {uploadedDocuments[docType.id]?.name}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </TabsContent>
+
+          {visaType === 'Résidence Permanente' && (
+            <TabsContent value="residence" className="space-y-6">
+              <Form {...residenceForm}>
+                <form className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Programme d'immigration */}
+                    <FormField
+                      control={residenceForm.control}
+                      name="programmeImmigration"
+                      render={({ field }) => (
+                        <FormItem className="col-span-2">
+                          <FormLabel>Programme d'immigration</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Sélectionner un programme" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Entrée express">Entrée express</SelectItem>
+                              <SelectItem value="Arrima">Arrima (Québec)</SelectItem>
+                              <SelectItem value="Autre">Autre</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Nombre de personnes */}
+                    <FormField
+                      control={residenceForm.control}
+                      name="nombrePersonnes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre de personnes</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="1"
+                              placeholder="1"
+                              {...field}
+                              onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Information sur le conjoint */}
+                    <div className="col-span-2 border-t pt-4 mt-2">
+                      <h3 className="font-medium mb-4">Information sur le conjoint</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={residenceForm.control}
+                          name="conjointNom"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nom du conjoint</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Nom" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={residenceForm.control}
+                          name="conjointPrenom"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Prénom du conjoint</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Prénom" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={residenceForm.control}
+                          name="conjointPassport"
+                          render={({ field }) => (
+                            <FormItem className="col-span-2">
+                              <FormLabel>Numéro de passeport du conjoint</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Numéro de passeport" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Enfants */}
+                    <div className="col-span-2 border-t pt-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-medium">Enfants ({enfants.length})</h3>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center"
+                          onClick={addEnfant}
+                          disabled={!newEnfant.nom || !newEnfant.prenom || !newEnfant.age}
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Ajouter
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                          <Label>Nom</Label>
+                          <Input
+                            placeholder="Nom"
+                            value={newEnfant.nom}
+                            onChange={(e) => setNewEnfant({...newEnfant, nom: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label>Prénom</Label>
+                          <Input
+                            placeholder="Prénom"
+                            value={newEnfant.prenom}
+                            onChange={(e) => setNewEnfant({...newEnfant, prenom: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label>Âge</Label>
+                          <Input
+                            type="number"
+                            placeholder="Âge"
+                            min="0"
+                            max="100"
+                            value={newEnfant.age}
+                            onChange={(e) => setNewEnfant({...newEnfant, age: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                      
+                      {enfants.length > 0 ? (
+                        <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                          {enfants.map((enfant, index) => (
+                            <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                              <div>
+                                <span className="font-medium">{enfant.prenom} {enfant.nom}</span>
+                                <span className="ml-2 text-sm text-gray-500">{enfant.age} ans</span>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => removeEnfant(index)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-center text-gray-500 py-4">Aucun enfant ajouté</p>
+                      )}
+                    </div>
+                    
+                    {/* Informations additionnelles */}
+                    <FormField
+                      control={residenceForm.control}
+                      name="detailsAutresPersonnes"
+                      render={({ field }) => (
+                        <FormItem className="col-span-2">
+                          <FormLabel>Informations additionnelles</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Autres informations pertinentes sur les personnes accompagnant le candidat"
+                              className="resize-none h-24"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </form>
+              </Form>
+            </TabsContent>
+          )}
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default AddCandidateForm;
