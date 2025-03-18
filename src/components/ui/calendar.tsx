@@ -1,9 +1,18 @@
+
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, DropdownProps } from "react-day-picker";
+import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -13,15 +22,81 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
+  const [currentMonth, setCurrentMonth] = React.useState<Date>(props.defaultMonth || new Date());
+  
+  // Composant personnalisé pour le titre du calendrier avec sélecteurs déroulants
+  function CustomCaption(captionProps: React.PropsWithChildren<{ date: Date }>) {
+    const months = [
+      "Janvier", "Février", "Mars", "Avril", 
+      "Mai", "Juin", "Juillet", "Août", 
+      "Septembre", "Octobre", "Novembre", "Décembre"
+    ];
+    
+    // Génère les années à afficher dans le sélecteur (de 1900 à l'année en cours + 10)
+    const years = Array.from({ length: new Date().getFullYear() - 1900 + 11 }, 
+      (_, i) => 1900 + i
+    );
+    
+    const handleMonthChange = (monthIndex: string) => {
+      const newDate = new Date(captionProps.date);
+      newDate.setMonth(parseInt(monthIndex));
+      setCurrentMonth(newDate);
+      props.onMonthChange?.(newDate);
+    };
+    
+    const handleYearChange = (year: string) => {
+      const newDate = new Date(captionProps.date);
+      newDate.setFullYear(parseInt(year));
+      setCurrentMonth(newDate);
+      props.onMonthChange?.(newDate);
+    };
+    
+    return (
+      <div className="flex justify-center space-x-2 items-center">
+        <Select
+          value={captionProps.date.getMonth().toString()}
+          onValueChange={handleMonthChange}
+        >
+          <SelectTrigger className="w-[110px] h-8">
+            <SelectValue placeholder="Mois" />
+          </SelectTrigger>
+          <SelectContent>
+            {months.map((month, index) => (
+              <SelectItem key={index} value={index.toString()}>
+                {month}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
+        <Select
+          value={captionProps.date.getFullYear().toString()}
+          onValueChange={handleYearChange}
+        >
+          <SelectTrigger className="w-[90px] h-8">
+            <SelectValue placeholder="Année" />
+          </SelectTrigger>
+          <SelectContent className="max-h-[200px] overflow-y-auto">
+            {years.map((year) => (
+              <SelectItem key={year} value={year.toString()}>
+                {year}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  }
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn("p-3 pointer-events-auto", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
+        caption_label: "hidden", // Cacher le label par défaut puisqu'on utilise notre composant personnalisé
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
@@ -54,7 +129,10 @@ function Calendar({
       components={{
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
+        Caption: CustomCaption
       }}
+      month={currentMonth}
+      onMonthChange={setCurrentMonth}
       {...props}
     />
   );
