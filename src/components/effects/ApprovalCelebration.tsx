@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Party, Sparkles, Star } from 'lucide-react';
+import { PartyPopper, Sparkles, Star } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface ApprovalCelebrationProps {
@@ -108,7 +108,7 @@ export const ApprovalCelebration = ({ isVisible, onComplete, candidateInfo }: Ap
         <Sparkles size={48} className="text-yellow-400" />
       </div>
       <div className="absolute bottom-1/4 left-1/3 animate-ping delay-700">
-        <Party size={48} className="text-red-400" />
+        <PartyPopper size={48} className="text-red-400" />
       </div>
       
       {/* Additional information card */}
