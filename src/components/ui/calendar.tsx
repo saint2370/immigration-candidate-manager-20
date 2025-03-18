@@ -1,21 +1,20 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, type DayPickerSingleProps } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 
+// Redéfinir les types pour être compatibles avec react-day-picker v8
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
 function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  selected,
-  onSelect,
   ...props
 }: CalendarProps) {
   // État local pour suivre le mois affiché
@@ -78,9 +77,11 @@ function Calendar({
     setManualDateInput(input);
     
     const parsedDate = parseManualDate(input);
-    if (parsedDate && onSelect) {
-      // Si la date est valide et onSelect est disponible, mettre à jour la sélection
-      onSelect(parsedDate);
+    if (parsedDate) {
+      // Si la date est valide, mettre à jour la sélection et afficher ce mois
+      if (props.mode === "single" && (props as DayPickerSingleProps).onSelect) {
+        (props as DayPickerSingleProps).onSelect(parsedDate);
+      }
       // Afficher ce mois
       handleMonthChange(parsedDate);
     }
@@ -157,8 +158,6 @@ function Calendar({
       <DayPicker
         month={month}
         onMonthChange={handleMonthChange}
-        selected={selected}
-        onSelect={onSelect}
         showOutsideDays={showOutsideDays}
         className={cn("p-3 pointer-events-auto", className)}
         classNames={{
