@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarIcon, Plus, X, Upload } from 'lucide-react';
+import { Plus, X, Upload } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from '@/integrations/supabase/types';
@@ -34,19 +33,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
+import { Input, DateInput } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -698,54 +691,19 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                     )}
                   />
 
-                  {/* Date de naissance - Modified for manual input */}
+                  {/* Date de naissance - using DateInput */}
                   <FormField
                     control={form.control}
                     name="dateNaissance"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel>Date de naissance</FormLabel>
-                        <div className="flex w-full items-center space-x-2">
-                          <Input
-                            placeholder="JJ/MM/AAAA"
-                            value={formatDateString(field.value)}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              if (value === '') {
-                                field.onChange(undefined);
-                              } else {
-                                const date = parseDateString(value);
-                                if (date) {
-                                  field.onChange(date);
-                                }
-                                // Si la date est invalide, ne pas mettre à jour le champ
-                              }
-                            }}
-                            className="w-full"
+                        <FormControl>
+                          <DateInput
+                            value={field.value}
+                            onChange={field.onChange}
                           />
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className="px-2"
-                                type="button"
-                              >
-                                <CalendarIcon className="h-4 w-4" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="end">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                disabled={(date) =>
-                                  date > new Date() || date < new Date("1900-01-01")
-                                }
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </div>
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -877,51 +835,19 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                     )}
                   />
 
-                  {/* Date de soumission - Modified for manual input */}
+                  {/* Date de soumission - using DateInput */}
                   <FormField
                     control={form.control}
                     name="dateSoumission"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel>Date de soumission</FormLabel>
-                        <div className="flex w-full items-center space-x-2">
-                          <Input
-                            placeholder="JJ/MM/AAAA"
-                            value={formatDateString(field.value)}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              if (value === '') {
-                                field.onChange(undefined);
-                              } else {
-                                const date = parseDateString(value);
-                                if (date) {
-                                  field.onChange(date);
-                                }
-                              }
-                            }}
-                            className="w-full"
+                        <FormControl>
+                          <DateInput
+                            value={field.value}
+                            onChange={field.onChange}
                           />
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className="px-2"
-                                type="button"
-                              >
-                                <CalendarIcon className="h-4 w-4" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="end">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                disabled={(date) => date > new Date()}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </div>
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -942,50 +868,19 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                     )}
                   />
 
-                  {/* Date prévue du voyage - Modified for manual input */}
+                  {/* Date prévue du voyage - using DateInput */}
                   <FormField
                     control={form.control}
                     name="dateVoyagePrevue"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel>Date prévue du voyage</FormLabel>
-                        <div className="flex w-full items-center space-x-2">
-                          <Input
-                            placeholder="JJ/MM/AAAA"
-                            value={formatDateString(field.value)}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              if (value === '') {
-                                field.onChange(undefined);
-                              } else {
-                                const date = parseDateString(value);
-                                if (date) {
-                                  field.onChange(date);
-                                }
-                              }
-                            }}
-                            className="w-full"
+                        <FormControl>
+                          <DateInput
+                            value={field.value}
+                            onChange={field.onChange}
                           />
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className="px-2"
-                                type="button"
-                              >
-                                <CalendarIcon className="h-4 w-4" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="end">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </div>
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1097,294 +992,4 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                     type="submit" 
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Enregistrement..." : "Ajouter candidat"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </TabsContent>
-
-          <TabsContent value="documents" className="space-y-4">
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Documents requis pour {visaType}</h3>
-              
-              {isLoadingDocTypes ? (
-                <p>Chargement des types de documents...</p>
-              ) : documentTypes.length === 0 ? (
-                <p>Aucun type de document disponible pour ce visa.</p>
-              ) : (
-                <div className="space-y-4">
-                  {documentTypes.map((docType) => (
-                    <div key={docType.id} className="border p-4 rounded-md">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{docType.nom}</h4>
-                          {docType.required && (
-                            <Badge variant="destructive">Requis</Badge>
-                          )}
-                        </div>
-                        {uploadedDocuments[docType.id] ? (
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
-                            Fichier prêt
-                          </Badge>
-                        ) : (
-                          docType.required && (
-                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">
-                              À téléverser
-                            </Badge>
-                          )
-                        )}
-                      </div>
-                      
-                      <div className="mt-2">
-                        {uploadedDocuments[docType.id] ? (
-                          <div className="flex items-center justify-between bg-muted p-2 rounded">
-                            <span className="text-sm truncate">
-                              {uploadedDocuments[docType.id]?.name}
-                            </span>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleFileUpload(docType.id, null)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="file"
-                              id={`doc-${docType.id}`}
-                              onChange={(e) => {
-                                const file = e.target.files?.[0] || null;
-                                handleFileUpload(docType.id, file);
-                              }}
-                              className="flex-1"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          {visaType === 'Résidence Permanente' && (
-            <TabsContent value="residence" className="space-y-4">
-              <Form {...residenceForm}>
-                <form className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={residenceForm.control}
-                      name="programmeImmigration"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Programme d'immigration</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Sélectionner un programme" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Entrée express">Entrée express</SelectItem>
-                              <SelectItem value="Arrima">Arrima (Québec)</SelectItem>
-                              <SelectItem value="Autre">Autre programme</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={residenceForm.control}
-                      name="nombrePersonnes"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nombre de personnes</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="1"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={residenceForm.control}
-                    name="immigrationFamiliale"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                        <FormControl>
-                          <input
-                            type="checkbox"
-                            checked={field.value}
-                            onChange={field.onChange}
-                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Immigration familiale</FormLabel>
-                          <p className="text-sm text-muted-foreground">
-                            Cochez si la demande inclut un conjoint et/ou des enfants
-                          </p>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-
-                  {residenceForm.watch('immigrationFamiliale') && (
-                    <div className="space-y-4 border rounded-md p-4">
-                      <h3 className="text-lg font-medium">Informations sur le conjoint</h3>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={residenceForm.control}
-                          name="conjointNom"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Nom du conjoint</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Nom" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={residenceForm.control}
-                          name="conjointPrenom"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Prénom du conjoint</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Prénom" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={residenceForm.control}
-                          name="conjointPassport"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Numéro de passeport du conjoint</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Numéro de passeport" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <h3 className="text-lg font-medium mt-6">Enfants</h3>
-                      
-                      {enfants.length > 0 && (
-                        <div className="space-y-2">
-                          {enfants.map((enfant, index) => (
-                            <div key={index} className="flex items-center justify-between bg-muted p-3 rounded">
-                              <div>
-                                <span className="font-medium">{enfant.prenom} {enfant.nom}</span>
-                                <span className="text-sm text-muted-foreground ml-2">({enfant.age} ans)</span>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeEnfant(index)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                        <div>
-                          <Label htmlFor="enfant-nom">Nom</Label>
-                          <Input
-                            id="enfant-nom"
-                            value={newEnfant.nom}
-                            onChange={(e) => setNewEnfant({...newEnfant, nom: e.target.value})}
-                            placeholder="Nom"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="enfant-prenom">Prénom</Label>
-                          <Input
-                            id="enfant-prenom"
-                            value={newEnfant.prenom}
-                            onChange={(e) => setNewEnfant({...newEnfant, prenom: e.target.value})}
-                            placeholder="Prénom"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="enfant-age">Âge</Label>
-                          <div className="flex gap-2">
-                            <Input
-                              id="enfant-age"
-                              value={newEnfant.age}
-                              onChange={(e) => setNewEnfant({...newEnfant, age: e.target.value})}
-                              placeholder="Âge"
-                              type="number"
-                              min="0"
-                              max="25"
-                              className="flex-1"
-                            />
-                            <Button
-                              type="button"
-                              onClick={addEnfant}
-                              disabled={!newEnfant.nom || !newEnfant.prenom || !newEnfant.age}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <FormField
-                    control={residenceForm.control}
-                    name="detailsAutresPersonnes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Détails supplémentaires (optionnel)</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Autres détails concernant les personnes accompagnantes"
-                            className="min-h-[100px]"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </form>
-              </Form>
-            </TabsContent>
-          )}
-        </Tabs>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-export default AddCandidateForm;
+                    {isSubmitting ? "Enregistrement..."
