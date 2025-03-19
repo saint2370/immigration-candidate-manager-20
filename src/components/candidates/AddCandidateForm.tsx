@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -992,4 +993,291 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
                     type="submit" 
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Enregistrement..."
+                    {isSubmitting ? "Enregistrement..." : "Enregistrer le candidat"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </TabsContent>
+
+          <TabsContent value="documents" className="space-y-4">
+            <div className="rounded-md border p-4">
+              <h3 className="text-lg font-medium mb-2">Documents requis pour {visaType}</h3>
+              
+              {isLoadingDocTypes ? (
+                <p>Chargement des documents requis...</p>
+              ) : documentTypes.length === 0 ? (
+                <p>Aucun document requis pour ce type de visa.</p>
+              ) : (
+                <div className="space-y-4">
+                  {documentTypes.map((docType) => (
+                    <div key={docType.id} className="flex flex-col space-y-2">
+                      <div className="flex items-center">
+                        <span className="font-medium">{docType.nom}</span>
+                        {docType.required && (
+                          <Badge variant="destructive" className="ml-2">Requis</Badge>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null;
+                            handleFileUpload(docType.id, file);
+                          }}
+                          className="flex-1"
+                        />
+                        {uploadedDocuments[docType.id] && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleFileUpload(docType.id, null)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                      
+                      {uploadedDocuments[docType.id] && (
+                        <p className="text-sm text-green-600">
+                          Fichier sélectionné: {uploadedDocuments[docType.id]?.name}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {visaType === 'Résidence Permanente' && (
+            <TabsContent value="residence" className="space-y-4">
+              <div className="rounded-md border p-4">
+                <h3 className="text-lg font-medium mb-4">Détails de résidence permanente</h3>
+                
+                <Form {...residenceForm}>
+                  <div className="space-y-4">
+                    <FormField
+                      control={residenceForm.control}
+                      name="programmeImmigration"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Programme d'immigration</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Sélectionner un programme" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Entrée express">Entrée express</SelectItem>
+                              <SelectItem value="Arrima">Arrima (Québec)</SelectItem>
+                              <SelectItem value="Autre">Autre programme</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={residenceForm.control}
+                      name="immigrationFamiliale"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>
+                              Immigration familiale
+                            </FormLabel>
+                            <p className="text-sm text-muted-foreground">
+                              Cochez si la demande inclut d'autres membres de la famille
+                            </p>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {residenceForm.watch('immigrationFamiliale') && (
+                      <>
+                        <FormField
+                          control={residenceForm.control}
+                          name="nombrePersonnes"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nombre total de personnes</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  {...field}
+                                  onChange={(e) => {
+                                    const value = parseInt(e.target.value, 10);
+                                    field.onChange(isNaN(value) ? 1 : value);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <div className="space-y-4 border-t pt-4 mt-4">
+                          <h4 className="text-md font-medium">Détails du conjoint/conjointe</h4>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={residenceForm.control}
+                              name="conjointNom"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Nom</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Nom du conjoint" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={residenceForm.control}
+                              name="conjointPrenom"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Prénom</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Prénom du conjoint" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={residenceForm.control}
+                              name="conjointPassport"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Numéro de passeport</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Passeport du conjoint" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          <div className="space-y-4 border-t pt-4 mt-4">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-md font-medium">Enfants</h4>
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm"
+                                onClick={addEnfant}
+                                disabled={!newEnfant.nom || !newEnfant.prenom || !newEnfant.age}
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Ajouter
+                              </Button>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div>
+                                <Label htmlFor="enfant-nom">Nom</Label>
+                                <Input
+                                  id="enfant-nom"
+                                  value={newEnfant.nom}
+                                  onChange={(e) => setNewEnfant({...newEnfant, nom: e.target.value})}
+                                  placeholder="Nom"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="enfant-prenom">Prénom</Label>
+                                <Input
+                                  id="enfant-prenom"
+                                  value={newEnfant.prenom}
+                                  onChange={(e) => setNewEnfant({...newEnfant, prenom: e.target.value})}
+                                  placeholder="Prénom"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="enfant-age">Âge</Label>
+                                <Input
+                                  id="enfant-age"
+                                  value={newEnfant.age}
+                                  onChange={(e) => setNewEnfant({...newEnfant, age: e.target.value})}
+                                  placeholder="Âge"
+                                  type="number"
+                                  min="0"
+                                />
+                              </div>
+                            </div>
+                            
+                            {enfants.length > 0 && (
+                              <div className="mt-4">
+                                <h5 className="text-sm font-medium mb-2">Enfants ajoutés:</h5>
+                                <div className="space-y-2">
+                                  {enfants.map((enfant, index) => (
+                                    <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
+                                      <span>
+                                        {enfant.prenom} {enfant.nom}, {enfant.age} ans
+                                      </span>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => removeEnfant(index)}
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <FormField
+                            control={residenceForm.control}
+                            name="detailsAutresPersonnes"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Détails additionnels (optionnel)</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="Autres informations sur les membres de la famille" 
+                                    className="min-h-[100px]"
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </Form>
+              </div>
+            </TabsContent>
+          )}
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default AddCandidateForm;
