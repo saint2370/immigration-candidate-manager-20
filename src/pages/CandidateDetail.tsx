@@ -909,4 +909,4 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="mb-2"><strong>Programme d'immigration:</strong> {permanentResidence.immigration_program}</p
+                    <p className="mb-2"><strong>Programme d'immigration:</strong> {permanentResidence.immigration_program}</p>
