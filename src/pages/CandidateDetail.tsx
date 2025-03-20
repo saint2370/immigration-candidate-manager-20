@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -76,16 +75,16 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
     prenom: '',
     email: '',
     telephone: '',
-    status: '' as StatusType,
-    visa_type: '' as VisaType,
+    status: 'En attente' as StatusType,
+    visa_type: 'Résidence Permanente' as VisaType,
     notes: '',
-    bureau: '',
+    bureau: 'Paris',
     numero_passport: '',
     nationalite: '',
     lieu_naissance: '',
     adresse: '',
     date_naissance: null as Date | null,
-    date_soumission: null as Date | null,
+    date_soumission: new Date() as Date | null,
     date_voyage: null as Date | null,
     procedure: '',
     delai_traitement: '',
@@ -97,11 +96,16 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    if (id) {
+    if (id && !isNewCandidate) {
       fetchCandidate();
       fetchDocuments();
+    } else if (isNewCandidate) {
+      // For new candidate, we're already in edit mode and don't need to fetch
+      setIsLoading(false);
+      // Set default visa type to fetch appropriate document types
+      fetchDocumentTypes(formData.visa_type);
     }
-  }, [id]);
+  }, [id, isNewCandidate]);
 
   // Mettre à jour le formulaire lorsque le candidat est chargé
   useEffect(() => {
@@ -410,82 +414,119 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id) return;
     
     setIsSaving(true);
     try {
-      // Upload photo if changed
-      let photoUrl = candidate?.photo_url;
-      if (photoFile) {
-        photoUrl = await uploadPhoto();
-      }
-      
       // Format dates for database
       const formatDateForDB = (date: Date | null) => {
         if (!date) return null;
         return format(date, 'yyyy-MM-dd');
       };
 
-      // Update candidate data
-      const { error } = await supabase
-        .from('candidates')
-        .update({
-          nom: formData.nom,
-          prenom: formData.prenom,
-          email: formData.email || null,
-          telephone: formData.telephone || null,
-          status: formData.status,
-          visa_type: formData.visa_type,
-          notes: formData.notes || null,
-          bureau: formData.bureau,
-          numero_passport: formData.numero_passport,
-          nationalite: formData.nationalite,
-          lieu_naissance: formData.lieu_naissance,
-          adresse: formData.adresse || null,
-          date_naissance: formatDateForDB(formData.date_naissance),
-          date_soumission: formatDateForDB(formData.date_soumission),
-          date_voyage: formatDateForDB(formData.date_voyage),
-          procedure: formData.procedure || null,
-          delai_traitement: formData.delai_traitement || null,
-          photo_url: photoUrl
-        })
-        .eq('id', id as string);
-      
-      if (error) throw error;
-      
-      // Upload any new documents
-      if (Object.keys(uploadedDocuments).length > 0) {
-        await insertDocuments(id);
+      // Prepare data object for both new and existing candidates
+      const candidateData = {
+        nom: formData.nom,
+        prenom: formData.prenom,
+        email: formData.email || null,
+        telephone: formData.telephone || null,
+        status: formData.status,
+        visa_type: formData.visa_type,
+        notes: formData.notes || null,
+        bureau: formData.bureau,
+        numero_passport: formData.numero_passport,
+        nationalite: formData.nationalite,
+        lieu_naissance: formData.lieu_naissance,
+        adresse: formData.adresse || null,
+        date_naissance: formatDateForDB(formData.date_naissance),
+        date_soumission: formatDateForDB(formData.date_soumission),
+        date_voyage: formatDateForDB(formData.date_voyage),
+        procedure: formData.procedure || null,
+        delai_traitement: formData.delai_traitement || null,
+      };
+
+      let candidateId = id;
+      let photoUrl = candidate?.photo_url;
+
+      if (isNewCandidate) {
+        // Insert new candidate
+        const { data: newCandidate, error: insertError } = await supabase
+          .from('candidates')
+          .insert(candidateData)
+          .select()
+          .single();
+        
+        if (insertError) throw insertError;
+        
+        candidateId = newCandidate.id;
+        
+        // Add creation to history
+        await supabase
+          .from('history')
+          .insert({
+            candidate_id: candidateId,
+            action: 'Dossier créé',
+            date: new Date().toISOString()
+          });
+          
+        toast({
+          title: "Candidat créé",
+          description: "Le nouveau candidat a été créé avec succès.",
+        });
+      } else {
+        // Update existing candidate
+        if (photoFile) {
+          photoUrl = await uploadPhoto();
+        }
+        
+        const { error: updateError } = await supabase
+          .from('candidates')
+          .update({
+            ...candidateData,
+            photo_url: photoUrl
+          })
+          .eq('id', id as string);
+        
+        if (updateError) throw updateError;
+        
+        // Add to history
+        await supabase
+          .from('history')
+          .insert({
+            candidate_id: id,
+            action: 'Dossier modifié',
+            date: new Date().toISOString()
+          });
+        
+        toast({
+          title: "Candidat mis à jour",
+          description: "Les informations du candidat ont été mises à jour avec succès.",
+        });
       }
       
-      // Add to history
-      await supabase
-        .from('history')
-        .insert({
-          candidate_id: id,
-          action: 'Dossier modifié',
-          date: new Date().toISOString()
-        });
-      
-      toast({
-        title: "Candidat mis à jour",
-        description: "Les informations du candidat ont été mises à jour avec succès.",
-      });
+      // Upload any new documents if we have an id
+      if (candidateId && Object.keys(uploadedDocuments).length > 0) {
+        await insertDocuments(candidateId);
+      }
       
       // Refresh data and exit edit mode
-      await fetchCandidate();
-      navigate(`/candidate/${id}`);
+      navigate(`/candidate/${candidateId}`);
     } catch (error) {
-      console.error("Error updating candidate:", error);
+      console.error("Error saving candidate:", error);
       toast({
         title: "Erreur",
-        description: "Une erreur s'est produite lors de la mise à jour du candidat.",
+        description: "Une erreur s'est produite lors de l'enregistrement du candidat.",
         variant: "destructive"
       });
     } finally {
       setIsSaving(false);
     }
   };
+
+  // Téléverser un document dans le storage Supabase
+  
+
+  // Insérer des documents dans la base de données
+  
 
   if (isLoading) {
     return <div className="container mx-auto p-4 flex justify-center items-center h-64">Chargement...</div>;
@@ -626,13 +667,13 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
     );
   }
 
-  // Vue en mode édition
+  // Vue en mode édition ou création
   return (
     <div className="container mx-auto p-4">
       <div className="mb-4 flex items-center justify-between">
-        <Link to={`/candidate/${id}`} className="flex items-center gap-2 text-blue-500 hover:text-blue-700">
+        <Link to="/tableaudebord/candidates" className="flex items-center gap-2 text-blue-500 hover:text-blue-700">
           <X className="h-5 w-5" />
-          Annuler les modifications
+          {isNewCandidate ? "Annuler la création" : "Annuler les modifications"}
         </Link>
       </div>
 
@@ -640,8 +681,10 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="info">Informations générales</TabsTrigger>
-            <TabsTrigger value="photo">Photo</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
+            {!isNewCandidate && <TabsTrigger value="photo">Photo</TabsTrigger>}
+            {!isNewCandidate && <TabsTrigger value="documents">Documents</TabsTrigger>}
+            {isNewCandidate && <TabsTrigger value="photo" disabled>Photo</TabsTrigger>}
+            {isNewCandidate && <TabsTrigger value="documents" disabled>Documents</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="info" className="space-y-6">
@@ -852,211 +895,4 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
                   <div className="space-y-2">
                     <Label htmlFor="delai_traitement">Délai de traitement</Label>
                     <Input 
-                      id="delai_traitement" 
-                      name="delai_traitement" 
-                      value={formData.delai_traitement} 
-                      onChange={handleInputChange} 
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-4 space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleInputChange}
-                    rows={4}
-                  />
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="photo" className="space-y-4">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Photo de profil</h2>
-
-              <div className="flex flex-col items-center justify-center space-y-4">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 w-full flex flex-col items-center justify-center">
-                  {photoPreview ? (
-                    <div className="relative">
-                      <img 
-                        src={photoPreview} 
-                        alt="Aperçu de la photo" 
-                        className="w-48 h-48 object-cover rounded-full" 
-                      />
-                      <button 
-                        onClick={clearPhotoSelection}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
-                        type="button"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload className="h-12 w-12 text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-500 mb-4">Cliquez ou glissez-déposez une photo</p>
-                      <Button variant="outline" asChild>
-                        <Label htmlFor="photo-upload" className="cursor-pointer">
-                          Sélectionner une photo
-                          <Input
-                            id="photo-upload"
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handlePhotoChange}
-                          />
-                        </Label>
-                      </Button>
-                    </>
-                  )}
-                </div>
-                
-                <div className="flex gap-4">
-                  {photoPreview && photoFile && (
-                    <p className="text-sm text-gray-500 italic">
-                      La photo sera téléversée lorsque vous enregistrerez les modifications
-                    </p>
-                  )}
-                  
-                  {(candidate?.photo_url || photoPreview) && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="flex items-center gap-2 text-red-600 hover:text-red-700"
-                      onClick={removePhoto}
-                    >
-                      <Trash className="h-4 w-4" />
-                      Supprimer la photo
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="documents" className="space-y-4">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Documents</h2>
-              
-              <div className="mb-6">
-                <h3 className="text-lg font-medium mb-4">Documents existants</h3>
-                {documents.length > 0 ? (
-                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {documents.map(doc => (
-                      <li key={doc.id} className="border rounded-md p-4 flex justify-between items-center">
-                        <div>
-                          <span className="font-medium">{doc.document_types?.nom || 'Document sans type'}</span>
-                          {doc.document_types?.required && (
-                            <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800">Requis</span>
-                          )}
-                        </div>
-                        {doc.file_path && (
-                          <a 
-                            href={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/documents/${doc.file_path}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-500 hover:text-blue-700 underline"
-                          >
-                            Voir
-                          </a>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>Aucun document trouvé pour ce candidat.</p>
-                )}
-              </div>
-
-              <div className="mt-8">
-                <h3 className="text-lg font-medium mb-4">Ajouter de nouveaux documents</h3>
-                
-                {isLoadingDocTypes ? (
-                  <p>Chargement des types de documents...</p>
-                ) : documentTypes.length > 0 ? (
-                  <div className="space-y-6">
-                    {documentTypes.map((docType) => {
-                      // Vérifier si ce type de document existe déjà
-                      const existingDoc = documents.find(doc => 
-                        doc.document_type_id === docType.id
-                      );
-                      
-                      if (existingDoc) return null; // Ne pas afficher si le document existe déjà
-                      
-                      return (
-                        <div key={docType.id} className="border rounded-md p-4">
-                          <div className="flex items-center mb-3">
-                            <span className="font-medium">{docType.nom}</span>
-                            {docType.required && (
-                              <Badge variant="destructive" className="ml-2">Requis</Badge>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="file"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0] || null;
-                                handleFileUpload(docType.id, file);
-                              }}
-                              className="flex-1"
-                            />
-                            {uploadedDocuments[docType.id] && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleFileUpload(docType.id, null)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                          
-                          {uploadedDocuments[docType.id] && (
-                            <p className="text-sm text-green-600 mt-2">
-                              Fichier sélectionné: {uploadedDocuments[docType.id]?.name}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p>Aucun type de document disponible pour ce type de visa.</p>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        <div className="flex justify-end gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate(`/candidate/${id}`)}
-          >
-            Annuler
-          </Button>
-          <Button 
-            type="submit" 
-            className="flex items-center gap-2"
-            disabled={isSaving || isUploading}
-          >
-            {(isSaving || isUploading) && (
-              <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-white rounded-full mr-2"></div>
-            )}
-            <Save className="h-4 w-4" />
-            Enregistrer
-          </Button>
-        </div>
-      </form>
-    </div>
-  );
-};
-
-export default CandidateDetail;
-
+                      id="delai
