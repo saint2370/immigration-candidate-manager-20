@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +8,7 @@ import { Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
 
 // Define the correct types from our Database type
 type Candidate = Database['public']['Tables']['candidates']['Row'];
@@ -20,9 +20,42 @@ const CandidatesList = () => {
   const [selectedVisa, setSelectedVisa] = useState<VisaType | 'all'>('all');
   const navigate = useNavigate();
   const { t, language } = useLanguage();
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchCandidates();
+
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel('candidates-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'candidates'
+        },
+        (payload) => {
+          console.log('Realtime update received:', payload);
+          
+          // Refresh the candidates list when any change occurs
+          fetchCandidates();
+          
+          // Show a toast notification for updates
+          if (payload.eventType === 'UPDATE') {
+            toast({
+              title: "Candidat mis à jour",
+              description: "Les informations du candidat ont été mises à jour.",
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on component unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [selectedVisa]);
 
   const visaTypes: VisaType[] = ['Visiteur', 'Travail', 'Résidence Permanente'];

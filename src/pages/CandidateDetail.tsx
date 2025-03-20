@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -100,6 +99,68 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
     if (id && !isNewCandidate) {
       fetchCandidate();
       fetchDocuments();
+
+      // Subscribe to realtime updates for this specific candidate
+      const channel = supabase
+        .channel(`candidate-${id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'candidates',
+            filter: `id=eq.${id}`
+          },
+          (payload) => {
+            console.log('Candidate updated:', payload);
+            
+            // Update the candidate data in real-time
+            const updatedCandidate = payload.new as Database['public']['Tables']['candidates']['Row'];
+            setCandidate(updatedCandidate);
+            
+            // Show a toast notification
+            if (!isEditMode) {
+              toast({
+                title: "Mise à jour en temps réel",
+                description: "Les informations du candidat ont été mises à jour.",
+              });
+            }
+          }
+        )
+        .subscribe();
+
+      // Subscribe to document changes for this candidate
+      const docsChannel = supabase
+        .channel(`docs-${id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to all events
+            schema: 'public',
+            table: 'documents',
+            filter: `candidate_id=eq.${id}`
+          },
+          (payload) => {
+            console.log('Documents updated:', payload);
+            
+            // Refresh documents list
+            fetchDocuments();
+            
+            if (payload.eventType === 'INSERT') {
+              toast({
+                title: "Document ajouté",
+                description: "Un nouveau document a été ajouté au dossier.",
+              });
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        // Cleanup subscriptions on component unmount
+        supabase.removeChannel(channel);
+        supabase.removeChannel(docsChannel);
+      };
     } else if (isNewCandidate) {
       // For new candidate, we're already in edit mode and don't need to fetch
       setIsLoading(false);
@@ -844,263 +905,3 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
                     <Select
                       value={formData.visa_type}
                       onValueChange={(value) => handleSelectChange('visa_type', value)}
-                    >
-                      <SelectTrigger id="visa_type">
-                        <SelectValue placeholder="Sélectionner un type de visa" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {visaTypes.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="procedure">Procédure</Label>
-                    <Input 
-                      id="procedure" 
-                      name="procedure" 
-                      value={formData.procedure} 
-                      onChange={handleInputChange} 
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Statut</Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(value) => handleSelectChange('status', value)}
-                    >
-                      <SelectTrigger id="status">
-                        <SelectValue placeholder="Sélectionner un statut" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {statuses.map((status) => (
-                          <SelectItem key={status} value={status}>
-                            {status}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="date_soumission">Date de soumission</Label>
-                    <DateInput
-                      value={formData.date_soumission}
-                      onChange={(date) => handleDateChange('date_soumission', date)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="date_voyage">Date prévue du voyage</Label>
-                    <DateInput
-                      value={formData.date_voyage}
-                      onChange={(date) => handleDateChange('date_voyage', date)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="delai_traitement">Délai de traitement</Label>
-                    <Input 
-                      id="delai_traitement" 
-                      name="delai_traitement" 
-                      value={formData.delai_traitement} 
-                      onChange={handleInputChange} 
-                    />
-                  </div>
-
-                  <div className="col-span-2 space-y-2">
-                    <Label htmlFor="notes">Notes</Label>
-                    <Textarea 
-                      id="notes" 
-                      name="notes" 
-                      value={formData.notes} 
-                      onChange={handleInputChange} 
-                      className="h-32"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="photo" className="space-y-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Photo du candidat</h2>
-              
-              <div className="flex flex-col items-center gap-4">
-                {photoPreview ? (
-                  <div className="mb-4">
-                    <Avatar className="h-60 w-60 rounded-full">
-                      <AvatarImage 
-                        src={photoPreview}
-                        alt="Photo de profil"
-                        className="object-cover"
-                      />
-                      <AvatarFallback className="text-5xl">
-                        {formData.prenom.charAt(0) || "?"}{formData.nom.charAt(0) || "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                ) : (
-                  <div className="mb-4">
-                    <Avatar className="h-60 w-60 rounded-full">
-                      <AvatarFallback className="text-5xl">
-                        {formData.prenom.charAt(0) || "?"}{formData.nom.charAt(0) || "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                )}
-                
-                <div className="w-full max-w-md">
-                  <div className="mb-4">
-                    <Label htmlFor="photo" className="mb-2 block">Choisir une photo</Label>
-                    <Input 
-                      id="photo" 
-                      type="file" 
-                      accept="image/*" 
-                      onChange={handlePhotoChange} 
-                      disabled={isUploading}
-                    />
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    {photoFile && (
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={clearPhotoSelection}
-                        disabled={isUploading}
-                      >
-                        <X className="h-4 w-4 mr-2" />
-                        Annuler
-                      </Button>
-                    )}
-                    
-                    {candidate?.photo_url && !isNewCandidate && (
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={removePhoto}
-                        disabled={isUploading}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash className="h-4 w-4 mr-2" />
-                        Supprimer
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="documents" className="space-y-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Documents du candidat</h2>
-              
-              {isNewCandidate ? (
-                <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                  <p className="text-yellow-700">
-                    Vous devez d'abord créer le candidat avant de pouvoir ajouter des documents.
-                    Veuillez remplir les informations dans l'onglet "Informations générales" et enregistrer.
-                  </p>
-                </div>
-              ) : (
-                <p className="mb-4">Ajoutez ou mettez à jour les documents du candidat</p>
-              )}
-              
-              {isLoadingDocTypes ? (
-                <div className="flex justify-center items-center h-64">
-                  <p>Chargement des types de documents...</p>
-                </div>
-              ) : documentTypes.length > 0 ? (
-                <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {documentTypes.map(docType => {
-                    // Trouver si un document de ce type existe déjà
-                    const existingDoc = documents.find(doc => 
-                      doc.document_type_id === docType.id
-                    );
-                    
-                    return (
-                      <li key={docType.id} className="border rounded-md p-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <div>
-                            <span className="font-medium">{docType.nom}</span>
-                            {docType.required && (
-                              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800">
-                                Requis
-                              </span>
-                            )}
-                          </div>
-                          {existingDoc && existingDoc.file_path && (
-                            <a 
-                              href={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/documents/${existingDoc.file_path}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-500 hover:text-blue-700 underline"
-                            >
-                              Document actuel
-                            </a>
-                          )}
-                        </div>
-                        
-                        <div className="mt-2">
-                          <Input 
-                            type="file" 
-                            onChange={(e) => {
-                              const file = e.target.files?.[0] || null;
-                              handleFileUpload(docType.id, file);
-                            }}
-                            disabled={isNewCandidate || isSaving}
-                            className={isNewCandidate ? "opacity-50 cursor-not-allowed" : ""}
-                          />
-                          {uploadedDocuments[docType.id] && (
-                            <p className="text-sm text-green-600 mt-1">
-                              Fichier sélectionné: {uploadedDocuments[docType.id]?.name}
-                            </p>
-                          )}
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <p>Aucun type de document trouvé pour ce type de visa.</p>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
-        
-        <div className="flex justify-end gap-2">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => navigate('/tableaudebord/candidates')}
-            disabled={isSaving}
-          >
-            Annuler
-          </Button>
-          <Button 
-            type="submit" 
-            className="flex items-center gap-2"
-            disabled={isSaving}
-          >
-            {isSaving ? 'Enregistrement...' : (
-              <>
-                <Save className="h-4 w-4" />
-                {isNewCandidate ? 'Créer le candidat' : 'Enregistrer'}
-              </>
-            )}
-          </Button>
-        </div>
-      </form>
-    </div>
-  );
-};
-
-export default CandidateDetail;
