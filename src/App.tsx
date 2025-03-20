@@ -37,6 +37,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="candidates" element={<CandidatesList />} />
+              <Route path="candidates/new" element={<CandidateDetail isNewCandidate={true} />} />
               <Route path="candidate/:id" element={<CandidateDetail />} />
               <Route path="candidates/edit/:id" element={<CandidateDetail />} />
               <Route path="settings" element={<Settings />} />

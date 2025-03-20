@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -82,7 +81,7 @@ const CandidatesList = () => {
             </Select>
           </div>
         </div>
-        <Button onClick={() => navigate('/candidates/new')} className="flex items-center gap-2">
+        <Button onClick={() => navigate('/tableaudebord/candidates/new')} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Nouveau candidat
         </Button>
@@ -141,4 +140,3 @@ const CandidatesList = () => {
 };
 
 export default CandidatesList;
-
