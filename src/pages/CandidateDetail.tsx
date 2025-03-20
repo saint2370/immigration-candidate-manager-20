@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -904,4 +905,257 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
                     <Label htmlFor="visa_type">Type de visa</Label>
                     <Select
                       value={formData.visa_type}
-                      onValueChange={(value) => handleSelectChange('visa_type', value)}
+                      onValueChange={(value) => handleSelectChange('visa_type', value as VisaType)}
+                    >
+                      <SelectTrigger id="visa_type">
+                        <SelectValue placeholder="Sélectionner un type de visa" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {visaTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Statut</Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value) => handleSelectChange('status', value as StatusType)}
+                    >
+                      <SelectTrigger id="status">
+                        <SelectValue placeholder="Sélectionner un statut" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {statuses.map((status) => (
+                          <SelectItem key={status} value={status}>
+                            {status}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="date_soumission">Date de soumission</Label>
+                    <DateInput
+                      value={formData.date_soumission}
+                      onChange={(date) => handleDateChange('date_soumission', date)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="date_voyage">Date prévue du voyage</Label>
+                    <DateInput
+                      value={formData.date_voyage}
+                      onChange={(date) => handleDateChange('date_voyage', date)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="procedure">Procédure</Label>
+                    <Input 
+                      id="procedure" 
+                      name="procedure" 
+                      value={formData.procedure} 
+                      onChange={handleInputChange} 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="delai_traitement">Délai de traitement</Label>
+                    <Input 
+                      id="delai_traitement" 
+                      name="delai_traitement" 
+                      value={formData.delai_traitement} 
+                      onChange={handleInputChange} 
+                    />
+                  </div>
+
+                  <div className="col-span-1 md:col-span-2 space-y-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea 
+                      id="notes" 
+                      name="notes" 
+                      value={formData.notes} 
+                      onChange={handleInputChange} 
+                      rows={5}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="photo" className="space-y-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">Photo de profil</h2>
+              
+              <div className="flex flex-col items-center space-y-4">
+                {photoPreview ? (
+                  <div className="relative">
+                    <Avatar className="h-40 w-40 rounded-full">
+                      <AvatarImage 
+                        src={photoPreview}
+                        alt="Photo de profil"
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="text-3xl">
+                        {formData.prenom.charAt(0)}{formData.nom.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute -top-2 -right-2 rounded-full h-8 w-8 p-0"
+                      onClick={clearPhotoSelection}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Avatar className="h-40 w-40 rounded-full">
+                    <AvatarFallback className="text-3xl">
+                      {formData.prenom.charAt(0) || "?"}{formData.nom.charAt(0) || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+                
+                <div className="flex flex-col gap-4 w-full max-w-xs">
+                  <div className="relative">
+                    <Input
+                      id="photo"
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoChange}
+                      className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                    />
+                    <Button 
+                      type="button" 
+                      className="w-full flex items-center gap-2"
+                      variant="outline"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Sélectionner une photo
+                    </Button>
+                  </div>
+                  
+                  {candidate && candidate.photo_url && (
+                    <Button 
+                      type="button" 
+                      variant="destructive"
+                      className="flex items-center gap-2"
+                      onClick={removePhoto}
+                    >
+                      <Trash className="h-4 w-4" />
+                      Supprimer la photo actuelle
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="documents" className="space-y-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">Documents</h2>
+              
+              {isLoadingDocTypes ? (
+                <div className="py-4 text-center">Chargement des types de documents...</div>
+              ) : documentTypes.length > 0 ? (
+                <div className="space-y-6">
+                  <ul className="space-y-4">
+                    {documentTypes.map((docType) => {
+                      // Find if document already exists
+                      const existingDoc = documents.find(doc => doc.document_type_id === docType.id);
+                      
+                      return (
+                        <li key={docType.id} className="border rounded-md p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <span className="font-medium">{docType.nom}</span>
+                              {docType.required && (
+                                <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800">Requis</span>
+                              )}
+                            </div>
+                            
+                            {existingDoc && existingDoc.file_path && (
+                              <a
+                                href={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/documents/${existingDoc.file_path}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:text-blue-700 underline"
+                              >
+                                Voir le document existant
+                              </a>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center gap-4">
+                            <div className="relative flex-1">
+                              <Input
+                                id={`document-${docType.id}`}
+                                type="file"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0] || null;
+                                  handleFileUpload(docType.id, file);
+                                }}
+                                className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                              />
+                              <Button 
+                                type="button" 
+                                className="w-full flex items-center gap-2"
+                                variant="outline"
+                              >
+                                <Upload className="h-4 w-4" />
+                                {existingDoc ? 'Remplacer le document' : 'Téléverser'}
+                              </Button>
+                            </div>
+                            
+                            {uploadedDocuments[docType.id] && (
+                              <div className="text-sm text-gray-600">
+                                {uploadedDocuments[docType.id]?.name}
+                              </div>
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ) : (
+                <div className="py-4 text-center">
+                  Aucun type de document configuré pour ce type de visa.
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+        
+        <div className="flex justify-end gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate('/tableaudebord/candidates')}
+          >
+            Annuler
+          </Button>
+          <Button 
+            type="submit" 
+            className="flex items-center gap-2"
+            disabled={isSaving}
+          >
+            {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+            <Save className="h-4 w-4" />
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default CandidateDetail;
