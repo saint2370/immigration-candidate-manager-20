@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from '@/integrations/supabase/types';
 import { Link } from 'react-router-dom';
-import { Pencil, ArrowLeft, Save, X, Upload, Trash, Plus } from 'lucide-react';
+import { Pencil, ArrowLeft, Save, X, Upload, Trash, Plus, UserPlus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input, DateInput } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,12 +15,15 @@ import { fr } from 'date-fns/locale';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Form } from '@/components/ui/form';
+import ResidencePermanenteForm, { EnfantType, ImmigrationProgramType } from '@/components/candidates/ResidencePermanenteForm';
 
 // Define a type for the documents with the nested document_types
 type DocumentWithTypeName = Database['public']['Tables']['documents']['Row'] & {
   document_types: {
     nom: string;
     required: boolean;
+    description?: string;
   } | null;
 };
 
@@ -32,6 +34,7 @@ type DocumentType = {
   nom: string;
   visa_type: VisaType;
   required: boolean;
+  description?: string;
 };
 type DocumentStatus = Database['public']['Enums']['document_status'];
 
@@ -70,6 +73,12 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingDocTypes, setIsLoadingDocTypes] = useState(false);
   
+  // Données pour la résidence permanente
+  const [permanentResidenceDetails, setPermanentResidenceDetails] = useState<Database['public']['Tables']['permanent_residence_details']['Row'] | null>(null);
+  const [enfants, setEnfants] = useState<EnfantType[]>([]);
+  const [isLoadingPermanentResidence, setIsLoadingPermanentResidence] = useState(false);
+  const [permanentResidenceId, setPermanentResidenceId] = useState<string | null>(null);
+
   // État pour le formulaire d'édition
   const [formData, setFormData] = useState({
     nom: '',
@@ -100,6 +109,9 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
     if (id && !isNewCandidate) {
       fetchCandidate();
       fetchDocuments();
+      if (candidate?.visa_type === 'Résidence Permanente') {
+        fetchPermanentResidenceDetails();
+      }
 
       // Subscribe to realtime updates for this specific candidate
       const channel = supabase
@@ -196,6 +208,10 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
       if (candidate.photo_url) {
         setPhotoPreview(`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/profile_photos/${candidate.photo_url}`);
       }
+      
+      if (candidate.visa_type === 'Résidence Permanente') {
+        fetchPermanentResidenceDetails();
+      }
 
       // Charger les types de documents en fonction du visa sélectionné
       fetchDocumentTypes(candidate.visa_type);
@@ -285,6 +301,57 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
       });
     } finally {
       setIsLoadingDocTypes(false);
+    }
+  };
+
+  const fetchPermanentResidenceDetails = async () => {
+    if (!id) return;
+    
+    setIsLoadingPermanentResidence(true);
+    try {
+      // Récupérer les détails de résidence permanente
+      const { data: residenceData, error: residenceError } = await supabase
+        .from('permanent_residence_details')
+        .select('*')
+        .eq('candidate_id', id)
+        .single();
+      
+      if (residenceError && residenceError.code !== 'PGRST116') {
+        // PGRST116 est l'erreur "no rows returned", ce qui est normal si c'est un nouveau candidat
+        console.error('Error fetching permanent residence details:', residenceError);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les détails de résidence permanente.",
+          variant: "destructive"
+        });
+      }
+      
+      if (residenceData) {
+        setPermanentResidenceDetails(residenceData);
+        setPermanentResidenceId(residenceData.id);
+        
+        // Maintenant, récupérons les enfants associés à ce détail de résidence permanente
+        const { data: enfantsData, error: enfantsError } = await supabase
+          .from('enfants')
+          .select('*')
+          .eq('permanent_residence_id', residenceData.id);
+        
+        if (enfantsError) {
+          console.error('Error fetching enfants:', enfantsError);
+        }
+        
+        if (enfantsData) {
+          // Convertir l'âge en chaîne de caractères pour correspondre au type EnfantType
+          const formattedEnfants = enfantsData.map(enfant => ({
+            ...enfant,
+            age: enfant.age.toString()
+          }));
+          
+          setEnfants(formattedEnfants);
+        }
+      }
+    } finally {
+      setIsLoadingPermanentResidence(false);
     }
   };
 
@@ -738,6 +805,57 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
             <p>Aucun document trouvé pour ce candidat.</p>
           )}
         </div>
+
+        {candidate && candidate.visa_type === 'Résidence Permanente' && (
+          <div className="bg-white rounded-lg shadow p-6 mt-6">
+            <h2 className="text-xl font-semibold mb-4">Détails de Résidence Permanente</h2>
+            
+            {isLoadingPermanentResidence ? (
+              <p>Chargement des informations...</p>
+            ) : permanentResidenceDetails ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Programme d'immigration</h3>
+                  <p className="mb-4">{permanentResidenceDetails.immigration_program}</p>
+                  
+                  <h3 className="text-lg font-medium mb-2">Nombre total de personnes</h3>
+                  <p className="mb-4">{permanentResidenceDetails.nombre_personnes}</p>
+                </div>
+                
+                {(permanentResidenceDetails.conjoint_nom || permanentResidenceDetails.conjoint_prenom) && (
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Informations du conjoint</h3>
+                    {permanentResidenceDetails.conjoint_prenom && (
+                      <p className="mb-1"><strong>Prénom:</strong> {permanentResidenceDetails.conjoint_prenom}</p>
+                    )}
+                    {permanentResidenceDetails.conjoint_nom && (
+                      <p className="mb-1"><strong>Nom:</strong> {permanentResidenceDetails.conjoint_nom}</p>
+                    )}
+                    {permanentResidenceDetails.conjoint_passport && (
+                      <p className="mb-1"><strong>Numéro de passport:</strong> {permanentResidenceDetails.conjoint_passport}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p>Aucune information de résidence permanente disponible.</p>
+            )}
+            
+            {enfants.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-lg font-medium mb-2">Enfants</h3>
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {enfants.map((enfant) => (
+                    <li key={enfant.id} className="border rounded-md p-4">
+                      <p className="font-medium">{enfant.prenom} {enfant.nom}</p>
+                      <p className="text-sm text-gray-600">Âge: {enfant.age} ans</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   }
@@ -754,10 +872,13 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-3 mb-4">
+          <TabsList className="grid grid-cols-1 md:grid-cols-4 mb-4">
             <TabsTrigger value="info">Informations générales</TabsTrigger>
             <TabsTrigger value="photo">Photo</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
+            {(formData.visa_type === 'Résidence Permanente' || candidate?.visa_type === 'Résidence Permanente') && (
+              <TabsTrigger value="residence_permanente">Résidence Permanente</TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="info" className="space-y-6">
@@ -1134,6 +1255,37 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
               )}
             </div>
           </TabsContent>
+
+          {(formData.visa_type === 'Résidence Permanente' || candidate?.visa_type === 'Résidence Permanente') && (
+            <TabsContent value="residence_permanente" className="space-y-6">
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-4">Informations de Résidence Permanente</h2>
+                
+                {isLoadingPermanentResidence ? (
+                  <div className="flex justify-center items-center py-8">
+                    <p>Chargement des informations...</p>
+                  </div>
+                ) : (
+                  <ResidencePermanenteForm 
+                    candidateId={id || ''}
+                    isNewCandidate={isNewCandidate}
+                    existingData={permanentResidenceDetails}
+                    existingEnfants={enfants}
+                    permanentResidenceId={permanentResidenceId}
+                    onSaved={(prData, enfantsData) => {
+                      setPermanentResidenceDetails(prData);
+                      setPermanentResidenceId(prData.id);
+                      setEnfants(enfantsData);
+                      toast({
+                        title: "Détails de résidence permanente enregistrés",
+                        description: "Les informations ont été mises à jour avec succès.",
+                      });
+                    }}
+                  />
+                )}
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
         
         <div className="flex justify-end gap-4">
