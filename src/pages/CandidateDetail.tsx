@@ -35,6 +35,11 @@ type DocumentType = {
 };
 type DocumentStatus = Database['public']['Enums']['document_status'];
 
+// Component props interface
+interface CandidateDetailProps {
+  isNewCandidate?: boolean;
+}
+
 const statuses: StatusType[] = [
   'En cours', 'Approuvé', 'En attente', 'Rejeté', 'Complété', 'Expiré'
 ];
@@ -49,12 +54,12 @@ const bureaux = [
   'Tokyo', 'Moscou', 'Madrid', 'Séoul', 'Le Caire'
 ];
 
-const CandidateDetail: React.FC = () => {
+const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = false }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const isEditMode = location.pathname.includes('/edit/');
+  const isEditMode = location.pathname.includes('/edit/') || isNewCandidate;
   const [activeTab, setActiveTab] = useState('info');
 
   const [candidate, setCandidate] = useState<Database['public']['Tables']['candidates']['Row'] | null>(null);
@@ -486,7 +491,7 @@ const CandidateDetail: React.FC = () => {
     return <div className="container mx-auto p-4 flex justify-center items-center h-64">Chargement...</div>;
   }
 
-  if (!candidate) {
+  if (!candidate && !isNewCandidate) {
     return <div className="container mx-auto p-4">Candidat non trouvé.</div>;
   }
 
@@ -511,7 +516,7 @@ const CandidateDetail: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <div className="md:col-span-1 flex flex-col items-center">
-            {candidate.photo_url ? (
+            {candidate && candidate.photo_url ? (
               <Avatar className="h-40 w-40 rounded-full">
                 <AvatarImage 
                   src={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/profile_photos/${candidate.photo_url}`}
@@ -525,14 +530,14 @@ const CandidateDetail: React.FC = () => {
             ) : (
               <Avatar className="h-40 w-40 rounded-full">
                 <AvatarFallback className="text-3xl">
-                  {candidate.prenom?.charAt(0)}{candidate.nom?.charAt(0)}
+                  {candidate && candidate.prenom?.charAt(0)}{candidate && candidate.nom?.charAt(0)}
                 </AvatarFallback>
               </Avatar>
             )}
-            <h1 className="text-2xl font-bold mt-4 text-center">{candidate.prenom} {candidate.nom}</h1>
+            <h1 className="text-2xl font-bold mt-4 text-center">{candidate && candidate.prenom} {candidate && candidate.nom}</h1>
             <div className="mt-2 text-center">
               <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                {candidate.visa_type}
+                {candidate && candidate.visa_type}
               </span>
             </div>
           </div>
@@ -541,37 +546,45 @@ const CandidateDetail: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white rounded-lg shadow p-6">
               <div>
                 <h2 className="text-xl font-semibold mb-4">Informations personnelles</h2>
-                <p className="mb-2"><strong>Date de naissance:</strong> {format(new Date(candidate.date_naissance), 'dd MMMM yyyy', { locale: fr })}</p>
-                <p className="mb-2"><strong>Lieu de naissance:</strong> {candidate.lieu_naissance}</p>
-                <p className="mb-2"><strong>Nationalité:</strong> {candidate.nationalite}</p>
-                <p className="mb-2"><strong>Numéro de passeport:</strong> {candidate.numero_passport}</p>
-                <p className="mb-2"><strong>Email:</strong> {candidate.email || 'Non spécifié'}</p>
-                <p className="mb-2"><strong>Téléphone:</strong> {candidate.telephone || 'Non spécifié'}</p>
-                <p className="mb-2"><strong>Adresse:</strong> {candidate.adresse || 'Non spécifiée'}</p>
+                {candidate && (
+                  <>
+                    <p className="mb-2"><strong>Date de naissance:</strong> {format(new Date(candidate.date_naissance), 'dd MMMM yyyy', { locale: fr })}</p>
+                    <p className="mb-2"><strong>Lieu de naissance:</strong> {candidate.lieu_naissance}</p>
+                    <p className="mb-2"><strong>Nationalité:</strong> {candidate.nationalite}</p>
+                    <p className="mb-2"><strong>Numéro de passeport:</strong> {candidate.numero_passport}</p>
+                    <p className="mb-2"><strong>Email:</strong> {candidate.email || 'Non spécifié'}</p>
+                    <p className="mb-2"><strong>Téléphone:</strong> {candidate.telephone || 'Non spécifié'}</p>
+                    <p className="mb-2"><strong>Adresse:</strong> {candidate.adresse || 'Non spécifiée'}</p>
+                  </>
+                )}
               </div>
               <div>
                 <h2 className="text-xl font-semibold mb-4">Détails du dossier</h2>
-                <p className="mb-2"><strong>Type de visa:</strong> {candidate.visa_type}</p>
-                <p className="mb-2"><strong>Procédure:</strong> {candidate.procedure || 'Non spécifiée'}</p>
-                <p className="mb-2"><strong>Statut:</strong> 
-                  <span className={`ml-2 px-2 py-1 rounded text-sm font-medium ${
-                    candidate.status === 'Approuvé' ? 'bg-green-100 text-green-800' :
-                    candidate.status === 'En cours' ? 'bg-blue-100 text-blue-800' :
-                    candidate.status === 'En attente' ? 'bg-yellow-100 text-yellow-800' :
-                    candidate.status === 'Rejeté' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {candidate.status}
-                  </span>
-                </p>
-                <p className="mb-2"><strong>Date de soumission:</strong> {format(new Date(candidate.date_soumission), 'dd MMMM yyyy', { locale: fr })}</p>
-                <p className="mb-2"><strong>Date prévue du voyage:</strong> {candidate.date_voyage ? format(new Date(candidate.date_voyage), 'dd MMMM yyyy', { locale: fr }) : 'Non spécifiée'}</p>
-                <p className="mb-2"><strong>Bureau en charge:</strong> {candidate.bureau}</p>
-                <p className="mb-2"><strong>Délai de traitement:</strong> {candidate.delai_traitement || 'Non spécifié'}</p>
+                {candidate && (
+                  <>
+                    <p className="mb-2"><strong>Type de visa:</strong> {candidate.visa_type}</p>
+                    <p className="mb-2"><strong>Procédure:</strong> {candidate.procedure || 'Non spécifiée'}</p>
+                    <p className="mb-2"><strong>Statut:</strong> 
+                      <span className={`ml-2 px-2 py-1 rounded text-sm font-medium ${
+                        candidate.status === 'Approuvé' ? 'bg-green-100 text-green-800' :
+                        candidate.status === 'En cours' ? 'bg-blue-100 text-blue-800' :
+                        candidate.status === 'En attente' ? 'bg-yellow-100 text-yellow-800' :
+                        candidate.status === 'Rejeté' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {candidate.status}
+                      </span>
+                    </p>
+                    <p className="mb-2"><strong>Date de soumission:</strong> {format(new Date(candidate.date_soumission), 'dd MMMM yyyy', { locale: fr })}</p>
+                    <p className="mb-2"><strong>Date prévue du voyage:</strong> {candidate.date_voyage ? format(new Date(candidate.date_voyage), 'dd MMMM yyyy', { locale: fr }) : 'Non spécifiée'}</p>
+                    <p className="mb-2"><strong>Bureau en charge:</strong> {candidate.bureau}</p>
+                    <p className="mb-2"><strong>Délai de traitement:</strong> {candidate.delai_traitement || 'Non spécifié'}</p>
+                  </>
+                )}
               </div>
             </div>
 
-            {candidate.notes && (
+            {candidate && candidate.notes && (
               <div className="mt-4 bg-white rounded-lg shadow p-6">
                 <h2 className="text-xl font-semibold mb-2">Notes</h2>
                 <p className="whitespace-pre-wrap">{candidate.notes}</p>
@@ -1046,3 +1059,4 @@ const CandidateDetail: React.FC = () => {
 };
 
 export default CandidateDetail;
+
