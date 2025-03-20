@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -874,3 +875,45 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-1 md:grid-cols-4 mb-4">
             <TabsTrigger value="info">Informations générales</TabsTrigger>
+            <TabsTrigger value="docs">Documents</TabsTrigger>
+            <TabsTrigger value="rp" disabled={formData.visa_type !== 'Résidence Permanente'}>Résidence Permanente</TabsTrigger>
+            <TabsTrigger value="history">Historique</TabsTrigger>
+          </TabsList>
+          
+          {/* Add the content of the tabs here */}
+          <TabsContent value="info">
+            {/* Information content */}
+          </TabsContent>
+          
+          <TabsContent value="docs">
+            {/* Documents content */}
+          </TabsContent>
+          
+          <TabsContent value="rp">
+            {/* Residence Permanente content */}
+          </TabsContent>
+          
+          <TabsContent value="history">
+            {/* History content */}
+          </TabsContent>
+        </Tabs>
+        
+        <div className="flex justify-end gap-4 mt-6">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate(`/tableaudebord/candidate/${id || ''}`)}
+            disabled={isSaving}
+          >
+            Annuler
+          </Button>
+          <Button type="submit" disabled={isSaving}>
+            {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default CandidateDetail;
