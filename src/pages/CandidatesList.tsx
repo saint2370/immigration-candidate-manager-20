@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -123,7 +124,7 @@ const CandidatesList = () => {
                   <td className="px-6 py-4">{candidate.bureau}</td>
                   <td className="px-6 py-4 text-center">
                     <Link
-                      to={`/candidate/${candidate.id}`}
+                      to={`/tableaudebord/candidate/${candidate.id}`}
                       className="text-blue-600 hover:text-blue-900"
                     >
                       Voir

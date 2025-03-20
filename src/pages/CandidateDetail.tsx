@@ -159,6 +159,11 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
 
       if (error) {
         console.error("Error fetching candidate:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les informations du candidat.",
+          variant: "destructive"
+        });
       }
 
       if (candidate) {
