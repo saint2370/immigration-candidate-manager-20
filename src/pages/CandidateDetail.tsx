@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -910,3 +911,472 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="mb-2"><strong>Programme d'immigration:</strong> {permanentResidence.immigration_program}</p>
+                    <p className="mb-2"><strong>Nombre de personnes:</strong> {permanentResidence.nombre_personnes}</p>
+                  </div>
+                  
+                  {permanentResidence.conjoint_nom && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Conjoint</h3>
+                      <p className="mb-2"><strong>Nom:</strong> {permanentResidence.conjoint_nom}</p>
+                      <p className="mb-2"><strong>Prénom:</strong> {permanentResidence.conjoint_prenom}</p>
+                      <p className="mb-2"><strong>Numéro de passeport:</strong> {permanentResidence.conjoint_passport || 'Non spécifié'}</p>
+                    </div>
+                  )}
+                </div>
+                
+                {enfants && enfants.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="text-lg font-semibold mb-2">Enfants</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {enfants.map((enfant, index) => (
+                        <div key={enfant.id || index} className="border p-3 rounded-md">
+                          <p className="mb-1"><strong>Nom:</strong> {enfant.nom}</p>
+                          <p className="mb-1"><strong>Prénom:</strong> {enfant.prenom}</p>
+                          <p className="mb-1"><strong>Âge:</strong> {enfant.age} ans</p>
+                          {enfant.numero_passport && (
+                            <p className="mb-1"><strong>Numéro de passeport:</strong> {enfant.numero_passport}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Section des documents */}
+            <div className="mt-4">
+              <Tabs defaultValue="documents" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="documents">Documents ({documents.length})</TabsTrigger>
+                  <TabsTrigger value="history">Historique</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="documents" className="bg-white rounded-lg shadow p-6">
+                  {documents.length === 0 ? (
+                    <p className="text-center text-gray-500 my-6">Aucun document n'a encore été téléversé pour ce candidat.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {documents.map((doc) => (
+                        <div key={doc.id} className="flex items-center justify-between p-3 border rounded-md">
+                          <div>
+                            <p className="font-medium">{doc.document_types?.nom || "Document"}</p>
+                            <p className="text-sm text-gray-500">{doc.filename}</p>
+                            <Badge variant={
+                              doc.status === 'approved' ? 'success' :
+                              doc.status === 'rejected' ? 'destructive' :
+                              'outline'
+                            }>
+                              {doc.status === 'uploaded' ? 'Téléversé' :
+                              doc.status === 'approved' ? 'Approuvé' :
+                              doc.status === 'rejected' ? 'Rejeté' :
+                              'En attente'}
+                            </Badge>
+                          </div>
+                          <a 
+                            href={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/documents/${doc.file_path}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:text-blue-700"
+                          >
+                            Voir
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="history" className="bg-white rounded-lg shadow p-6">
+                  {/* Contenu de l'onglet historique - à implémenter */}
+                  <p className="text-center text-gray-500 my-6">L'historique sera implémenté prochainement.</p>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Vue en mode édition - à implémenter
+  return (
+    <div className="container mx-auto p-4">
+      <div className="mb-4 flex items-center justify-between">
+        <Link to={isNewCandidate ? "/tableaudebord/candidates" : `/tableaudebord/candidate/${id}`} className="flex items-center gap-2 text-blue-500 hover:text-blue-700">
+          <ArrowLeft className="h-5 w-5" />
+          {isNewCandidate ? "Retour à la liste des candidats" : "Annuler les modifications"}
+        </Link>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex flex-col md:flex-row gap-6 mb-6">
+            <div className="flex flex-col items-center">
+              <div className="mb-4 w-40 h-40 relative">
+                {photoPreview ? (
+                  <Avatar className="h-40 w-40 rounded-full">
+                    <AvatarImage 
+                      src={photoPreview}
+                      alt="Preview"
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="text-3xl">
+                      {formData.prenom?.charAt(0)}{formData.nom?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <Avatar className="h-40 w-40 rounded-full">
+                    <AvatarFallback className="text-3xl">
+                      {formData.prenom?.charAt(0)}{formData.nom?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+                
+                <div className="mt-2 flex gap-2 justify-center">
+                  <Label htmlFor="photo-upload" className="cursor-pointer bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-2 rounded-md text-sm flex items-center gap-1">
+                    <Upload className="h-4 w-4" />
+                    Photo
+                    <input 
+                      type="file" 
+                      id="photo-upload"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handlePhotoChange}
+                    />
+                  </Label>
+                  
+                  {photoFile && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={clearPhotoSelection}
+                      className="text-sm"
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Annuler
+                    </Button>
+                  )}
+                  
+                  {!photoFile && candidate?.photo_url && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={removePhoto}
+                      className="text-sm"
+                    >
+                      <Trash className="h-4 w-4 mr-1" />
+                      Supprimer
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="prenom">Prénom</Label>
+                <Input
+                  id="prenom"
+                  name="prenom"
+                  value={formData.prenom}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="nom">Nom</Label>
+                <Input
+                  id="nom"
+                  name="nom"
+                  value={formData.nom}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="telephone">Téléphone</Label>
+                <Input
+                  id="telephone"
+                  name="telephone"
+                  value={formData.telephone}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="date_naissance">Date de naissance</Label>
+              <DateInput 
+                value={formData.date_naissance} 
+                onChange={(date) => handleDateChange('date_naissance', date)}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="lieu_naissance">Lieu de naissance</Label>
+              <Input
+                id="lieu_naissance"
+                name="lieu_naissance"
+                value={formData.lieu_naissance}
+                onChange={handleInputChange}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="nationalite">Nationalité</Label>
+              <Input
+                id="nationalite"
+                name="nationalite"
+                value={formData.nationalite}
+                onChange={handleInputChange}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="numero_passport">Numéro de passeport</Label>
+              <Input
+                id="numero_passport"
+                name="numero_passport"
+                value={formData.numero_passport}
+                onChange={handleInputChange}
+              />
+            </div>
+            
+            <div className="md:col-span-2">
+              <Label htmlFor="adresse">Adresse</Label>
+              <Input
+                id="adresse"
+                name="adresse"
+                value={formData.adresse}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-4">Détails du dossier</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="visa_type">Type de visa</Label>
+              <Select 
+                name="visa_type" 
+                value={formData.visa_type} 
+                onValueChange={(value) => handleSelectChange('visa_type', value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner un type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {visaTypes.map((type) => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="status">Statut</Label>
+              <Select 
+                name="status" 
+                value={formData.status} 
+                onValueChange={(value) => handleSelectChange('status', value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner un statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statuses.map((status) => (
+                    <SelectItem key={status} value={status}>{status}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="bureau">Bureau en charge</Label>
+              <Select 
+                name="bureau" 
+                value={formData.bureau} 
+                onValueChange={(value) => handleSelectChange('bureau', value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner un bureau" />
+                </SelectTrigger>
+                <SelectContent>
+                  {bureaux.map((bureau) => (
+                    <SelectItem key={bureau} value={bureau}>{bureau}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="date_soumission">Date de soumission</Label>
+              <DateInput 
+                value={formData.date_soumission} 
+                onChange={(date) => handleDateChange('date_soumission', date)}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="date_voyage">Date prévue du voyage</Label>
+              <DateInput 
+                value={formData.date_voyage} 
+                onChange={(date) => handleDateChange('date_voyage', date)}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="procedure">Procédure</Label>
+              <Input
+                id="procedure"
+                name="procedure"
+                value={formData.procedure}
+                onChange={handleInputChange}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="delai_traitement">Délai de traitement</Label>
+              <Input
+                id="delai_traitement"
+                name="delai_traitement"
+                value={formData.delai_traitement}
+                onChange={handleInputChange}
+              />
+            </div>
+            
+            <div className="md:col-span-3">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                name="notes"
+                value={formData.notes}
+                onChange={handleInputChange}
+                rows={4}
+                className="resize-y"
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Section Résidence permanente */}
+        {formData.visa_type === 'Résidence Permanente' && (
+          <ResidencePermanenteForm
+            permanentResidence={permanentResidence}
+            setPermanentResidence={setPermanentResidence}
+            enfants={enfants}
+            setEnfants={setEnfants}
+          />
+        )}
+        
+        {/* Section téléversement de documents */}
+        {!isNewCandidate && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">Documents</h2>
+            
+            {isLoadingDocTypes ? (
+              <p className="text-center">Chargement des types de documents...</p>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {documentTypes.map((docType) => (
+                    <div key={docType.id} className="border p-3 rounded-md">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="font-medium">{docType.nom}</h3>
+                          {docType.required && (
+                            <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">Obligatoire</span>
+                          )}
+                        </div>
+                        <input
+                          type="file"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null;
+                            handleFileUpload(docType.id, file);
+                          }}
+                          className="text-sm file:mr-4 file:py-2 file:px-4
+                            file:rounded-md file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-blue-50 file:text-blue-700
+                            hover:file:bg-blue-100"
+                        />
+                      </div>
+                      
+                      {/* Afficher les documents existants de ce type */}
+                      {documents.filter(doc => doc.document_type_id === docType.id).map(doc => (
+                        <div key={doc.id} className="flex items-center justify-between text-sm text-gray-600 mt-1">
+                          <span>{doc.filename}</span>
+                          <a 
+                            href={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/documents/${doc.file_path}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:text-blue-700"
+                          >
+                            Voir
+                          </a>
+                        </div>
+                      ))}
+                      
+                      {uploadedDocuments[docType.id] && (
+                        <div className="text-sm text-gray-600 mt-1">
+                          À téléverser: {uploadedDocuments[docType.id].name}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+        
+        <div className="flex justify-end gap-2">
+          <Button 
+            type="button" 
+            variant="outline"
+            onClick={() => navigate(isNewCandidate ? "/tableaudebord/candidates" : `/tableaudebord/candidate/${id}`)}
+          >
+            Annuler
+          </Button>
+          <Button 
+            type="submit" 
+            className="flex items-center gap-2"
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              "Enregistrement..."
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Enregistrer
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default CandidateDetail;
