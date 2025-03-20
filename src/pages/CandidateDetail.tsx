@@ -873,4 +873,4 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
       <form onSubmit={handleSubmit} className="space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-1 md:grid-cols-4 mb-4">
-            <TabsTrigger value="info">Informations générales</TabsTrigger
+            <TabsTrigger value="info">Informations générales</TabsTrigger>
