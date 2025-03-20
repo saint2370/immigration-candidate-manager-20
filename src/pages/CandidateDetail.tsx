@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -273,13 +272,13 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
     }
   };
 
-  const uploadPhoto = async (): Promise<string | null> => {
-    if (!photoFile || !id) return null;
+  const uploadPhoto = async (candidateId: string): Promise<string | null> => {
+    if (!photoFile) return null;
     
     setIsUploading(true);
     try {
       const fileExt = photoFile.name.split('.').pop();
-      const fileName = `${id}/profile.${fileExt}`;
+      const fileName = `${candidateId}/profile.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
         .from('profile_photos')
@@ -465,6 +464,19 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
         
         candidateId = newCandidate.id;
         
+        // Upload photo if provided
+        if (photoFile) {
+          photoUrl = await uploadPhoto(candidateId);
+          
+          // Update candidate with photo URL if photo was uploaded
+          if (photoUrl) {
+            await supabase
+              .from('candidates')
+              .update({ photo_url: photoUrl })
+              .eq('id', candidateId);
+          }
+        }
+        
         // Add creation to history
         await supabase
           .from('history')
@@ -481,7 +493,7 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
       } else {
         // Update existing candidate
         if (photoFile) {
-          photoUrl = await uploadPhoto();
+          photoUrl = await uploadPhoto(id as string);
         }
         
         const { error: updateError } = await supabase
@@ -681,10 +693,8 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="info">Informations générales</TabsTrigger>
-            {!isNewCandidate && <TabsTrigger value="photo">Photo</TabsTrigger>}
-            {!isNewCandidate && <TabsTrigger value="documents">Documents</TabsTrigger>}
-            {isNewCandidate && <TabsTrigger value="photo" disabled>Photo</TabsTrigger>}
-            {isNewCandidate && <TabsTrigger value="documents" disabled>Documents</TabsTrigger>}
+            <TabsTrigger value="photo">Photo</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
           </TabsList>
 
           <TabsContent value="info" className="space-y-6">
@@ -704,11 +714,11 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
                 ) : (
                   <Avatar className="h-40 w-40 rounded-full">
                     <AvatarFallback className="text-3xl">
-                      {formData.prenom.charAt(0)}{formData.nom.charAt(0)}
+                      {formData.prenom.charAt(0) || "?"}{formData.nom.charAt(0) || "?"}
                     </AvatarFallback>
                   </Avatar>
                 )}
-                <h2 className="text-xl font-bold mt-4 text-center">{formData.prenom} {formData.nom}</h2>
+                <h2 className="text-xl font-bold mt-4 text-center">{formData.prenom || "Prénom"} {formData.nom || "Nom"}</h2>
               </div>
 
               <div className="md:col-span-3 bg-white rounded-lg shadow p-6">
@@ -887,206 +897,3 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
                   <div className="space-y-2">
                     <Label htmlFor="date_voyage">Date prévue du voyage</Label>
                     <DateInput
-                      value={formData.date_voyage}
-                      onChange={(date) => handleDateChange('date_voyage', date)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="delai_traitement">Délai de traitement</Label>
-                    <Input 
-                      id="delai_traitement" 
-                      name="delai_traitement" 
-                      value={formData.delai_traitement} 
-                      onChange={handleInputChange} 
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-4 space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleInputChange}
-                    rows={4}
-                  />
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="photo" className="space-y-4">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Photo de profil</h2>
-
-              <div className="flex flex-col items-center justify-center space-y-4">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 w-full flex flex-col items-center justify-center">
-                  {photoPreview ? (
-                    <div className="relative">
-                      <img 
-                        src={photoPreview} 
-                        alt="Aperçu de la photo" 
-                        className="w-48 h-48 object-cover rounded-full" 
-                      />
-                      <button 
-                        onClick={clearPhotoSelection}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
-                        type="button"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload className="h-12 w-12 text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-500 mb-4">Cliquez ou glissez-déposez pour ajouter une photo</p>
-                    </>
-                  )}
-                </div>
-
-                <div className="flex gap-4">
-                  <Label 
-                    htmlFor="photo-upload" 
-                    className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-600 transition-colors"
-                  >
-                    <Upload className="h-4 w-4" />
-                    {photoFile ? 'Changer la photo' : 'Téléverser une photo'}
-                  </Label>
-                  <input
-                    id="photo-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    className="hidden"
-                  />
-                  
-                  {candidate?.photo_url && (
-                    <Button 
-                      variant="destructive" 
-                      className="flex items-center gap-2"
-                      onClick={removePhoto}
-                      type="button"
-                    >
-                      <Trash className="h-4 w-4" />
-                      Supprimer la photo
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="documents" className="space-y-4">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Documents</h2>
-              
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Documents téléversés</h3>
-                  {documents.length > 0 ? (
-                    <ul className="grid grid-cols-1 gap-2">
-                      {documents.map((doc) => (
-                        <li key={doc.id} className="border rounded-md p-3 flex justify-between items-center">
-                          <div>
-                            <span className="font-medium">{doc.document_types?.nom || 'Document sans type'}</span>
-                            {doc.document_types?.required && (
-                              <Badge variant="destructive" className="ml-2">Requis</Badge>
-                            )}
-                          </div>
-                          {doc.file_path && (
-                            <a 
-                              href={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/documents/${doc.file_path}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-500 hover:text-blue-700 underline"
-                            >
-                              Voir
-                            </a>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-500">Aucun document téléversé</p>
-                  )}
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Ajouter des documents</h3>
-                  {isLoadingDocTypes ? (
-                    <p>Chargement des types de documents...</p>
-                  ) : documentTypes.length === 0 ? (
-                    <p className="text-gray-500">Aucun type de document disponible pour ce type de visa</p>
-                  ) : (
-                    <ul className="grid grid-cols-1 gap-4">
-                      {documentTypes.map((docType) => (
-                        <li key={docType.id} className="border rounded-md p-4">
-                          <div className="flex justify-between items-center mb-2">
-                            <div>
-                              <span className="font-medium">{docType.nom}</span>
-                              {docType.required && (
-                                <Badge variant="destructive" className="ml-2">Requis</Badge>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="mt-2">
-                            <Label 
-                              htmlFor={`doc-${docType.id}`}
-                              className="flex items-center gap-2 bg-blue-500 text-white px-3 py-1.5 rounded text-sm cursor-pointer hover:bg-blue-600 transition-colors w-fit"
-                            >
-                              <Upload className="h-3 w-3" />
-                              {uploadedDocuments[docType.id] ? 'Changer le fichier' : 'Téléverser un fichier'}
-                            </Label>
-                            <input
-                              id={`doc-${docType.id}`}
-                              type="file"
-                              onChange={(e) => handleFileUpload(docType.id, e.target.files?.[0] || null)}
-                              className="hidden"
-                            />
-                            
-                            {uploadedDocuments[docType.id] && (
-                              <div className="mt-2 text-sm text-green-600">
-                                Fichier sélectionné: {uploadedDocuments[docType.id]?.name}
-                              </div>
-                            )}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-        
-        <div className="flex justify-end gap-4">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => navigate('/tableaudebord/candidates')}
-          >
-            Annuler
-          </Button>
-          <Button 
-            type="submit" 
-            className="flex items-center gap-2" 
-            disabled={isSaving}
-          >
-            {isSaving ? 'Enregistrement...' : (
-              <>
-                <Save className="h-4 w-4" />
-                {isNewCandidate ? 'Créer le candidat' : 'Enregistrer les modifications'}
-              </>
-            )}
-          </Button>
-        </div>
-      </form>
-    </div>
-  );
-};
-
-export default CandidateDetail;
