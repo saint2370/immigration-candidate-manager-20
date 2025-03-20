@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Download, FileText, AlertCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Download, FileText, AlertCircle, Clock, Users, Home } from 'lucide-react';
 import IRCCHeader from '@/components/layout/IRCCHeader';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -16,12 +16,16 @@ import { NotificationCarousel } from '@/components/notifications/NotificationCar
 import { ApprovalCelebration } from '@/components/effects/ApprovalCelebration';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-// Define a type for the documents with the nested document_types
+// Define types for the documents and permanent residence details
 type DocumentWithTypeName = Database['public']['Tables']['documents']['Row'] & {
   document_types: {
     nom: string;
     required: boolean;
   } | null;
+};
+
+type PermanentResidenceDetails = Database['public']['Tables']['permanent_residence_details']['Row'] & {
+  enfants?: Database['public']['Tables']['enfants']['Row'][];
 };
 
 const CandidatePortalDetail = () => {
@@ -30,6 +34,7 @@ const CandidatePortalDetail = () => {
   const { language } = useLanguage();
   const [candidate, setCandidate] = useState<Database['public']['Tables']['candidates']['Row'] | null>(null);
   const [documents, setDocuments] = useState<DocumentWithTypeName[]>([]);
+  const [permanentResidenceDetails, setPermanentResidenceDetails] = useState<PermanentResidenceDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -132,6 +137,11 @@ const CandidatePortalDetail = () => {
         console.log("Candidate data loaded:", candidateData);
         fetchDocuments(candidateData.id);
         
+        // If visa type is "Résidence Permanente", fetch additional details
+        if (candidateData.visa_type === 'Résidence Permanente') {
+          fetchPermanentResidenceDetails(candidateData.id);
+        }
+        
         // Show celebration if status is approved
         if (candidateData.status === 'Approuvé') {
           setShowCelebration(true);
@@ -165,6 +175,45 @@ const CandidatePortalDetail = () => {
       }
     } catch (error) {
       console.error("Unexpected error fetching documents:", error);
+    }
+  };
+
+  const fetchPermanentResidenceDetails = async (candidateId: string) => {
+    try {
+      // Fetch permanent residence details
+      const { data: residenceData, error: residenceError } = await supabase
+        .from('permanent_residence_details')
+        .select('*')
+        .eq('candidate_id', candidateId)
+        .maybeSingle();
+
+      if (residenceError) {
+        console.error("Error fetching permanent residence details:", residenceError);
+        return;
+      }
+
+      if (residenceData) {
+        // Fetch children if they exist
+        const { data: enfantsData, error: enfantsError } = await supabase
+          .from('enfants')
+          .select('*')
+          .eq('permanent_residence_id', residenceData.id);
+
+        if (enfantsError) {
+          console.error("Error fetching children:", enfantsError);
+        }
+
+        // Combine permanent residence details with children data
+        const combinedData = {
+          ...residenceData,
+          enfants: enfantsData || []
+        };
+
+        console.log("Permanent residence details loaded:", combinedData);
+        setPermanentResidenceDetails(combinedData);
+      }
+    } catch (error) {
+      console.error("Unexpected error fetching permanent residence details:", error);
     }
   };
 
@@ -317,6 +366,12 @@ const CandidatePortalDetail = () => {
                             <p className="font-medium">{candidate.telephone}</p>
                           </div>
                         )}
+                        {candidate.adresse && (
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">{language === 'fr' ? 'Adresse' : 'Address'}</p>
+                            <p className="font-medium">{candidate.adresse}</p>
+                          </div>
+                        )}
                       </div>
                       
                       {/* Status section */}
@@ -381,6 +436,122 @@ const CandidatePortalDetail = () => {
                   </div>
                 </CardContent>
               </Card>
+              
+              {/* Permanent Residence Details Card (conditionally rendered) */}
+              {candidate.visa_type === 'Résidence Permanente' && (
+                <Card className="shadow-lg border-gray-200 mb-6">
+                  <CardHeader className="bg-gradient-to-r from-red-600 to-red-700 text-white rounded-t-lg">
+                    <CardTitle className="text-xl">
+                      {language === 'fr' ? 'Détails de votre demande de résidence permanente' : 'Permanent Residence Application Details'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    {permanentResidenceDetails ? (
+                      <div className="space-y-6">
+                        <div>
+                          <h3 className="font-semibold text-lg mb-4 flex items-center">
+                            <Users className="mr-2" />
+                            {language === 'fr' ? 'Informations familiales' : 'Family Information'}
+                          </h3>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-red-50 p-4 rounded-lg">
+                            <div>
+                              <p className="text-sm text-gray-600 mb-1">
+                                {language === 'fr' ? 'Programme d\'immigration' : 'Immigration Program'}
+                              </p>
+                              <p className="font-medium">{permanentResidenceDetails.immigration_program}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600 mb-1">
+                                {language === 'fr' ? 'Nombre de personnes' : 'Number of Persons'}
+                              </p>
+                              <p className="font-medium">{permanentResidenceDetails.nombre_personnes}</p>
+                            </div>
+                            
+                            {/* Spouse information if available */}
+                            {permanentResidenceDetails.conjoint_nom && (
+                              <>
+                                <div className="col-span-2 mt-2">
+                                  <h4 className="font-medium text-red-700 mb-2">
+                                    {language === 'fr' ? 'Informations du conjoint' : 'Spouse Information'}
+                                  </h4>
+                                </div>
+                                {permanentResidenceDetails.conjoint_prenom && (
+                                  <div>
+                                    <p className="text-sm text-gray-600 mb-1">
+                                      {language === 'fr' ? 'Prénom du conjoint' : 'Spouse First Name'}
+                                    </p>
+                                    <p className="font-medium">{permanentResidenceDetails.conjoint_prenom}</p>
+                                  </div>
+                                )}
+                                <div>
+                                  <p className="text-sm text-gray-600 mb-1">
+                                    {language === 'fr' ? 'Nom du conjoint' : 'Spouse Last Name'}
+                                  </p>
+                                  <p className="font-medium">{permanentResidenceDetails.conjoint_nom}</p>
+                                </div>
+                                {permanentResidenceDetails.conjoint_passport && (
+                                  <div>
+                                    <p className="text-sm text-gray-600 mb-1">
+                                      {language === 'fr' ? 'Passeport du conjoint' : 'Spouse Passport'}
+                                    </p>
+                                    <p className="font-medium">{permanentResidenceDetails.conjoint_passport}</p>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                            
+                            {/* Children information if available */}
+                            {permanentResidenceDetails.enfants && permanentResidenceDetails.enfants.length > 0 && (
+                              <>
+                                <div className="col-span-2 mt-4">
+                                  <h4 className="font-medium text-red-700 mb-2">
+                                    {language === 'fr' ? 'Informations des enfants' : 'Children Information'}
+                                  </h4>
+                                  <div className="space-y-4">
+                                    {permanentResidenceDetails.enfants.map((enfant, index) => (
+                                      <div key={enfant.id} className="bg-white p-3 rounded-md border border-red-100">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                          <div>
+                                            <p className="text-sm text-gray-600 mb-1">
+                                              {language === 'fr' ? 'Prénom' : 'First Name'}
+                                            </p>
+                                            <p className="font-medium">{enfant.prenom}</p>
+                                          </div>
+                                          <div>
+                                            <p className="text-sm text-gray-600 mb-1">
+                                              {language === 'fr' ? 'Nom' : 'Last Name'}
+                                            </p>
+                                            <p className="font-medium">{enfant.nom}</p>
+                                          </div>
+                                          <div>
+                                            <p className="text-sm text-gray-600 mb-1">
+                                              {language === 'fr' ? 'Âge' : 'Age'}
+                                            </p>
+                                            <p className="font-medium">{enfant.age} {language === 'fr' ? 'ans' : 'years'}</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-6">
+                        <p className="text-gray-500">
+                          {language === 'fr' 
+                            ? 'Détails de résidence permanente en attente ou non disponibles.' 
+                            : 'Permanent residence details pending or not available.'}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
               
               {/* Documents Card */}
               <Card className="shadow-lg border-gray-200">
