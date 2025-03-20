@@ -108,7 +108,18 @@ const CandidatesList = () => {
     }
     
     if (data) {
-      setCandidates(data);
+      // Transform the data to match our expected CandidateWithDetails type
+      const transformedData = data.map(candidate => {
+        const { permanent_residence_details, ...rest } = candidate;
+        return {
+          ...rest,
+          permanent_residence_details: permanent_residence_details && permanent_residence_details.length > 0 
+            ? permanent_residence_details[0] 
+            : null
+        } as CandidateWithDetails;
+      });
+      
+      setCandidates(transformedData);
     }
   };
 
