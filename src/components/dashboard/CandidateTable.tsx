@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { 
   Table, 
@@ -8,21 +7,9 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Eye, Edit, Trash2, ChevronLeft, ChevronRight, Users } from 'lucide-react';
+import { Eye, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-
-export interface ResidenceDetails {
-  id?: string;
-  candidate_id?: string;
-  immigration_program?: string;
-  nombre_personnes?: number;
-  conjoint_nom?: string;
-  conjoint_prenom?: string;
-  conjoint_passport?: string;
-}
 
 export interface Candidate {
   id: string;
@@ -40,7 +27,6 @@ export interface Candidate {
   bureau_traitement?: string;
   identificationNumber?: string;
   identifiant?: string;
-  permanent_residence_details?: ResidenceDetails | null;
 }
 
 interface CandidateTableProps {
@@ -136,38 +122,6 @@ const CandidateTable = ({
   const getIdNumber = (candidate: Candidate): string => {
     return candidate.identificationNumber || candidate.identifiant || "-";
   };
-
-  // Helper function to get residence details badge
-  const getResidenceBadge = (candidate: Candidate): JSX.Element | null => {
-    const residenceDetails = candidate.permanent_residence_details;
-    if (!residenceDetails || !candidate.visa_type || candidate.visa_type !== 'Résidence Permanente') {
-      return null;
-    }
-
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="flex items-center gap-1 cursor-help">
-              <Users size={14} />
-              <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md">
-                {residenceDetails.immigration_program || 'RP'} ({residenceDetails.nombre_personnes || 1})
-              </span>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p className="text-sm">
-              Programme: {residenceDetails.immigration_program || 'Non spécifié'}<br />
-              {residenceDetails.conjoint_nom && residenceDetails.conjoint_prenom && (
-                <>Conjoint: {residenceDetails.conjoint_prenom} {residenceDetails.conjoint_nom}<br /></>
-              )}
-              Nombre de personnes: {residenceDetails.nombre_personnes || 1}
-            </p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  };
   
   const handleViewClick = (id: string) => {
     if (onViewCandidate) {
@@ -228,10 +182,7 @@ const CandidateTable = ({
                     <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 mr-2">
                       {getAvatarInitial(candidate)}
                     </div>
-                    <div className="flex flex-col">
-                      {getDisplayName(candidate)}
-                      {getResidenceBadge(candidate)}
-                    </div>
+                    {getDisplayName(candidate)}
                   </div>
                 </TableCell>
                 <TableCell>

@@ -25,17 +25,8 @@ type Candidate = Database['public']['Tables']['candidates']['Row'];
 type VisaType = Database['public']['Enums']['visa_type'];
 type StatusType = Database['public']['Enums']['status_type'];
 
-// Type pour les détails de résidence permanente
-type PermanentResidenceDetails = Database['public']['Tables']['permanent_residence_details']['Row'];
-type ImmigrationProgram = 'Entrée express' | 'Arrima' | 'Autre';
-
-// Type pour les candidats avec les détails de résidence permanente
-type CandidateWithDetails = Candidate & {
-  permanent_residence_details?: PermanentResidenceDetails | null;
-};
-
 const CandidatesList = () => {
-  const [candidates, setCandidates] = useState<CandidateWithDetails[]>([]);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedVisa, setSelectedVisa] = useState<VisaType | 'all'>('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [candidateToDelete, setCandidateToDelete] = useState<string | null>(null);
@@ -90,10 +81,7 @@ const CandidatesList = () => {
   const fetchCandidates = async () => {
     let query = supabase
       .from('candidates')
-      .select(`
-        *,
-        permanent_residence_details(*)
-      `)
+      .select('*')
       .order('date_soumission', { ascending: false });
     
     if (selectedVisa && selectedVisa !== 'all') {
@@ -108,18 +96,7 @@ const CandidatesList = () => {
     }
     
     if (data) {
-      // Transform the data to match our expected CandidateWithDetails type
-      const transformedData = data.map(candidate => {
-        const { permanent_residence_details, ...rest } = candidate;
-        return {
-          ...rest,
-          permanent_residence_details: permanent_residence_details && permanent_residence_details.length > 0 
-            ? permanent_residence_details[0] 
-            : null
-        } as CandidateWithDetails;
-      });
-      
-      setCandidates(transformedData);
+      setCandidates(data);
     }
   };
 

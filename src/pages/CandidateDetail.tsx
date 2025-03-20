@@ -1,794 +1,1161 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useToast } from "@/hooks/use-toast";
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { 
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormDescription,
-  FormMessage 
-} from "@/components/ui/form"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { CalendarIcon, CheckCircle, ChevronsUpDown, Copy, CopyCheck, Edit, File, Loader2, RefreshCcw, Trash2 } from 'lucide-react';
-import { DateRange } from "react-day-picker"
-import { DateInput } from "@/components/ui/input";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from '@/integrations/supabase/types';
-import ResidencePermanenteForm from '@/components/candidates/ResidencePermanenteForm';
-import { CustomButton } from '@/components/ui/custom-button';
-import type { 
-  PermanentResidenceDetailsType, 
-  EnfantType, 
-  ResidencePermanenteFormProps 
-} from '@/components/candidates/ResidencePermanenteFormProps';
+import { Link } from 'react-router-dom';
+import { Pencil, ArrowLeft, Save, X, Upload, Trash, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input, DateInput } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 
-// Define types based on your database schema
-type Candidate = Database['public']['Tables']['candidates']['Row'];
-type VisaType = Database['public']['Enums']['visa_type'];
+// Define a type for the documents with the nested document_types
+type DocumentWithTypeName = Database['public']['Tables']['documents']['Row'] & {
+  document_types: {
+    nom: string;
+    required: boolean;
+  } | null;
+};
+
 type StatusType = Database['public']['Enums']['status_type'];
-type Document = Database['public']['Tables']['documents']['Row'];
-type DocumentType = Database['public']['Tables']['document_types']['Row'] & {
-  description?: string;
+type VisaType = Database['public']['Enums']['visa_type'];
+type DocumentType = {
+  id: string;
+  nom: string;
+  visa_type: VisaType;
+  required: boolean;
 };
 type DocumentStatus = Database['public']['Enums']['document_status'];
 
-// Define form schema
-const formSchema = z.object({
-  nom: z.string().min(2, { message: "Le nom doit comporter au moins 2 caractères." }),
-  prenom: z.string().min(2, { message: "Le prénom doit comporter au moins 2 caractères." }),
-  date_naissance: z.string(),
-  lieu_naissance: z.string().min(2, { message: "Le lieu de naissance doit comporter au moins 2 caractères." }),
-  nationalite: z.string().min(2, { message: "La nationalité doit comporter au moins 2 caractères." }),
-  numero_passport: z.string().min(5, { message: "Le numéro de passeport doit comporter au moins 5 caractères." }),
-  telephone: z.string().min(8, { message: "Le numéro de téléphone doit comporter au moins 8 caractères." }),
-  email: z.string().email({ message: "Email invalide" }).optional().or(z.literal('')),
-  adresse: z.string().optional().or(z.literal('')),
-  visa_type: z.enum(['Visiteur', 'Travail', 'Résidence Permanente']),
-  procedure: z.string().optional().or(z.literal('')),
-  date_soumission: z.string(),
-  delai_traitement: z.string().optional().or(z.literal('')),
-  status: z.enum(['En cours', 'Approuvé', 'En attente', 'Rejeté', 'Complété', 'Expiré']),
-  date_voyage: z.string(),
-  bureau: z.string().min(2, { message: "Le bureau doit comporter au moins 2 caractères." }),
-  notes: z.string().optional().or(z.literal('')),
-  photo_url: z.string().optional().or(z.literal(''))
-});
+// Component props interface
+interface CandidateDetailProps {
+  isNewCandidate?: boolean;
+}
 
-const CandidateDetail = ({ isNewCandidate }: { isNewCandidate?: boolean }) => {
+const statuses: StatusType[] = [
+  'En cours', 'Approuvé', 'En attente', 'Rejeté', 'Complété', 'Expiré'
+];
+
+const visaTypes: VisaType[] = [
+  'Visiteur', 'Travail', 'Résidence Permanente'
+];
+
+// Bureaux disponibles
+const bureaux = [
+  'Paris', 'Rabat', 'New York', 'Mumbai', 'Mexico', 
+  'Tokyo', 'Moscou', 'Madrid', 'Séoul', 'Le Caire'
+];
+
+const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = false }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t, language } = useLanguage();
+  const location = useLocation();
   const { toast } = useToast();
+  const isEditMode = location.pathname.includes('/edit/') || isNewCandidate;
+  const [activeTab, setActiveTab] = useState('info');
 
-  const [candidateData, setCandidateData] = useState<Candidate | null>(null);
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [candidate, setCandidate] = useState<Database['public']['Tables']['candidates']['Row'] | null>(null);
+  const [documents, setDocuments] = useState<DocumentWithTypeName[]>([]);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCopying, setIsCopying] = useState(false);
-  const [permanentResidence, setPermanentResidence] = useState<PermanentResidenceDetailsType | null>(null);
-  const [enfants, setEnfants] = useState<EnfantType[]>([]);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      nom: '',
-      prenom: '',
-      date_naissance: '',
-      lieu_naissance: '',
-      nationalite: '',
-      numero_passport: '',
-      telephone: '',
-      email: '',
-      adresse: '',
-      visa_type: 'Visiteur',
-      procedure: '',
-      date_soumission: '',
-      delai_traitement: '',
-      status: 'En cours',
-      date_voyage: '',
-      bureau: '',
-      notes: '',
-      photo_url: ''
-    },
+  const [uploadedDocuments, setUploadedDocuments] = useState<Record<string, File | null>>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingDocTypes, setIsLoadingDocTypes] = useState(false);
+  
+  // État pour le formulaire d'édition
+  const [formData, setFormData] = useState({
+    nom: '',
+    prenom: '',
+    email: '',
+    telephone: '',
+    status: 'En attente' as StatusType,
+    visa_type: 'Résidence Permanente' as VisaType,
+    notes: '',
+    bureau: 'Paris',
+    numero_passport: '',
+    nationalite: '',
+    lieu_naissance: '',
+    adresse: '',
+    date_naissance: null as Date | null,
+    date_soumission: new Date() as Date | null,
+    date_voyage: null as Date | null,
+    procedure: '',
+    delai_traitement: '',
   });
 
-  // Fetch candidate data, documents, and document types
-  useEffect(() => {
-    if (id) {
-      fetchCandidateData(id);
-      fetchDocuments(id);
-      fetchPermanentResidenceDetails(id);
-      fetchEnfants(id);
-    }
-    fetchDocumentTypes();
-  }, [id]);
+  // État pour le téléchargement de la photo
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
-  // Fetch candidate data from Supabase
-  const fetchCandidateData = async (candidateId: string) => {
+  useEffect(() => {
+    if (id && !isNewCandidate) {
+      fetchCandidate();
+      fetchDocuments();
+
+      // Subscribe to realtime updates for this specific candidate
+      const channel = supabase
+        .channel(`candidate-${id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'candidates',
+            filter: `id=eq.${id}`
+          },
+          (payload) => {
+            console.log('Candidate updated:', payload);
+            
+            // Update the candidate data in real-time
+            const updatedCandidate = payload.new as Database['public']['Tables']['candidates']['Row'];
+            setCandidate(updatedCandidate);
+            
+            // Show a toast notification
+            if (!isEditMode) {
+              toast({
+                title: "Mise à jour en temps réel",
+                description: "Les informations du candidat ont été mises à jour.",
+              });
+            }
+          }
+        )
+        .subscribe();
+
+      // Subscribe to document changes for this candidate
+      const docsChannel = supabase
+        .channel(`docs-${id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to all events
+            schema: 'public',
+            table: 'documents',
+            filter: `candidate_id=eq.${id}`
+          },
+          (payload) => {
+            console.log('Documents updated:', payload);
+            
+            // Refresh documents list
+            fetchDocuments();
+            
+            if (payload.eventType === 'INSERT') {
+              toast({
+                title: "Document ajouté",
+                description: "Un nouveau document a été ajouté au dossier.",
+              });
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        // Cleanup subscriptions on component unmount
+        supabase.removeChannel(channel);
+        supabase.removeChannel(docsChannel);
+      };
+    } else if (isNewCandidate) {
+      // For new candidate, we're already in edit mode and don't need to fetch
+      setIsLoading(false);
+      // Set default visa type to fetch appropriate document types
+      fetchDocumentTypes(formData.visa_type);
+    }
+  }, [id, isNewCandidate]);
+
+  // Mettre à jour le formulaire lorsque le candidat est chargé
+  useEffect(() => {
+    if (candidate) {
+      setFormData({
+        nom: candidate.nom || '',
+        prenom: candidate.prenom || '',
+        email: candidate.email || '',
+        telephone: candidate.telephone || '',
+        status: candidate.status as StatusType,
+        visa_type: candidate.visa_type as VisaType,
+        notes: candidate.notes || '',
+        bureau: candidate.bureau || '',
+        numero_passport: candidate.numero_passport || '',
+        nationalite: candidate.nationalite || '',
+        lieu_naissance: candidate.lieu_naissance || '',
+        adresse: candidate.adresse || '',
+        date_naissance: candidate.date_naissance ? new Date(candidate.date_naissance) : null,
+        date_soumission: candidate.date_soumission ? new Date(candidate.date_soumission) : null,
+        date_voyage: candidate.date_voyage ? new Date(candidate.date_voyage) : null,
+        procedure: candidate.procedure || '',
+        delai_traitement: candidate.delai_traitement || '',
+      });
+      
+      if (candidate.photo_url) {
+        setPhotoPreview(`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/profile_photos/${candidate.photo_url}`);
+      }
+
+      // Charger les types de documents en fonction du visa sélectionné
+      fetchDocumentTypes(candidate.visa_type);
+    }
+  }, [candidate]);
+
+  // Surveiller le changement de type de visa pour recharger les types de documents
+  useEffect(() => {
+    if (isEditMode && formData.visa_type) {
+      fetchDocumentTypes(formData.visa_type);
+    }
+  }, [formData.visa_type, isEditMode]);
+
+  const fetchCandidate = async () => {
+    setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // Fix the type issue with the id parameter
+      const { data: candidate, error } = await supabase
         .from('candidates')
         .select('*')
-        .eq('id', candidateId)
+        .eq('id', id as string)
         .single();
 
       if (error) {
-        console.error('Error fetching candidate data:', error);
+        console.error("Error fetching candidate:", error);
         toast({
           title: "Erreur",
           description: "Impossible de charger les informations du candidat.",
-          variant: "destructive",
+          variant: "destructive"
         });
-        return;
       }
 
-      if (data) {
-        setCandidateData(data);
-        // Set default values for the form
-        form.reset({
-          nom: data.nom,
-          prenom: data.prenom,
-          date_naissance: data.date_naissance,
-          lieu_naissance: data.lieu_naissance,
-          nationalite: data.nationalite,
-          numero_passport: data.numero_passport,
-          telephone: data.telephone,
-          email: data.email || '',
-          adresse: data.adresse || '',
-          visa_type: data.visa_type,
-          procedure: data.procedure || '',
-          date_soumission: data.date_soumission,
-          delai_traitement: data.delai_traitement || '',
-          status: data.status,
-          date_voyage: data.date_voyage,
-          bureau: data.bureau,
-          notes: data.notes || '',
-          photo_url: data.photo_url || ''
-        });
+      if (candidate) {
+        setCandidate(candidate);
       }
-    } catch (error) {
-      console.error('Error fetching candidate data:', error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur s'est produite lors du chargement des informations du candidat.",
-        variant: "destructive",
-      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Fetch documents from Supabase
-  const fetchDocuments = async (candidateId: string) => {
+  const fetchDocuments = async () => {
     try {
+      // Fix the type issue with the candidate_id parameter
       const { data, error } = await supabase
         .from('documents')
-        .select('*')
-        .eq('candidate_id', candidateId);
+        .select('*, document_types(nom, required)')
+        .eq('candidate_id', id as string);
 
       if (error) {
-        console.error('Error fetching documents:', error);
-        return;
+        console.error("Error fetching documents:", error);
       }
 
       if (data) {
-        setDocuments(data);
+        setDocuments(data as DocumentWithTypeName[]);
       }
     } catch (error) {
-      console.error('Error fetching documents:', error);
+      console.error("Unexpected error fetching documents:", error);
     }
   };
 
-  // Fetch document types from Supabase
-  const fetchDocumentTypes = async () => {
+  const fetchDocumentTypes = async (visaType: VisaType) => {
+    if (!visaType) return;
+    
+    setIsLoadingDocTypes(true);
     try {
       const { data, error } = await supabase
         .from('document_types')
-        .select('*');
-
-      if (error) {
-        console.error('Error fetching document types:', error);
-        return;
-      }
-
+        .select('*')
+        .eq('visa_type', visaType);
+      
+      if (error) throw error;
       if (data) {
-        setDocumentTypes(data);
+        const typedDocuments = data.map(doc => ({
+          id: doc.id,
+          nom: doc.nom,
+          visa_type: doc.visa_type,
+          required: doc.required
+        }));
+        setDocumentTypes(typedDocuments);
       }
     } catch (error) {
       console.error('Error fetching document types:', error);
-    }
-  };
-
-  const fetchPermanentResidenceDetails = async (candidateId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('permanent_residence_details')
-        .select('*')
-        .eq('candidate_id', candidateId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching permanent residence details:', error);
-        return;
-      }
-
-      if (data) {
-        setPermanentResidence(data as PermanentResidenceDetailsType);
-      }
-    } catch (error) {
-      console.error('Error fetching permanent residence details:', error);
-    }
-  };
-
-  const fetchEnfants = async (candidateId: string) => {
-    try {
-      // Fetch permanent residence details first
-      const { data: residenceData, error: residenceError } = await supabase
-        .from('permanent_residence_details')
-        .select('id')
-        .eq('candidate_id', candidateId)
-        .single();
-  
-      if (residenceError) {
-        console.error('Error fetching permanent residence details:', residenceError);
-        return;
-      }
-  
-      if (residenceData) {
-        // Now fetch enfants using the permanent residence ID
-        const { data: enfantsData, error: enfantsError } = await supabase
-          .from('enfants')
-          .select('*')
-          .eq('permanent_residence_id', residenceData.id);
-  
-        if (enfantsError) {
-          console.error('Error fetching enfants:', enfantsError);
-          return;
-        }
-  
-        if (enfantsData) {
-          // Convert age to string to match the EnfantType
-          const convertedEnfants: EnfantType[] = enfantsData.map(enfant => ({
-            ...enfant,
-            age: enfant.age.toString()
-          }));
-          setEnfants(convertedEnfants);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching enfants:', error);
-    }
-  };
-
-  // Function to handle copying candidate ID
-  const handleCopyCandidateId = () => {
-    if (candidateData) {
-      navigator.clipboard.writeText(candidateData.id)
-        .then(() => {
-          setIsCopying(true);
-          toast({
-            title: "Succès",
-            description: "ID du candidat copié dans le presse-papiers.",
-          });
-          setTimeout(() => setIsCopying(false), 2000);
-        })
-        .catch(err => {
-          console.error("Failed to copy candidate ID: ", err);
-          toast({
-            title: "Erreur",
-            description: "Impossible de copier l'ID du candidat.",
-            variant: "destructive",
-          });
-        });
-    }
-  };
-
-  // Function to handle document status change
-  const handleChangeDocumentStatus = async (documentId: string, status: DocumentStatus) => {
-    try {
-      const { error } = await supabase
-        .from('documents')
-        .update({ status })
-        .eq('id', documentId);
-
-      if (error) {
-        console.error('Error updating document status:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de mettre à jour le statut du document.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Optimistically update the document status in the local state
-      setDocuments(prevDocuments =>
-        prevDocuments.map(doc =>
-          doc.id === documentId ? { ...doc, status } : doc
-        )
-      );
-
-      toast({
-        title: "Succès",
-        description: "Statut du document mis à jour avec succès.",
-      });
-    } catch (error) {
-      console.error('Error updating document status:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur s'est produite lors de la mise à jour du statut du document.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Function to handle candidate update
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    setIsSubmitting(true);
-    try {
-      const { error } = await supabase
-        .from('candidates')
-        .update({
-          nom: data.nom,
-          prenom: data.prenom,
-          date_naissance: data.date_naissance,
-          lieu_naissance: data.lieu_naissance,
-          nationalite: data.nationalite,
-          numero_passport: data.numero_passport,
-          telephone: data.telephone,
-          email: data.email,
-          adresse: data.adresse,
-          visa_type: data.visa_type,
-          procedure: data.procedure,
-          date_soumission: data.date_soumission,
-          delai_traitement: data.delai_traitement,
-          status: data.status,
-          date_voyage: data.date_voyage,
-          bureau: data.bureau,
-          notes: data.notes,
-          photo_url: data.photo_url
-        })
-        .eq('id', id);
-
-      if (error) {
-        console.error('Error updating candidate:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de mettre à jour les informations du candidat.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Update local state with new data
-      setCandidateData({ ...candidateData, ...data } as Candidate);
-      toast({
-        title: "Succès",
-        description: "Informations du candidat mises à jour avec succès.",
-      });
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error updating candidate:', error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur s'est produite lors de la mise à jour des informations du candidat.",
-        variant: "destructive",
+        description: "Impossible de charger les types de documents.",
+        variant: "destructive"
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLoadingDocTypes(false);
     }
   };
 
-  const handleDeleteCandidate = async () => {
-    if (!id) return;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleDateChange = (name: string, date: Date | undefined) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: date || null
+    }));
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPhotoFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setPhotoPreview(previewUrl);
+    }
+  };
+
+  const handleFileUpload = (documentId: string, file: File | null) => {
+    setUploadedDocuments(prev => ({
+      ...prev,
+      [documentId]: file
+    }));
+  };
+
+  const clearPhotoSelection = () => {
+    setPhotoFile(null);
+    if (candidate?.photo_url) {
+      setPhotoPreview(`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/profile_photos/${candidate.photo_url}`);
+    } else {
+      setPhotoPreview(null);
+    }
+  };
+
+  const uploadPhoto = async (candidateId: string): Promise<string | null> => {
+    if (!photoFile) return null;
+    
+    setIsUploading(true);
     try {
-      const { error } = await supabase
-        .from('candidates')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.error('Error deleting candidate:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de supprimer le candidat.",
-          variant: "destructive",
+      const fileExt = photoFile.name.split('.').pop();
+      const fileName = `${candidateId}/profile.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('profile_photos')
+        .upload(fileName, photoFile, {
+          cacheControl: '3600',
+          upsert: true
         });
-        return;
+      
+      if (uploadError) {
+        throw uploadError;
       }
-
-      toast({
-        title: "Succès",
-        description: "Candidat supprimé avec succès.",
-      });
-      navigate('/tableaudebord/candidates');
+      
+      return fileName;
     } catch (error) {
-      console.error('Error deleting candidate:', error);
+      console.error("Error uploading photo:", error);
       toast({
         title: "Erreur",
-        description: "Une erreur s'est produite lors de la suppression du candidat.",
-        variant: "destructive",
+        description: "Impossible de téléverser la photo.",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removePhoto = async () => {
+    if (!candidate?.photo_url || !id) return;
+    
+    try {
+      // Supprimer le fichier du stockage
+      const { error: deleteError } = await supabase.storage
+        .from('profile_photos')
+        .remove([candidate.photo_url]);
+      
+      if (deleteError) throw deleteError;
+      
+      // Mettre à jour le candidat pour supprimer la référence à la photo
+      const { error: updateError } = await supabase
+        .from('candidates')
+        .update({ photo_url: null })
+        .eq('id', id as string);
+      
+      if (updateError) throw updateError;
+      
+      // Mettre à jour l'état local
+      setPhotoPreview(null);
+      setPhotoFile(null);
+      setCandidate(prev => prev ? { ...prev, photo_url: null } : null);
+      
+      toast({
+        title: "Photo supprimée",
+        description: "La photo du candidat a été supprimée.",
+      });
+    } catch (error) {
+      console.error("Error removing photo:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer la photo.",
+        variant: "destructive"
       });
     }
   };
 
-  const getStatusBadge = (status: DocumentStatus) => {
-    let variant: "default" | "secondary" | "destructive" | "outline" | "success" = "default";
-    
-    switch(status) {
-      case "verified":
-        variant = "outline";
-        break;
-      case "uploaded":
-        variant = "outline";
-        break;
-      case "rejected":
-        variant = "destructive";
-        break;
-      case "pending":
-        variant = "outline";
-        break;
-      default:
-        variant = "outline";
+  // Téléverser un document dans le storage Supabase
+  const uploadFile = async (file: File, candidateId: string, documentTypeId: string) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${candidateId}/${documentTypeId}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${fileName}`;
+      
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      if (error) {
+        console.error('Error uploading to storage:', error);
+        throw error;
+      }
+      
+      return { filePath, fileName: file.name };
+    } catch (error) {
+      console.error('Exception during upload:', error);
+      throw error;
     }
-    
-    return (
-      <Badge variant={variant} className={status === "verified" ? "bg-green-100 text-green-800 hover:bg-green-200" : ""}>
-        {status}
-      </Badge>
-    );
   };
 
-  if (!candidateData) {
+  // Insérer des documents dans la base de données
+  const insertDocuments = async (candidateId: string) => {
+    const documentsPromises = [];
+    
+    for (const [documentTypeId, file] of Object.entries(uploadedDocuments)) {
+      if (!file) continue;
+      
+      try {
+        console.log('Processing document:', documentTypeId, 'for candidate:', candidateId);
+        
+        // Upload the file
+        const { filePath, fileName } = await uploadFile(file, candidateId, documentTypeId);
+        
+        // Insert document record
+        const insertPromise = supabase
+          .from('documents')
+          .insert({
+            candidate_id: candidateId,
+            document_type_id: documentTypeId,
+            file_path: filePath,
+            filename: fileName,
+            status: 'uploaded' as DocumentStatus,
+            upload_date: new Date().toISOString()
+          });
+        
+        documentsPromises.push(insertPromise);
+      } catch (error) {
+        console.error('Error uploading document:', error);
+        toast({
+          title: "Avertissement",
+          description: `Échec du téléversement d'un document: ${file.name}`,
+          variant: "destructive"
+        });
+      }
+    }
+    
+    // Wait for all document inserts to complete
+    if (documentsPromises.length > 0) {
+      try {
+        await Promise.all(documentsPromises);
+        console.log('All documents inserted successfully');
+        fetchDocuments(); // Refresh documents list
+      } catch (error) {
+        console.error('Error inserting documents:', error);
+      }
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    setIsSaving(true);
+    try {
+      // Format dates for database
+      const formatDateForDB = (date: Date | null) => {
+        if (!date) return null;
+        return format(date, 'yyyy-MM-dd');
+      };
+
+      // Prepare data object for both new and existing candidates
+      const candidateData = {
+        nom: formData.nom,
+        prenom: formData.prenom,
+        email: formData.email || null,
+        telephone: formData.telephone || null,
+        status: formData.status,
+        visa_type: formData.visa_type,
+        notes: formData.notes || null,
+        bureau: formData.bureau,
+        numero_passport: formData.numero_passport,
+        nationalite: formData.nationalite,
+        lieu_naissance: formData.lieu_naissance,
+        adresse: formData.adresse || null,
+        date_naissance: formatDateForDB(formData.date_naissance),
+        date_soumission: formatDateForDB(formData.date_soumission),
+        date_voyage: formatDateForDB(formData.date_voyage),
+        procedure: formData.procedure || null,
+        delai_traitement: formData.delai_traitement || null,
+      };
+
+      let candidateId = id;
+      let photoUrl = candidate?.photo_url;
+
+      if (isNewCandidate) {
+        // Insert new candidate
+        const { data: newCandidate, error: insertError } = await supabase
+          .from('candidates')
+          .insert(candidateData)
+          .select()
+          .single();
+        
+        if (insertError) throw insertError;
+        
+        candidateId = newCandidate.id;
+        
+        // Upload photo if provided
+        if (photoFile) {
+          photoUrl = await uploadPhoto(candidateId);
+          
+          // Update candidate with photo URL if photo was uploaded
+          if (photoUrl) {
+            await supabase
+              .from('candidates')
+              .update({ photo_url: photoUrl })
+              .eq('id', candidateId);
+          }
+        }
+        
+        // Add creation to history
+        await supabase
+          .from('history')
+          .insert({
+            candidate_id: candidateId,
+            action: 'Dossier créé',
+            date: new Date().toISOString()
+          });
+          
+        toast({
+          title: "Candidat créé",
+          description: "Le nouveau candidat a été créé avec succès.",
+        });
+      } else {
+        // Update existing candidate
+        if (photoFile) {
+          photoUrl = await uploadPhoto(id as string);
+        }
+        
+        const { error: updateError } = await supabase
+          .from('candidates')
+          .update({
+            ...candidateData,
+            photo_url: photoUrl
+          })
+          .eq('id', id as string);
+        
+        if (updateError) throw updateError;
+        
+        // Add to history
+        await supabase
+          .from('history')
+          .insert({
+            candidate_id: id,
+            action: 'Dossier modifié',
+            date: new Date().toISOString()
+          });
+        
+        toast({
+          title: "Candidat mis à jour",
+          description: "Les informations du candidat ont été mises à jour avec succès.",
+        });
+      }
+      
+      // Upload any new documents if we have an id
+      if (candidateId && Object.keys(uploadedDocuments).length > 0) {
+        await insertDocuments(candidateId);
+      }
+      
+      // Refresh data and exit edit mode
+      navigate(`/tableaudebord/candidate/${candidateId}`);
+    } catch (error) {
+      console.error("Error saving candidate:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de l'enregistrement du candidat.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="container mx-auto p-4 flex justify-center items-center h-64">Chargement...</div>;
+  }
+
+  if (!candidate && !isNewCandidate) {
+    return <div className="container mx-auto p-4">Candidat non trouvé.</div>;
+  }
+
+  // Vue en mode lecture
+  if (!isEditMode) {
     return (
       <div className="container mx-auto p-4">
-        <div className="flex items-center justify-center h-48">
-          <Loader2 className="mr-2 h-6 w-6 animate-spin" /> Chargement des informations du candidat...
+        <div className="mb-4 flex items-center justify-between">
+          <Link to="/tableaudebord/candidates" className="flex items-center gap-2 text-blue-500 hover:text-blue-700">
+            <ArrowLeft className="h-5 w-5" />
+            Retour à la liste des candidats
+          </Link>
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={() => navigate(`/tableaudebord/candidates/edit/${id}`)}
+          >
+            <Pencil className="h-4 w-4" />
+            Modifier
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <div className="md:col-span-1 flex flex-col items-center">
+            {candidate && candidate.photo_url ? (
+              <Avatar className="h-40 w-40 rounded-full">
+                <AvatarImage 
+                  src={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/profile_photos/${candidate.photo_url}`}
+                  alt={`${candidate.prenom} ${candidate.nom}`}
+                  className="object-cover"
+                />
+                <AvatarFallback className="text-3xl">
+                  {candidate.prenom?.charAt(0)}{candidate.nom?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <Avatar className="h-40 w-40 rounded-full">
+                <AvatarFallback className="text-3xl">
+                  {candidate && candidate.prenom?.charAt(0)}{candidate && candidate.nom?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+            )}
+            <h1 className="text-2xl font-bold mt-4 text-center">{candidate && candidate.prenom} {candidate && candidate.nom}</h1>
+            <div className="mt-2 text-center">
+              <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                {candidate && candidate.visa_type}
+              </span>
+            </div>
+          </div>
+
+          <div className="md:col-span-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white rounded-lg shadow p-6">
+              <div>
+                <h2 className="text-xl font-semibold mb-4">Informations personnelles</h2>
+                {candidate && (
+                  <>
+                    <p className="mb-2"><strong>Date de naissance:</strong> {format(new Date(candidate.date_naissance), 'dd MMMM yyyy', { locale: fr })}</p>
+                    <p className="mb-2"><strong>Lieu de naissance:</strong> {candidate.lieu_naissance}</p>
+                    <p className="mb-2"><strong>Nationalité:</strong> {candidate.nationalite}</p>
+                    <p className="mb-2"><strong>Numéro de passeport:</strong> {candidate.numero_passport}</p>
+                    <p className="mb-2"><strong>Email:</strong> {candidate.email || 'Non spécifié'}</p>
+                    <p className="mb-2"><strong>Téléphone:</strong> {candidate.telephone || 'Non spécifié'}</p>
+                    <p className="mb-2"><strong>Adresse:</strong> {candidate.adresse || 'Non spécifiée'}</p>
+                  </>
+                )}
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold mb-4">Détails du dossier</h2>
+                {candidate && (
+                  <>
+                    <p className="mb-2"><strong>Type de visa:</strong> {candidate.visa_type}</p>
+                    <p className="mb-2"><strong>Procédure:</strong> {candidate.procedure || 'Non spécifiée'}</p>
+                    <p className="mb-2"><strong>Statut:</strong> 
+                      <span className={`ml-2 px-2 py-1 rounded text-sm font-medium ${
+                        candidate.status === 'Approuvé' ? 'bg-green-100 text-green-800' :
+                        candidate.status === 'En cours' ? 'bg-blue-100 text-blue-800' :
+                        candidate.status === 'En attente' ? 'bg-yellow-100 text-yellow-800' :
+                        candidate.status === 'Rejeté' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {candidate.status}
+                      </span>
+                    </p>
+                    <p className="mb-2"><strong>Date de soumission:</strong> {format(new Date(candidate.date_soumission), 'dd MMMM yyyy', { locale: fr })}</p>
+                    <p className="mb-2"><strong>Date prévue du voyage:</strong> {candidate.date_voyage ? format(new Date(candidate.date_voyage), 'dd MMMM yyyy', { locale: fr }) : 'Non spécifiée'}</p>
+                    <p className="mb-2"><strong>Bureau en charge:</strong> {candidate.bureau}</p>
+                    <p className="mb-2"><strong>Délai de traitement:</strong> {candidate.delai_traitement || 'Non spécifié'}</p>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {candidate && candidate.notes && (
+              <div className="mt-4 bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-2">Notes</h2>
+                <p className="whitespace-pre-wrap">{candidate.notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6 mt-6">
+          <h2 className="text-xl font-semibold mb-4">Documents</h2>
+          {documents.length > 0 ? (
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {documents.map(doc => (
+                <li key={doc.id} className="border rounded-md p-4 flex justify-between items-center">
+                  <div>
+                    <span className="font-medium">{doc.document_types?.nom || 'Document sans type'}</span>
+                    {doc.document_types?.required && (
+                      <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800">Requis</span>
+                    )}
+                  </div>
+                  {doc.file_path && (
+                    <a 
+                      href={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/documents/${doc.file_path}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:text-blue-700 underline"
+                    >
+                      Voir
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>Aucun document trouvé pour ce candidat.</p>
+          )}
         </div>
       </div>
     );
   }
 
+  // Vue en mode édition ou création
   return (
     <div className="container mx-auto p-4">
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>{candidateData.prenom} {candidateData.nom}</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/tableaudebord/candidates')}>
-                <RefreshCcw className="h-4 w-4 mr-2" /> Retour à la liste
-              </Button>
-              {!isEditing ? (
-                <Button size="sm" onClick={() => setIsEditing(true)}>
-                  <Edit className="h-4 w-4 mr-2" /> Modifier
-                </Button>
-              ) : (
-                <Button variant="secondary" size="sm" onClick={() => setIsEditing(false)}>
-                  <X className="h-4 w-4 mr-2" /> Annuler
-                </Button>
-              )}
-              <Button variant="destructive" size="sm" onClick={handleDeleteCandidate}>
-                <Trash2 className="h-4 w-4 mr-2" /> Supprimer
-              </Button>
-            </div>
-          </div>
-          <CardDescription>
-            Informations détaillées du candidat.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>ID du candidat</Label>
-              <div className="flex items-center">
-                <Input value={candidateData.id} readOnly className="cursor-not-allowed" />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleCopyCandidateId}
-                  disabled={isCopying}
-                >
-                  {isCopying ? (
-                    <CopyCheck className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-            <div>
-              <Label>Type de visa</Label>
-              <Input value={candidateData.visa_type} readOnly className="cursor-not-allowed" />
-            </div>
-          </div>
+      <div className="mb-4 flex items-center justify-between">
+        <Link to="/tableaudebord/candidates" className="flex items-center gap-2 text-blue-500 hover:text-blue-700">
+          <X className="h-5 w-5" />
+          {isNewCandidate ? "Annuler la création" : "Annuler les modifications"}
+        </Link>
+      </div>
 
-          {isEditing ? (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-3 mb-4">
+            <TabsTrigger value="info">Informations générales</TabsTrigger>
+            <TabsTrigger value="photo">Photo</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="info" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="md:col-span-1 flex flex-col items-center">
+                {photoPreview ? (
+                  <Avatar className="h-40 w-40 rounded-full">
+                    <AvatarImage 
+                      src={photoPreview}
+                      alt="Photo de profil"
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="text-3xl">
+                      {formData.prenom.charAt(0)}{formData.nom.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <Avatar className="h-40 w-40 rounded-full">
+                    <AvatarFallback className="text-3xl">
+                      {formData.prenom.charAt(0) || "?"}{formData.nom.charAt(0) || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+                <h2 className="text-xl font-bold mt-4 text-center">{formData.prenom || "Prénom"} {formData.nom || "Nom"}</h2>
+              </div>
+
+              <div className="md:col-span-3 bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-4">Modifier les informations</h2>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="nom">Nom</Label>
-                    <Input id="nom" placeholder="Nom" {...form.register("nom")} />
-                  </div>
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="prenom">Prénom</Label>
-                    <Input id="prenom" placeholder="Prénom" {...form.register("prenom")} />
+                    <Input 
+                      id="prenom" 
+                      name="prenom" 
+                      value={formData.prenom} 
+                      onChange={handleInputChange} 
+                      required 
+                    />
                   </div>
-                  <div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="nom">Nom</Label>
+                    <Input 
+                      id="nom" 
+                      name="nom" 
+                      value={formData.nom} 
+                      onChange={handleInputChange} 
+                      required 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="date_naissance">Date de naissance</Label>
-                    <Input id="date_naissance" placeholder="Date de naissance" {...form.register("date_naissance")} />
+                    <DateInput
+                      value={formData.date_naissance}
+                      onChange={(date) => handleDateChange('date_naissance', date)}
+                    />
                   </div>
-                  <div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="lieu_naissance">Lieu de naissance</Label>
-                    <Input id="lieu_naissance" placeholder="Lieu de naissance" {...form.register("lieu_naissance")} />
+                    <Input 
+                      id="lieu_naissance" 
+                      name="lieu_naissance" 
+                      value={formData.lieu_naissance} 
+                      onChange={handleInputChange} 
+                      required 
+                    />
                   </div>
-                  <div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="nationalite">Nationalité</Label>
-                    <Input id="nationalite" placeholder="Nationalité" {...form.register("nationalite")} />
+                    <Input 
+                      id="nationalite" 
+                      name="nationalite" 
+                      value={formData.nationalite} 
+                      onChange={handleInputChange} 
+                      required 
+                    />
                   </div>
-                  <div>
-                    <Label htmlFor="numero_passport">Numéro de passeport</Label>
-                    <Input id="numero_passport" placeholder="Numéro de passeport" {...form.register("numero_passport")} />
-                  </div>
-                  <div>
-                    <Label htmlFor="telephone">Téléphone</Label>
-                    <Input id="telephone" placeholder="Téléphone" {...form.register("telephone")} />
-                  </div>
-                  <div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" placeholder="Email" {...form.register("email")} />
+                    <Input 
+                      id="email" 
+                      name="email" 
+                      type="email" 
+                      value={formData.email} 
+                      onChange={handleInputChange} 
+                    />
                   </div>
-                  <div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="telephone">Téléphone</Label>
+                    <Input 
+                      id="telephone" 
+                      name="telephone" 
+                      value={formData.telephone} 
+                      onChange={handleInputChange} 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="adresse">Adresse</Label>
-                    <Input id="adresse" placeholder="Adresse" {...form.register("adresse")} />
+                    <Input 
+                      id="adresse" 
+                      name="adresse" 
+                      value={formData.adresse} 
+                      onChange={handleInputChange} 
+                    />
                   </div>
-                  <div>
-                    <Label htmlFor="visa_type">Type de visa</Label>
-                    <Select disabled>
-                      <SelectTrigger>
-                        <SelectValue placeholder={candidateData.visa_type} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Visiteur">Visiteur</SelectItem>
-                        <SelectItem value="Travail">Travail</SelectItem>
-                        <SelectItem value="Résidence Permanente">Résidence Permanente</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="procedure">Procédure</Label>
-                    <Input id="procedure" placeholder="Procédure" {...form.register("procedure")} />
-                  </div>
-                  <div>
-                    <Label htmlFor="date_soumission">Date de soumission</Label>
-                    <Input id="date_soumission" placeholder="Date de soumission" {...form.register("date_soumission")} />
-                  </div>
-                  <div>
-                    <Label htmlFor="delai_traitement">Délai de traitement</Label>
-                    <Input id="delai_traitement" placeholder="Délai de traitement" {...form.register("delai_traitement")} />
-                  </div>
-                  <div>
-                    <Label htmlFor="status">Statut</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder={candidateData.status} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="En cours">En cours</SelectItem>
-                        <SelectItem value="Approuvé">Approuvé</SelectItem>
-                        <SelectItem value="En attente">En attente</SelectItem>
-                        <SelectItem value="Rejeté">Rejeté</SelectItem>
-                        <SelectItem value="Complété">Complété</SelectItem>
-                        <SelectItem value="Expiré">Expiré</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="date_voyage">Date de voyage</Label>
-                    <Input id="date_voyage" placeholder="Date de voyage" {...form.register("date_voyage")} />
-                  </div>
-                  <div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="bureau">Bureau</Label>
-                    <Input id="bureau" placeholder="Bureau" {...form.register("bureau")} />
+                    <Select
+                      value={formData.bureau}
+                      onValueChange={(value) => handleSelectChange('bureau', value)}
+                    >
+                      <SelectTrigger id="bureau">
+                        <SelectValue placeholder="Sélectionner un bureau" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bureaux.map((bureau) => (
+                          <SelectItem key={bureau} value={bureau}>
+                            {bureau}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="numero_passport">Numéro de passeport</Label>
+                    <Input 
+                      id="numero_passport" 
+                      name="numero_passport" 
+                      value={formData.numero_passport} 
+                      onChange={handleInputChange} 
+                      required 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="visa_type">Type de visa</Label>
+                    <Select
+                      value={formData.visa_type}
+                      onValueChange={(value) => handleSelectChange('visa_type', value as VisaType)}
+                    >
+                      <SelectTrigger id="visa_type">
+                        <SelectValue placeholder="Sélectionner un type de visa" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {visaTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Statut</Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value) => handleSelectChange('status', value as StatusType)}
+                    >
+                      <SelectTrigger id="status">
+                        <SelectValue placeholder="Sélectionner un statut" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {statuses.map((status) => (
+                          <SelectItem key={status} value={status}>
+                            {status}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="date_soumission">Date de soumission</Label>
+                    <DateInput
+                      value={formData.date_soumission}
+                      onChange={(date) => handleDateChange('date_soumission', date)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="date_voyage">Date prévue du voyage</Label>
+                    <DateInput
+                      value={formData.date_voyage}
+                      onChange={(date) => handleDateChange('date_voyage', date)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="procedure">Procédure</Label>
+                    <Input 
+                      id="procedure" 
+                      name="procedure" 
+                      value={formData.procedure} 
+                      onChange={handleInputChange} 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="delai_traitement">Délai de traitement</Label>
+                    <Input 
+                      id="delai_traitement" 
+                      name="delai_traitement" 
+                      value={formData.delai_traitement} 
+                      onChange={handleInputChange} 
+                    />
+                  </div>
+
+                  <div className="col-span-1 md:col-span-2 space-y-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea 
+                      id="notes" 
+                      name="notes" 
+                      value={formData.notes} 
+                      onChange={handleInputChange} 
+                      rows={5}
+                    />
                   </div>
                 </div>
-                <div>
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea id="notes" placeholder="Notes" {...form.register("notes")} className="min-h-[80px]" />
-                </div>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Enregistrement...
-                    </>
-                  ) : (
-                    "Enregistrer"
-                  )}
-                </Button>
-              </form>
-            </Form>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Nom</Label>
-                  <Input value={candidateData.nom} readOnly className="cursor-not-allowed" />
-                </div>
-                <div>
-                  <Label>Prénom</Label>
-                  <Input value={candidateData.prenom} readOnly className="cursor-not-allowed" />
-                </div>
-                <div>
-                  <Label>Date de naissance</Label>
-                  <Input value={candidateData.date_naissance} readOnly className="cursor-not-allowed" />
-                </div>
-                <div>
-                  <Label>Lieu de naissance</Label>
-                  <Input value={candidateData.lieu_naissance} readOnly className="cursor-not-allowed" />
-                </div>
-                <div>
-                  <Label>Nationalité</Label>
-                  <Input value={candidateData.nationalite} readOnly className="cursor-not-allowed" />
-                </div>
-                <div>
-                  <Label>Numéro de passeport</Label>
-                  <Input value={candidateData.numero_passport} readOnly className="cursor-not-allowed" />
-                </div>
-                <div>
-                  <Label>Téléphone</Label>
-                  <Input value={candidateData.telephone} readOnly className="cursor-not-allowed" />
-                </div>
-                <div>
-                  <Label>Email</Label>
-                  <Input value={candidateData.email || 'N/A'} readOnly className="cursor-not-allowed" />
-                </div>
-                <div>
-                  <Label>Adresse</Label>
-                  <Input value={candidateData.adresse || 'N/A'} readOnly className="cursor-not-allowed" />
-                </div>
-                <div>
-                  <Label>Procédure</Label>
-                  <Input value={candidateData.procedure || 'N/A'} readOnly className="cursor-not-allowed" />
-                </div>
-                <div>
-                  <Label>Date de soumission</Label>
-                  <Input value={candidateData.date_soumission} readOnly className="cursor-not-allowed" />
-                </div>
-                <div>
-                  <Label>Délai de traitement</Label>
-                  <Input value={candidateData.delai_traitement || 'N/A'} readOnly className="cursor-not-allowed" />
-                </div>
-                <div>
-                  <Label>Statut</Label>
-                  <Input value={candidateData.status} readOnly className="cursor-not-allowed" />
-                </div>
-                <div>
-                  <Label>Date de voyage</Label>
-                  <Input value={candidateData.date_voyage} readOnly className="cursor-not-allowed" />
-                </div>
-                <div>
-                  <Label>Bureau</Label>
-                  <Input value={candidateData.bureau} readOnly className="cursor-not-allowed" />
-                </div>
               </div>
-              <div>
-                <Label>Notes</Label>
-                <Textarea value={candidateData.notes || 'N/A'} readOnly className="cursor-not-allowed min-h-[80px]" />
-              </div>
-            </>
-          )}
-        </CardContent>
-        <CardFooter>
-          <div className="w-full">
-            <h3 className="text-xl font-bold mb-4">Documents</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {documentTypes.map((docType) => {
-                const document = documents.find(doc => doc.document_type_id === docType.id);
-                return (
-                  <Card key={docType.id}>
-                    <CardHeader>
-                      <CardTitle>{docType.nom}</CardTitle>
-                      <CardDescription>{docType.description || ''}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {document ? (
-                        <div className="flex flex-col space-y-2">
-                          <p>Nom du fichier: {document.filename}</p>
-                          <p>Date de téléversement: {format(new Date(document.upload_date), 'd MMMM yyyy', { locale: language === 'fr' ? fr : undefined })}</p>
-                          <Badge variant={document.status === "verified" ? "outline" : "default"} className={document.status === "verified" ? "bg-green-100 text-green-800 hover:bg-green-200" : ""}>
-                            {document.status}
-                          </Badge>
-                          <div className="flex space-x-2">
-                            <CustomButton variant="success" size="sm" onClick={() => handleChangeDocumentStatus(document.id, "verified")}>
-                              Approuver
-                            </CustomButton>
-                            <Button variant="destructive" size="sm" onClick={() => handleChangeDocumentStatus(document.id, "rejected")}>
-                              Rejeter
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <p>Aucun document téléversé</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
             </div>
-          </div>
-        </CardFooter>
-        {candidateData.visa_type === 'Résidence Permanente' && permanentResidence && (
-          <div className="mt-6 p-4">
-            <h2 className="text-xl font-bold mb-4">Détails de résidence permanente</h2>
-            <ResidencePermanenteForm
-              permanentResidence={permanentResidence}
-              setPermanentResidence={setPermanentResidence}
-              enfants={enfants}
-              setEnfants={setEnfants}
-              isEditing={isEditing}
-              onSubmit={async () => await onSubmit(form.getValues())}
-              isSubmitting={isSubmitting}
-            />
-          </div>
-        )}
-      </Card>
+          </TabsContent>
+
+          <TabsContent value="photo" className="space-y-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">Photo de profil</h2>
+              
+              <div className="flex flex-col items-center space-y-4">
+                {photoPreview ? (
+                  <div className="relative">
+                    <Avatar className="h-40 w-40 rounded-full">
+                      <AvatarImage 
+                        src={photoPreview}
+                        alt="Photo de profil"
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="text-3xl">
+                        {formData.prenom.charAt(0)}{formData.nom.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute -top-2 -right-2 rounded-full h-8 w-8 p-0"
+                      onClick={clearPhotoSelection}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Avatar className="h-40 w-40 rounded-full">
+                    <AvatarFallback className="text-3xl">
+                      {formData.prenom.charAt(0) || "?"}{formData.nom.charAt(0) || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+                
+                <div className="flex flex-col gap-4 w-full max-w-xs">
+                  <div className="relative">
+                    <Input
+                      id="photo"
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoChange}
+                      className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                    />
+                    <Button 
+                      type="button" 
+                      className="w-full flex items-center gap-2"
+                      variant="outline"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Sélectionner une photo
+                    </Button>
+                  </div>
+                  
+                  {candidate && candidate.photo_url && (
+                    <Button 
+                      type="button" 
+                      variant="destructive"
+                      className="flex items-center gap-2"
+                      onClick={removePhoto}
+                    >
+                      <Trash className="h-4 w-4" />
+                      Supprimer la photo actuelle
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="documents" className="space-y-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">Documents</h2>
+              
+              {isLoadingDocTypes ? (
+                <div className="py-4 text-center">Chargement des types de documents...</div>
+              ) : documentTypes.length > 0 ? (
+                <div className="space-y-6">
+                  <ul className="space-y-4">
+                    {documentTypes.map((docType) => {
+                      // Find if document already exists
+                      const existingDoc = documents.find(doc => doc.document_type_id === docType.id);
+                      
+                      return (
+                        <li key={docType.id} className="border rounded-md p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <span className="font-medium">{docType.nom}</span>
+                              {docType.required && (
+                                <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800">Requis</span>
+                              )}
+                            </div>
+                            
+                            {existingDoc && existingDoc.file_path && (
+                              <a
+                                href={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/documents/${existingDoc.file_path}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:text-blue-700 underline"
+                              >
+                                Voir le document existant
+                              </a>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center gap-4">
+                            <div className="relative flex-1">
+                              <Input
+                                id={`document-${docType.id}`}
+                                type="file"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0] || null;
+                                  handleFileUpload(docType.id, file);
+                                }}
+                                className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                              />
+                              <Button 
+                                type="button" 
+                                className="w-full flex items-center gap-2"
+                                variant="outline"
+                              >
+                                <Upload className="h-4 w-4" />
+                                {existingDoc ? 'Remplacer le document' : 'Téléverser'}
+                              </Button>
+                            </div>
+                            
+                            {uploadedDocuments[docType.id] && (
+                              <div className="text-sm text-gray-600">
+                                {uploadedDocuments[docType.id]?.name}
+                              </div>
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ) : (
+                <div className="py-4 text-center">
+                  Aucun type de document configuré pour ce type de visa.
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+        
+        <div className="flex justify-end gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate('/tableaudebord/candidates')}
+          >
+            Annuler
+          </Button>
+          <Button 
+            type="submit" 
+            className="flex items-center gap-2"
+            disabled={isSaving}
+          >
+            {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+            <Save className="h-4 w-4" />
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };
 
 export default CandidateDetail;
-
-interface XProps {
-  className?: string;
-}
-
-function X(props: XProps) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M18 6 6 18" />
-      <path d="m6 6 12 12" />
-    </svg>
-  );
-}
