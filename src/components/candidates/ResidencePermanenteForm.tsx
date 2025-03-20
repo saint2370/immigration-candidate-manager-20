@@ -11,11 +11,8 @@ import { Trash, Plus, UserPlus, Users, Save } from 'lucide-react';
 import { ResidencePermanenteFormProps, EnfantType, ImmigrationProgramType } from './ResidencePermanenteFormProps';
 
 const immigrationPrograms: ImmigrationProgramType[] = [
-  'Express Entry',
-  'Programme des travailleurs qualifiés',
-  'Regroupement familial',
-  'Programme des candidats des provinces',
-  'Programme Startup Visa',
+  'Entrée express',
+  'Arrima',
   'Autre'
 ];
 
@@ -32,7 +29,7 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
   
   // État du formulaire
   const [formData, setFormData] = useState({
-    immigration_program: (existingData?.immigration_program as ImmigrationProgramType) || 'Express Entry',
+    immigration_program: (existingData?.immigration_program as ImmigrationProgramType) || 'Entrée express',
     nombre_personnes: existingData?.nombre_personnes || 1,
     conjoint_nom: existingData?.conjoint_nom || '',
     conjoint_prenom: existingData?.conjoint_prenom || '',

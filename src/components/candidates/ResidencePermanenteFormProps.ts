@@ -1,7 +1,7 @@
 
 import type { Database } from '@/integrations/supabase/types';
 
-export type ImmigrationProgramType = 'Express Entry' | 'Programme des travailleurs qualifiés' | 'Regroupement familial' | 'Programme des candidats des provinces' | 'Programme Startup Visa' | 'Autre';
+export type ImmigrationProgramType = 'Entrée express' | 'Arrima' | 'Autre';
 
 export type EnfantType = {
   id: string;
