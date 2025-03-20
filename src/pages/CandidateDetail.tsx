@@ -35,11 +35,6 @@ type DocumentType = {
 };
 type DocumentStatus = Database['public']['Enums']['document_status'];
 
-// Component props interface
-interface CandidateDetailProps {
-  isNewCandidate?: boolean;
-}
-
 const statuses: StatusType[] = [
   'En cours', 'Approuvé', 'En attente', 'Rejeté', 'Complété', 'Expiré'
 ];
@@ -54,12 +49,12 @@ const bureaux = [
   'Tokyo', 'Moscou', 'Madrid', 'Séoul', 'Le Caire'
 ];
 
-const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = false }) => {
+const CandidateDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const isEditMode = location.pathname.includes('/edit/') || isNewCandidate;
+  const isEditMode = location.pathname.includes('/edit/');
   const [activeTab, setActiveTab] = useState('info');
 
   const [candidate, setCandidate] = useState<Database['public']['Tables']['candidates']['Row'] | null>(null);
@@ -491,7 +486,7 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
     return <div className="container mx-auto p-4 flex justify-center items-center h-64">Chargement...</div>;
   }
 
-  if (!candidate && !isNewCandidate) {
+  if (!candidate) {
     return <div className="container mx-auto p-4">Candidat non trouvé.</div>;
   }
 
