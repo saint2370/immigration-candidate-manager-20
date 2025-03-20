@@ -25,8 +25,17 @@ type Candidate = Database['public']['Tables']['candidates']['Row'];
 type VisaType = Database['public']['Enums']['visa_type'];
 type StatusType = Database['public']['Enums']['status_type'];
 
+// Type pour les détails de résidence permanente
+type PermanentResidenceDetails = Database['public']['Tables']['permanent_residence_details']['Row'];
+type ImmigrationProgram = 'Entrée express' | 'Arrima' | 'Autre';
+
+// Type pour les candidats avec les détails de résidence permanente
+type CandidateWithDetails = Candidate & {
+  permanent_residence_details?: PermanentResidenceDetails | null;
+};
+
 const CandidatesList = () => {
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [candidates, setCandidates] = useState<CandidateWithDetails[]>([]);
   const [selectedVisa, setSelectedVisa] = useState<VisaType | 'all'>('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [candidateToDelete, setCandidateToDelete] = useState<string | null>(null);
@@ -81,7 +90,10 @@ const CandidatesList = () => {
   const fetchCandidates = async () => {
     let query = supabase
       .from('candidates')
-      .select('*')
+      .select(`
+        *,
+        permanent_residence_details(*)
+      `)
       .order('date_soumission', { ascending: false });
     
     if (selectedVisa && selectedVisa !== 'all') {

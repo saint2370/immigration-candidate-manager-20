@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +15,7 @@ import { fr } from 'date-fns/locale';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import ResidencePermanenteForm from '@/components/candidates/ResidencePermanenteForm';
 
 // Define a type for the documents with the nested document_types
 type DocumentWithTypeName = Database['public']['Tables']['documents']['Row'] & {
@@ -34,6 +34,20 @@ type DocumentType = {
   required: boolean;
 };
 type DocumentStatus = Database['public']['Enums']['document_status'];
+
+// Type pour les enfants
+interface EnfantType {
+  id?: string;
+  nom: string;
+  prenom: string;
+  age: string;
+  numero_passport?: string;
+  permanent_residence_id?: string;
+}
+
+// Type pour les détails de résidence permanente
+type PermanentResidenceDetails = Database['public']['Tables']['permanent_residence_details']['Row'];
+type ImmigrationProgram = 'Entrée express' | 'Arrima' | 'Autre';
 
 // Component props interface
 interface CandidateDetailProps {
@@ -96,10 +110,15 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  const [permanentResidence, setPermanentResidence] = useState<PermanentResidenceDetails | null>(null);
+  const [enfants, setEnfants] = useState<EnfantType[]>([]);
+  const [isLoadingResidenceData, setIsLoadingResidenceData] = useState(false);
+  
   useEffect(() => {
     if (id && !isNewCandidate) {
       fetchCandidate();
       fetchDocuments();
+      fetchResidenceDetails();
 
       // Subscribe to realtime updates for this specific candidate
       const channel = supabase
@@ -208,6 +227,50 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
       fetchDocumentTypes(formData.visa_type);
     }
   }, [formData.visa_type, isEditMode]);
+
+  // Fetch residence details and children if applicable
+  const fetchResidenceDetails = async () => {
+    if (!id) return;
+    
+    setIsLoadingResidenceData(true);
+    try {
+      // Fetch residence details
+      const { data: residenceData, error: residenceError } = await supabase
+        .from('permanent_residence_details')
+        .select('*')
+        .eq('candidate_id', id)
+        .single();
+      
+      if (residenceError && residenceError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        console.error('Error fetching residence details:', residenceError);
+      }
+      
+      if (residenceData) {
+        setPermanentResidence(residenceData);
+        
+        // Now fetch children if we have residence details
+        const { data: enfantsData, error: enfantsError } = await supabase
+          .from('enfants')
+          .select('*')
+          .eq('permanent_residence_id', residenceData.id);
+        
+        if (enfantsError) {
+          console.error('Error fetching children:', enfantsError);
+        }
+        
+        if (enfantsData) {
+          setEnfants(enfantsData.map(enfant => ({
+            ...enfant,
+            age: enfant.age.toString()
+          })));
+        }
+      }
+    } catch (error) {
+      console.error('Unexpected error fetching residence details:', error);
+    } finally {
+      setIsLoadingResidenceData(false);
+    }
+  };
 
   const fetchCandidate = async () => {
     setIsLoading(true);
@@ -480,6 +543,118 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
     }
   };
 
+  // Save residence details and children
+  const saveResidenceDetails = async (candidateId: string) => {
+    if (formData.visa_type !== 'Résidence Permanente') return;
+    
+    try {
+      // Prepare data for residence details
+      const residenceData = {
+        candidate_id: candidateId,
+        immigration_program: permanentResidence?.immigration_program || 'Entrée express',
+        nombre_personnes: permanentResidence?.nombre_personnes || 1,
+        conjoint_nom: permanentResidence?.conjoint_nom || null,
+        conjoint_prenom: permanentResidence?.conjoint_prenom || null,
+        conjoint_passport: permanentResidence?.conjoint_passport || null
+      };
+      
+      let residenceId;
+      
+      if (permanentResidence && permanentResidence.id) {
+        // Update existing residence details
+        const { error: updateError } = await supabase
+          .from('permanent_residence_details')
+          .update(residenceData)
+          .eq('id', permanentResidence.id);
+        
+        if (updateError) throw updateError;
+        residenceId = permanentResidence.id;
+      } else {
+        // Insert new residence details
+        const { data: newResidence, error: insertError } = await supabase
+          .from('permanent_residence_details')
+          .insert(residenceData)
+          .select();
+        
+        if (insertError) throw insertError;
+        if (!newResidence || newResidence.length === 0) {
+          throw new Error('No data returned from residence details insert');
+        }
+        
+        residenceId = newResidence[0].id;
+      }
+      
+      // Handle children
+      if (residenceId) {
+        // First, delete any existing children not in our current list
+        if (permanentResidence && permanentResidence.id) {
+          const existingIds = enfants
+            .filter(enfant => enfant.id)
+            .map(enfant => enfant.id);
+          
+          if (existingIds.length > 0) {
+            const { error: deleteError } = await supabase
+              .from('enfants')
+              .delete()
+              .eq('permanent_residence_id', residenceId)
+              .not('id', 'in', `(${existingIds.join(',')})`);
+            
+            if (deleteError) {
+              console.error('Error deleting children:', deleteError);
+            }
+          } else {
+            // If no existing IDs, delete all children for this residence
+            const { error: deleteAllError } = await supabase
+              .from('enfants')
+              .delete()
+              .eq('permanent_residence_id', residenceId);
+            
+            if (deleteAllError) {
+              console.error('Error deleting all children:', deleteAllError);
+            }
+          }
+        }
+        
+        // Now insert/update each child
+        for (const enfant of enfants) {
+          const enfantData = {
+            permanent_residence_id: residenceId,
+            nom: enfant.nom,
+            prenom: enfant.prenom,
+            age: parseInt(enfant.age, 10),
+            numero_passport: enfant.numero_passport || null
+          };
+          
+          if (enfant.id) {
+            // Update existing child
+            const { error: updateError } = await supabase
+              .from('enfants')
+              .update(enfantData)
+              .eq('id', enfant.id);
+            
+            if (updateError) {
+              console.error('Error updating child:', updateError);
+            }
+          } else {
+            // Insert new child
+            const { error: insertError } = await supabase
+              .from('enfants')
+              .insert(enfantData);
+            
+            if (insertError) {
+              console.error('Error inserting child:', insertError);
+            }
+          }
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error saving residence details:', error);
+      return false;
+    }
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -549,6 +724,11 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
             date: new Date().toISOString()
           });
           
+        // Save residence details if applicable
+        if (formData.visa_type === 'Résidence Permanente' && candidateId) {
+          await saveResidenceDetails(candidateId);
+        }
+        
         toast({
           title: "Candidat créé",
           description: "Le nouveau candidat a été créé avec succès.",
@@ -568,6 +748,21 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
           .eq('id', id as string);
         
         if (updateError) throw updateError;
+        
+        // Save residence details if applicable
+        if (formData.visa_type === 'Résidence Permanente') {
+          await saveResidenceDetails(id as string);
+        } else if (permanentResidence && permanentResidence.id) {
+          // If visa type changed and we have existing residence details, delete them
+          const { error: deleteError } = await supabase
+            .from('permanent_residence_details')
+            .delete()
+            .eq('id', permanentResidence.id);
+          
+          if (deleteError) {
+            console.error('Error deleting residence details:', deleteError);
+          }
+        }
         
         // Add to history
         await supabase
@@ -706,456 +901,12 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
                 <p className="whitespace-pre-wrap">{candidate.notes}</p>
               </div>
             )}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6 mt-6">
-          <h2 className="text-xl font-semibold mb-4">Documents</h2>
-          {documents.length > 0 ? (
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {documents.map(doc => (
-                <li key={doc.id} className="border rounded-md p-4 flex justify-between items-center">
-                  <div>
-                    <span className="font-medium">{doc.document_types?.nom || 'Document sans type'}</span>
-                    {doc.document_types?.required && (
-                      <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800">Requis</span>
-                    )}
-                  </div>
-                  {doc.file_path && (
-                    <a 
-                      href={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/documents/${doc.file_path}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:text-blue-700 underline"
-                    >
-                      Voir
-                    </a>
-                  )}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>Aucun document trouvé pour ce candidat.</p>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Vue en mode édition ou création
-  return (
-    <div className="container mx-auto p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <Link to="/tableaudebord/candidates" className="flex items-center gap-2 text-blue-500 hover:text-blue-700">
-          <X className="h-5 w-5" />
-          {isNewCandidate ? "Annuler la création" : "Annuler les modifications"}
-        </Link>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-3 mb-4">
-            <TabsTrigger value="info">Informations générales</TabsTrigger>
-            <TabsTrigger value="photo">Photo</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="info" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="md:col-span-1 flex flex-col items-center">
-                {photoPreview ? (
-                  <Avatar className="h-40 w-40 rounded-full">
-                    <AvatarImage 
-                      src={photoPreview}
-                      alt="Photo de profil"
-                      className="object-cover"
-                    />
-                    <AvatarFallback className="text-3xl">
-                      {formData.prenom.charAt(0)}{formData.nom.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                ) : (
-                  <Avatar className="h-40 w-40 rounded-full">
-                    <AvatarFallback className="text-3xl">
-                      {formData.prenom.charAt(0) || "?"}{formData.nom.charAt(0) || "?"}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
-                <h2 className="text-xl font-bold mt-4 text-center">{formData.prenom || "Prénom"} {formData.nom || "Nom"}</h2>
-              </div>
-
-              <div className="md:col-span-3 bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-4">Modifier les informations</h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="prenom">Prénom</Label>
-                    <Input 
-                      id="prenom" 
-                      name="prenom" 
-                      value={formData.prenom} 
-                      onChange={handleInputChange} 
-                      required 
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="nom">Nom</Label>
-                    <Input 
-                      id="nom" 
-                      name="nom" 
-                      value={formData.nom} 
-                      onChange={handleInputChange} 
-                      required 
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="date_naissance">Date de naissance</Label>
-                    <DateInput
-                      value={formData.date_naissance}
-                      onChange={(date) => handleDateChange('date_naissance', date)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="lieu_naissance">Lieu de naissance</Label>
-                    <Input 
-                      id="lieu_naissance" 
-                      name="lieu_naissance" 
-                      value={formData.lieu_naissance} 
-                      onChange={handleInputChange} 
-                      required 
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="nationalite">Nationalité</Label>
-                    <Input 
-                      id="nationalite" 
-                      name="nationalite" 
-                      value={formData.nationalite} 
-                      onChange={handleInputChange} 
-                      required 
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input 
-                      id="email" 
-                      name="email" 
-                      type="email" 
-                      value={formData.email} 
-                      onChange={handleInputChange} 
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="telephone">Téléphone</Label>
-                    <Input 
-                      id="telephone" 
-                      name="telephone" 
-                      value={formData.telephone} 
-                      onChange={handleInputChange} 
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="adresse">Adresse</Label>
-                    <Input 
-                      id="adresse" 
-                      name="adresse" 
-                      value={formData.adresse} 
-                      onChange={handleInputChange} 
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="bureau">Bureau</Label>
-                    <Select
-                      value={formData.bureau}
-                      onValueChange={(value) => handleSelectChange('bureau', value)}
-                    >
-                      <SelectTrigger id="bureau">
-                        <SelectValue placeholder="Sélectionner un bureau" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {bureaux.map((bureau) => (
-                          <SelectItem key={bureau} value={bureau}>
-                            {bureau}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="numero_passport">Numéro de passeport</Label>
-                    <Input 
-                      id="numero_passport" 
-                      name="numero_passport" 
-                      value={formData.numero_passport} 
-                      onChange={handleInputChange} 
-                      required 
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="visa_type">Type de visa</Label>
-                    <Select
-                      value={formData.visa_type}
-                      onValueChange={(value) => handleSelectChange('visa_type', value as VisaType)}
-                    >
-                      <SelectTrigger id="visa_type">
-                        <SelectValue placeholder="Sélectionner un type de visa" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {visaTypes.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Statut</Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(value) => handleSelectChange('status', value as StatusType)}
-                    >
-                      <SelectTrigger id="status">
-                        <SelectValue placeholder="Sélectionner un statut" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {statuses.map((status) => (
-                          <SelectItem key={status} value={status}>
-                            {status}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="date_soumission">Date de soumission</Label>
-                    <DateInput
-                      value={formData.date_soumission}
-                      onChange={(date) => handleDateChange('date_soumission', date)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="date_voyage">Date prévue du voyage</Label>
-                    <DateInput
-                      value={formData.date_voyage}
-                      onChange={(date) => handleDateChange('date_voyage', date)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="procedure">Procédure</Label>
-                    <Input 
-                      id="procedure" 
-                      name="procedure" 
-                      value={formData.procedure} 
-                      onChange={handleInputChange} 
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="delai_traitement">Délai de traitement</Label>
-                    <Input 
-                      id="delai_traitement" 
-                      name="delai_traitement" 
-                      value={formData.delai_traitement} 
-                      onChange={handleInputChange} 
-                    />
-                  </div>
-
-                  <div className="col-span-1 md:col-span-2 space-y-2">
-                    <Label htmlFor="notes">Notes</Label>
-                    <Textarea 
-                      id="notes" 
-                      name="notes" 
-                      value={formData.notes} 
-                      onChange={handleInputChange} 
-                      rows={5}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="photo" className="space-y-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Photo de profil</h2>
-              
-              <div className="flex flex-col items-center space-y-4">
-                {photoPreview ? (
-                  <div className="relative">
-                    <Avatar className="h-40 w-40 rounded-full">
-                      <AvatarImage 
-                        src={photoPreview}
-                        alt="Photo de profil"
-                        className="object-cover"
-                      />
-                      <AvatarFallback className="text-3xl">
-                        {formData.prenom.charAt(0)}{formData.nom.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      className="absolute -top-2 -right-2 rounded-full h-8 w-8 p-0"
-                      onClick={clearPhotoSelection}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <Avatar className="h-40 w-40 rounded-full">
-                    <AvatarFallback className="text-3xl">
-                      {formData.prenom.charAt(0) || "?"}{formData.nom.charAt(0) || "?"}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
+            
+            {/* Afficher les détails de résidence permanente si applicable */}
+            {candidate && candidate.visa_type === 'Résidence Permanente' && permanentResidence && (
+              <div className="mt-4 bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-4">Détails de résidence permanente</h2>
                 
-                <div className="flex flex-col gap-4 w-full max-w-xs">
-                  <div className="relative">
-                    <Input
-                      id="photo"
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoChange}
-                      className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
-                    />
-                    <Button 
-                      type="button" 
-                      className="w-full flex items-center gap-2"
-                      variant="outline"
-                    >
-                      <Upload className="h-4 w-4" />
-                      Sélectionner une photo
-                    </Button>
-                  </div>
-                  
-                  {candidate && candidate.photo_url && (
-                    <Button 
-                      type="button" 
-                      variant="destructive"
-                      className="flex items-center gap-2"
-                      onClick={removePhoto}
-                    >
-                      <Trash className="h-4 w-4" />
-                      Supprimer la photo actuelle
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="documents" className="space-y-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Documents</h2>
-              
-              {isLoadingDocTypes ? (
-                <div className="py-4 text-center">Chargement des types de documents...</div>
-              ) : documentTypes.length > 0 ? (
-                <div className="space-y-6">
-                  <ul className="space-y-4">
-                    {documentTypes.map((docType) => {
-                      // Find if document already exists
-                      const existingDoc = documents.find(doc => doc.document_type_id === docType.id);
-                      
-                      return (
-                        <li key={docType.id} className="border rounded-md p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <span className="font-medium">{docType.nom}</span>
-                              {docType.required && (
-                                <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800">Requis</span>
-                              )}
-                            </div>
-                            
-                            {existingDoc && existingDoc.file_path && (
-                              <a
-                                href={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/documents/${existingDoc.file_path}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-500 hover:text-blue-700 underline"
-                              >
-                                Voir le document existant
-                              </a>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center gap-4">
-                            <div className="relative flex-1">
-                              <Input
-                                id={`document-${docType.id}`}
-                                type="file"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0] || null;
-                                  handleFileUpload(docType.id, file);
-                                }}
-                                className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
-                              />
-                              <Button 
-                                type="button" 
-                                className="w-full flex items-center gap-2"
-                                variant="outline"
-                              >
-                                <Upload className="h-4 w-4" />
-                                {existingDoc ? 'Remplacer le document' : 'Téléverser'}
-                              </Button>
-                            </div>
-                            
-                            {uploadedDocuments[docType.id] && (
-                              <div className="text-sm text-gray-600">
-                                {uploadedDocuments[docType.id]?.name}
-                              </div>
-                            )}
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ) : (
-                <div className="py-4 text-center">
-                  Aucun type de document configuré pour ce type de visa.
-                </div>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
-        
-        <div className="flex justify-end gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate('/tableaudebord/candidates')}
-          >
-            Annuler
-          </Button>
-          <Button 
-            type="submit" 
-            className="flex items-center gap-2"
-            disabled={isSaving}
-          >
-            {isSaving ? 'Enregistrement...' : 'Enregistrer'}
-            <Save className="h-4 w-4" />
-          </Button>
-        </div>
-      </form>
-    </div>
-  );
-};
-
-export default CandidateDetail;
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="mb-2"><strong>Programme d'immigration:</strong> {permanentResidence.immigration_program}</p
