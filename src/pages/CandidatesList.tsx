@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Define the correct types from our Database type
 type Candidate = Database['public']['Tables']['candidates']['Row'];
@@ -16,8 +17,9 @@ type StatusType = Database['public']['Enums']['status_type'];
 
 const CandidatesList = () => {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [selectedVisa, setSelectedVisa] = useState<VisaType>('Résidence Permanente');
+  const [selectedVisa, setSelectedVisa] = useState<VisaType | 'all'>('all');
   const navigate = useNavigate();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     fetchCandidates();
@@ -31,7 +33,7 @@ const CandidatesList = () => {
       .select('*')
       .order('date_soumission', { ascending: false });
     
-    if (selectedVisa) {
+    if (selectedVisa && selectedVisa !== 'all') {
       query = query.eq('visa_type', selectedVisa);
     }
     
@@ -68,11 +70,15 @@ const CandidatesList = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <h1 className="text-2xl font-bold">Liste des candidats</h1>
           <div className="w-full sm:w-auto">
-            <Select value={selectedVisa} onValueChange={(value: VisaType) => setSelectedVisa(value)}>
+            <Select 
+              value={selectedVisa} 
+              onValueChange={(value: VisaType | 'all') => setSelectedVisa(value)}
+            >
               <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="Sélectionner le type de visa" />
+                <SelectValue placeholder="Type de visa" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">Tous les visas</SelectItem>
                 {visaTypes.map((type) => (
                   <SelectItem key={type} value={type}>
                     {type}
@@ -102,36 +108,44 @@ const CandidatesList = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {candidates.map((candidate) => (
-                <tr key={candidate.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <div>
-                        <div className="font-medium">{candidate.prenom} {candidate.nom}</div>
-                        <div className="text-gray-500">{candidate.email}</div>
+              {candidates.length > 0 ? (
+                candidates.map((candidate) => (
+                  <tr key={candidate.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center">
+                        <div>
+                          <div className="font-medium">{candidate.prenom} {candidate.nom}</div>
+                          <div className="text-gray-500">{candidate.email || candidate.identification_number || ''}</div>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">{candidate.visa_type}</td>
-                  <td className="px-6 py-4">
-                    {format(new Date(candidate.date_soumission), 'dd MMMM yyyy', { locale: fr })}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium ${getStatusClass(candidate.status)}`}>
-                      {candidate.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">{candidate.bureau}</td>
-                  <td className="px-6 py-4 text-center">
-                    <Link
-                      to={`/tableaudebord/candidate/${candidate.id}`}
-                      className="text-blue-600 hover:text-blue-900"
-                    >
-                      Voir
-                    </Link>
+                    </td>
+                    <td className="px-6 py-4">{candidate.visa_type}</td>
+                    <td className="px-6 py-4">
+                      {format(new Date(candidate.date_soumission), 'dd MMMM yyyy', { locale: language === 'fr' ? fr : undefined })}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium ${getStatusClass(candidate.status)}`}>
+                        {candidate.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">{candidate.bureau}</td>
+                    <td className="px-6 py-4 text-center">
+                      <Link
+                        to={`/tableaudebord/candidate/${candidate.id}`}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        Voir
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                    Aucun candidat trouvé
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
