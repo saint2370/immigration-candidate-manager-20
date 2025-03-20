@@ -29,7 +29,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 // Types based on our database schema
 interface Candidate {
@@ -41,12 +41,15 @@ interface Candidate {
   date_soumission: string;
   status: 'En cours' | 'Approuvé' | 'En attente' | 'Rejeté' | 'Complété' | 'Expiré';
   bureau: string;
-  identification_number?: string; // Ajout de l'identifiant unique
+  identification_number?: string; // Identifiant unique
+}
+
+interface CandidatesListProps {
+  filterByVisaType?: 'Visiteur' | 'Travail' | 'Résidence Permanente';
 }
 
 // Format candidate data for display
 const formatCandidateForDisplay = (candidate: any): Candidate => {
-  // Parse date_soumission from database format to display format
   const formattedDate = candidate.date_soumission 
     ? format(new Date(candidate.date_soumission), 'dd MMMM yyyy', { locale: fr }) 
     : '';
@@ -60,16 +63,23 @@ const formatCandidateForDisplay = (candidate: any): Candidate => {
     date_soumission: formattedDate,
     status: candidate.status,
     bureau: candidate.bureau,
-    identification_number: candidate.identification_number // Ajout de l'identifiant unique
+    identification_number: candidate.identification_number
   };
 };
 
 // Fetch candidates from Supabase
-const fetchCandidates = async () => {
-  const { data, error } = await supabase
+const fetchCandidates = async (visaType?: string) => {
+  let query = supabase
     .from('candidates')
     .select('*')
     .order('created_at', { ascending: false });
+  
+  // Si un type de visa est spécifié, filtrer par ce type
+  if (visaType) {
+    query = query.eq('visa_type', visaType);
+  }
+  
+  const { data, error } = await query;
   
   if (error) {
     console.error('Error fetching candidates:', error);
@@ -98,7 +108,7 @@ const getStatusBadge = (status: string) => {
   );
 };
 
-const CandidatesList = () => {
+const CandidatesList: React.FC<CandidatesListProps> = ({ filterByVisaType }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
@@ -109,13 +119,22 @@ const CandidatesList = () => {
     visaType: string[];
   }>({
     status: [],
-    visaType: []
+    visaType: filterByVisaType ? [filterByVisaType] : []
   });
+  
+  // Titre de la page en fonction du filtre
+  const getPageTitle = () => {
+    if (filterByVisaType === 'Travail') return 'Visas de Travail';
+    if (filterByVisaType === 'Visiteur') return 'Visas Visiteur';
+    if (filterByVisaType === 'Résidence Permanente') return 'Résidence Permanente';
+    return 'Liste des Candidats';
+  };
   
   // Use React Query to fetch candidates
   const { data: candidates = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ['candidates'],
-    queryFn: fetchCandidates
+    queryKey: ['candidates', filterByVisaType],
+    queryFn: () => fetchCandidates(filterByVisaType),
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const pageSize = 7;
@@ -181,7 +200,6 @@ const CandidatesList = () => {
 
   // Delete candidate
   const handleDeleteCandidate = async (candidateId: string) => {
-    // Implement confirmation dialog and deletion logic here
     if (window.confirm("Êtes-vous sûr de vouloir supprimer ce candidat ?")) {
       try {
         const { error } = await supabase
@@ -237,9 +255,11 @@ const CandidatesList = () => {
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center">
             <Users size={24} className="mr-2 text-ircc-blue" />
-            Liste des Candidats
+            {getPageTitle()}
           </h2>
-          <p className="text-gray-500 mt-1">Gérez et suivez tous vos candidats</p>
+          <p className="text-gray-500 mt-1">
+            {filterByVisaType ? `Gestion des dossiers de type ${filterByVisaType}` : 'Gérez et suivez tous vos candidats'}
+          </p>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2">
@@ -288,28 +308,31 @@ const CandidatesList = () => {
                       ))}
                     </div>
                   </div>
-                  <div className="p-2 border-t">
-                    <p className="text-sm font-medium mb-2">Type de visa</p>
-                    <div className="space-y-1">
-                      {['Travail', 'Visiteur', 'Résidence Permanente'].map(type => (
-                        <DropdownMenuItem 
-                          key={type}
-                          className={cn(
-                            "cursor-pointer flex items-center",
-                            selectedFilters.visaType.includes(type) && "bg-muted"
-                          )}
-                          onClick={() => toggleFilter('visaType', type)}
-                        >
-                          <div className="w-4 h-4 mr-2 flex items-center justify-center">
-                            {selectedFilters.visaType.includes(type) && (
-                              <div className="w-2 h-2 rounded-full bg-primary" />
+                  
+                  {!filterByVisaType && (
+                    <div className="p-2 border-t">
+                      <p className="text-sm font-medium mb-2">Type de visa</p>
+                      <div className="space-y-1">
+                        {['Travail', 'Visiteur', 'Résidence Permanente'].map(type => (
+                          <DropdownMenuItem 
+                            key={type}
+                            className={cn(
+                              "cursor-pointer flex items-center",
+                              selectedFilters.visaType.includes(type) && "bg-muted"
                             )}
-                          </div>
-                          {type}
-                        </DropdownMenuItem>
-                      ))}
+                            onClick={() => toggleFilter('visaType', type)}
+                          >
+                            <div className="w-4 h-4 mr-2 flex items-center justify-center">
+                              {selectedFilters.visaType.includes(type) && (
+                                <div className="w-2 h-2 rounded-full bg-primary" />
+                              )}
+                            </div>
+                            {type}
+                          </DropdownMenuItem>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -321,7 +344,7 @@ const CandidatesList = () => {
             
             <Button 
               className="bg-ircc-blue hover:bg-ircc-dark-blue btn-hover"
-              onClick={() => setIsAddFormOpen(true)}
+              onClick={() => navigate('/tableaudebord/candidates/new')}
             >
               <Plus size={18} className="mr-2" />
               Ajouter
@@ -339,7 +362,7 @@ const CandidatesList = () => {
                 <TableHead className="w-[200px]">Nom</TableHead>
                 <TableHead>ID</TableHead>
                 <TableHead>Nationalité</TableHead>
-                <TableHead>Type de visa</TableHead>
+                {!filterByVisaType && <TableHead>Type de visa</TableHead>}
                 <TableHead>Date de soumission</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead>Bureau</TableHead>
@@ -349,7 +372,7 @@ const CandidatesList = () => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center">
+                  <TableCell colSpan={filterByVisaType ? 7 : 8} className="h-24 text-center">
                     <div className="flex flex-col items-center py-4">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ircc-blue"></div>
                       <p className="mt-2 text-gray-500">Chargement des candidats...</p>
@@ -358,7 +381,7 @@ const CandidatesList = () => {
                 </TableRow>
               ) : isError ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center">
+                  <TableCell colSpan={filterByVisaType ? 7 : 8} className="h-24 text-center">
                     <div className="flex flex-col items-center py-4">
                       <p className="text-red-500">Erreur lors du chargement des candidats</p>
                       <Button 
@@ -391,7 +414,7 @@ const CandidatesList = () => {
                       </span>
                     </TableCell>
                     <TableCell>{candidate.nationalite}</TableCell>
-                    <TableCell>{candidate.visa_type}</TableCell>
+                    {!filterByVisaType && <TableCell>{candidate.visa_type}</TableCell>}
                     <TableCell>{candidate.date_soumission}</TableCell>
                     <TableCell>{getStatusBadge(candidate.status)}</TableCell>
                     <TableCell>{candidate.bureau}</TableCell>
@@ -424,7 +447,7 @@ const CandidatesList = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center">
+                  <TableCell colSpan={filterByVisaType ? 7 : 8} className="h-24 text-center">
                     {searchTerm || selectedFilters.status.length > 0 || selectedFilters.visaType.length > 0 ? (
                       <div className="flex flex-col items-center py-4">
                         <p className="text-gray-500">Aucun candidat ne correspond à votre recherche</p>
@@ -433,7 +456,10 @@ const CandidatesList = () => {
                           className="mt-2"
                           onClick={() => {
                             setSearchTerm('');
-                            setSelectedFilters({ status: [], visaType: [] });
+                            setSelectedFilters({ 
+                              status: [], 
+                              visaType: filterByVisaType ? [filterByVisaType] : [] 
+                            });
                           }}
                         >
                           Réinitialiser les filtres
@@ -488,13 +514,6 @@ const CandidatesList = () => {
           </div>
         </div>
       </div>
-
-      {/* Modal de formulaire d'ajout */}
-      <AddCandidateForm 
-        isOpen={isAddFormOpen}
-        onClose={() => setIsAddFormOpen(false)}
-        onAddCandidate={handleAddCandidate}
-      />
     </div>
   );
 };

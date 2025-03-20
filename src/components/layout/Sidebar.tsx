@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { 
   Home, Users, Briefcase, Plane, CreditCard, 
   Calendar, BarChart2, Settings, Menu, X, 
@@ -17,6 +17,7 @@ interface SidebarProps {
 const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     setMounted(true);
@@ -24,7 +25,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
 
   const navItems = [
     { name: 'Tableau de bord', path: '/tableaudebord/dashboard', icon: Home },
-    { name: 'Candidats', path: '/tableaudebord/candidates', icon: Users },
+    { name: 'Tous les candidats', path: '/tableaudebord/candidates', icon: Users },
     { name: 'Visas Travail', path: '/tableaudebord/work-visas', icon: Briefcase },
     { name: 'Visas Visiteur', path: '/tableaudebord/visitor-visas', icon: Plane },
     { name: 'Résidence Permanente', path: '/tableaudebord/permanent-residence', icon: CreditCard },
@@ -34,6 +35,23 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   ];
 
   if (!mounted) return null;
+
+  // Check if the current path is a child of a nav item path
+  const isActiveRoute = (path: string) => {
+    // Exact match
+    if (location.pathname === path) return true;
+    
+    // Check if it's a child path (e.g. /tableaudebord/candidate/123 is a child of /tableaudebord/candidates)
+    // Special case for candidate paths
+    if (path === '/tableaudebord/candidates') {
+      return (
+        location.pathname.startsWith('/tableaudebord/candidate/') || 
+        location.pathname.startsWith('/tableaudebord/candidates/edit/')
+      );
+    }
+    
+    return location.pathname.startsWith(path + '/');
+  };
 
   return (
     <>
@@ -86,7 +104,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
                   to={item.path}
                   className={({ isActive }) => cn(
                     "flex items-center px-3 py-2.5 rounded-lg transition-all duration-200",
-                    isActive 
+                    isActiveRoute(item.path)
                       ? "bg-ircc-blue text-white" 
                       : "text-gray-700 hover:bg-gray-100",
                     !isOpen && "justify-center"
