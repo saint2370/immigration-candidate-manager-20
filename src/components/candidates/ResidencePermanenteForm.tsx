@@ -7,60 +7,42 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, X, Trash } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-
-type ImmigrationProgram = 'Entrée express' | 'Arrima' | 'Autre';
-
-interface EnfantType {
-  id?: string;
-  nom: string;
-  prenom: string;
-  age: string;
-  numero_passport?: string;
-  permanent_residence_id?: string;
-}
-
-interface ResidenceFormData {
-  immigration_program: ImmigrationProgram;
-  nombre_personnes: number;
-  conjoint_nom?: string;
-  conjoint_prenom?: string;
-  conjoint_passport?: string;
-}
-
-interface ResidencePermanenteFormProps {
-  residenceData: ResidenceFormData;
-  enfants: EnfantType[];
-  onResidenceDataChange: (data: ResidenceFormData) => void;
-  onEnfantsChange: (enfants: EnfantType[]) => void;
-}
+import { 
+  PermanentResidenceDetailsType, 
+  EnfantType, 
+  ResidencePermanenteFormProps 
+} from './ResidencePermanenteFormProps';
 
 const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
-  residenceData,
+  permanentResidence,
+  setPermanentResidence,
   enfants,
-  onResidenceDataChange,
-  onEnfantsChange
+  setEnfants,
+  isEditing,
+  onSubmit,
+  isSubmitting
 }) => {
   const [newEnfant, setNewEnfant] = useState<EnfantType>({ nom: '', prenom: '', age: '' });
   const [showConjointFields, setShowConjointFields] = useState(
-    !!residenceData.conjoint_nom || !!residenceData.conjoint_prenom
+    !!permanentResidence.conjoint_nom || !!permanentResidence.conjoint_prenom
   );
 
   const handleResidenceChange = (name: string, value: string | number) => {
-    onResidenceDataChange({
-      ...residenceData,
+    setPermanentResidence({
+      ...permanentResidence,
       [name]: value
     });
   };
 
   const handleConjointChange = (field: string, value: string) => {
-    const updatedData = { ...residenceData, [field]: value };
+    const updatedData = { ...permanentResidence, [field]: value };
     
     // Mettre à jour le nombre de personnes si nécessaire
-    if ((field === 'conjoint_nom' || field === 'conjoint_prenom') && value && !residenceData.conjoint_nom && !residenceData.conjoint_prenom) {
-      updatedData.nombre_personnes = (residenceData.nombre_personnes || 1) + 1;
+    if ((field === 'conjoint_nom' || field === 'conjoint_prenom') && value && !permanentResidence.conjoint_nom && !permanentResidence.conjoint_prenom) {
+      updatedData.nombre_personnes = (permanentResidence.nombre_personnes || 1) + 1;
     }
     
-    onResidenceDataChange(updatedData);
+    setPermanentResidence(updatedData);
   };
 
   const handleEnfantChange = (field: string, value: string) => {
@@ -70,12 +52,12 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
   const addEnfant = () => {
     if (newEnfant.nom && newEnfant.prenom && newEnfant.age) {
       const updatedEnfants = [...enfants, newEnfant];
-      onEnfantsChange(updatedEnfants);
+      setEnfants(updatedEnfants);
       
       // Mettre à jour le nombre de personnes
-      onResidenceDataChange({
-        ...residenceData,
-        nombre_personnes: (residenceData.nombre_personnes || 1) + 1
+      setPermanentResidence({
+        ...permanentResidence,
+        nombre_personnes: (permanentResidence.nombre_personnes || 1) + 1
       });
       
       // Réinitialiser le formulaire d'ajout d'enfant
@@ -86,12 +68,12 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
   const removeEnfant = (index: number) => {
     const updatedEnfants = [...enfants];
     updatedEnfants.splice(index, 1);
-    onEnfantsChange(updatedEnfants);
+    setEnfants(updatedEnfants);
     
     // Mettre à jour le nombre de personnes
-    onResidenceDataChange({
-      ...residenceData,
-      nombre_personnes: Math.max(1, (residenceData.nombre_personnes || 1) - 1)
+    setPermanentResidence({
+      ...permanentResidence,
+      nombre_personnes: Math.max(1, (permanentResidence.nombre_personnes || 1) - 1)
     });
   };
 
@@ -101,13 +83,13 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
     // Si on cache les champs du conjoint, on efface les données
     if (showConjointFields) {
       const updatedData = {
-        ...residenceData,
-        conjoint_nom: '',
-        conjoint_prenom: '',
-        conjoint_passport: '',
-        nombre_personnes: Math.max(1, (residenceData.nombre_personnes || 1) - 1)
+        ...permanentResidence,
+        conjoint_nom: null,
+        conjoint_prenom: null,
+        conjoint_passport: null,
+        nombre_personnes: Math.max(1, (permanentResidence.nombre_personnes || 1) - 1)
       };
-      onResidenceDataChange(updatedData);
+      setPermanentResidence(updatedData);
     }
   };
 
@@ -122,8 +104,9 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
             <div>
               <Label htmlFor="immigration_program">Programme d'immigration</Label>
               <Select
-                value={residenceData.immigration_program}
-                onValueChange={(value) => handleResidenceChange('immigration_program', value)}
+                value={permanentResidence.immigration_program}
+                onValueChange={(value) => handleResidenceChange('immigration_program', value as 'Entrée express' | 'Arrima' | 'Autre')}
+                disabled={!isEditing}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un programme" />
@@ -142,7 +125,7 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
                 id="nombre_personnes"
                 type="number"
                 min="1"
-                value={residenceData.nombre_personnes || 1}
+                value={permanentResidence.nombre_personnes || 1}
                 onChange={(e) => handleResidenceChange('nombre_personnes', parseInt(e.target.value))}
                 disabled
               />
@@ -160,6 +143,7 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
                 variant="outline" 
                 size="sm" 
                 onClick={toggleConjointFields}
+                disabled={!isEditing}
               >
                 {showConjointFields ? 'Retirer le conjoint' : 'Ajouter un conjoint'}
               </Button>
@@ -171,8 +155,9 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
                   <Label htmlFor="conjoint_prenom">Prénom du conjoint</Label>
                   <Input
                     id="conjoint_prenom"
-                    value={residenceData.conjoint_prenom || ''}
+                    value={permanentResidence.conjoint_prenom || ''}
                     onChange={(e) => handleConjointChange('conjoint_prenom', e.target.value)}
+                    disabled={!isEditing}
                   />
                 </div>
                 
@@ -180,8 +165,9 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
                   <Label htmlFor="conjoint_nom">Nom du conjoint</Label>
                   <Input
                     id="conjoint_nom"
-                    value={residenceData.conjoint_nom || ''}
+                    value={permanentResidence.conjoint_nom || ''}
                     onChange={(e) => handleConjointChange('conjoint_nom', e.target.value)}
+                    disabled={!isEditing}
                   />
                 </div>
                 
@@ -189,8 +175,9 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
                   <Label htmlFor="conjoint_passport">N° Passeport du conjoint</Label>
                   <Input
                     id="conjoint_passport"
-                    value={residenceData.conjoint_passport || ''}
+                    value={permanentResidence.conjoint_passport || ''}
                     onChange={(e) => handleConjointChange('conjoint_passport', e.target.value)}
+                    disabled={!isEditing}
                   />
                 </div>
               </div>
@@ -238,6 +225,7 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
                     size="sm"
                     onClick={() => removeEnfant(index)}
                     className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    disabled={!isEditing}
                   >
                     <Trash size={16} />
                   </Button>
@@ -246,60 +234,73 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
             </div>
           )}
           
-          <div className="border rounded-md p-4 bg-gray-50">
-            <h4 className="text-sm font-medium mb-3">Ajouter un enfant</h4>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-              <div>
-                <Label htmlFor="enfant_prenom">Prénom</Label>
-                <Input
-                  id="enfant_prenom"
-                  value={newEnfant.prenom}
-                  onChange={(e) => handleEnfantChange('prenom', e.target.value)}
-                />
+          {isEditing && (
+            <div className="border rounded-md p-4 bg-gray-50">
+              <h4 className="text-sm font-medium mb-3">Ajouter un enfant</h4>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                <div>
+                  <Label htmlFor="enfant_prenom">Prénom</Label>
+                  <Input
+                    id="enfant_prenom"
+                    value={newEnfant.prenom}
+                    onChange={(e) => handleEnfantChange('prenom', e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="enfant_nom">Nom</Label>
+                  <Input
+                    id="enfant_nom"
+                    value={newEnfant.nom}
+                    onChange={(e) => handleEnfantChange('nom', e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="enfant_age">Age</Label>
+                  <Input
+                    id="enfant_age"
+                    type="number"
+                    min="0"
+                    max="17"
+                    value={newEnfant.age}
+                    onChange={(e) => handleEnfantChange('age', e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="enfant_passport">N° Passeport (optionnel)</Label>
+                  <Input
+                    id="enfant_passport"
+                    value={newEnfant.numero_passport || ''}
+                    onChange={(e) => handleEnfantChange('numero_passport', e.target.value)}
+                  />
+                </div>
               </div>
               
-              <div>
-                <Label htmlFor="enfant_nom">Nom</Label>
-                <Input
-                  id="enfant_nom"
-                  value={newEnfant.nom}
-                  onChange={(e) => handleEnfantChange('nom', e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="enfant_age">Age</Label>
-                <Input
-                  id="enfant_age"
-                  type="number"
-                  min="0"
-                  max="17"
-                  value={newEnfant.age}
-                  onChange={(e) => handleEnfantChange('age', e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="enfant_passport">N° Passeport (optionnel)</Label>
-                <Input
-                  id="enfant_passport"
-                  value={newEnfant.numero_passport || ''}
-                  onChange={(e) => handleEnfantChange('numero_passport', e.target.value)}
-                />
+              <div className="mt-4 flex justify-end">
+                <Button
+                  type="button"
+                  onClick={addEnfant}
+                  size="sm"
+                  disabled={!newEnfant.prenom || !newEnfant.nom || !newEnfant.age}
+                >
+                  <Plus size={16} className="mr-1" /> Ajouter l'enfant
+                </Button>
               </div>
             </div>
-            
-            <div className="mt-4 flex justify-end">
-              <Button
-                type="button"
-                onClick={addEnfant}
-                size="sm"
-                disabled={!newEnfant.prenom || !newEnfant.nom || !newEnfant.age}
+          )}
+          
+          {isEditing && (
+            <div className="mt-6 flex justify-end">
+              <Button 
+                onClick={onSubmit}
+                disabled={isSubmitting}
               >
-                <Plus size={16} className="mr-1" /> Ajouter l'enfant
+                Enregistrer
               </Button>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
