@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -19,6 +20,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { 
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage 
+} from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Card,
@@ -35,17 +45,21 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from '@/integrations/supabase/types';
 import ResidencePermanenteForm from '@/components/candidates/ResidencePermanenteForm';
 import { CustomButton } from '@/components/ui/custom-button';
-import type { ResidencePermanenteFormProps } from '@/components/candidates/ResidencePermanenteFormProps';
+import type { 
+  PermanentResidenceDetailsType, 
+  EnfantType, 
+  ResidencePermanenteFormProps 
+} from '@/components/candidates/ResidencePermanenteFormProps';
 
 // Define types based on your database schema
 type Candidate = Database['public']['Tables']['candidates']['Row'];
 type VisaType = Database['public']['Enums']['visa_type'];
 type StatusType = Database['public']['Enums']['status_type'];
 type Document = Database['public']['Tables']['documents']['Row'];
-type DocumentType = Database['public']['Tables']['document_types']['Row'];
+type DocumentType = Database['public']['Tables']['document_types']['Row'] & {
+  description?: string;
+};
 type DocumentStatus = Database['public']['Enums']['document_status'];
-type PermanentResidenceDetails = Database['public']['Tables']['permanent_residence_details']['Row'];
-type Enfant = Database['public']['Tables']['enfants']['Row'];
 
 // Define form schema
 const formSchema = z.object({
@@ -81,8 +95,8 @@ const CandidateDetail = ({ isNewCandidate }: { isNewCandidate?: boolean }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
-  const [permanentResidence, setPermanentResidence] = useState<PermanentResidenceDetails | null>(null);
-  const [enfants, setEnfants] = useState<Enfant[]>([]);
+  const [permanentResidence, setPermanentResidence] = useState<PermanentResidenceDetailsType | null>(null);
+  const [enfants, setEnfants] = useState<EnfantType[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -227,7 +241,7 @@ const CandidateDetail = ({ isNewCandidate }: { isNewCandidate?: boolean }) => {
       }
 
       if (data) {
-        setPermanentResidence(data);
+        setPermanentResidence(data as PermanentResidenceDetailsType);
       }
     } catch (error) {
       console.error('Error fetching permanent residence details:', error);
@@ -261,7 +275,12 @@ const CandidateDetail = ({ isNewCandidate }: { isNewCandidate?: boolean }) => {
         }
   
         if (enfantsData) {
-          setEnfants(enfantsData);
+          // Convert age to string to match the EnfantType
+          const convertedEnfants: EnfantType[] = enfantsData.map(enfant => ({
+            ...enfant,
+            age: enfant.age.toString()
+          }));
+          setEnfants(convertedEnfants);
         }
       }
     } catch (error) {
@@ -700,7 +719,7 @@ const CandidateDetail = ({ isNewCandidate }: { isNewCandidate?: boolean }) => {
                   <Card key={docType.id}>
                     <CardHeader>
                       <CardTitle>{docType.nom}</CardTitle>
-                      <CardDescription>{docType.description}</CardDescription>
+                      <CardDescription>{docType.description || ''}</CardDescription>
                     </CardHeader>
                     <CardContent>
                       {document ? (
@@ -730,7 +749,7 @@ const CandidateDetail = ({ isNewCandidate }: { isNewCandidate?: boolean }) => {
           </div>
         </CardFooter>
         {candidateData.visa_type === 'Résidence Permanente' && permanentResidence && (
-          <div className="mt-6">
+          <div className="mt-6 p-4">
             <h2 className="text-xl font-bold mb-4">Détails de résidence permanente</h2>
             <ResidencePermanenteForm
               permanentResidence={permanentResidence}
@@ -738,7 +757,7 @@ const CandidateDetail = ({ isNewCandidate }: { isNewCandidate?: boolean }) => {
               enfants={enfants}
               setEnfants={setEnfants}
               isEditing={isEditing}
-              onSubmit={onSubmit}
+              onSubmit={async () => await onSubmit(form.getValues())}
               isSubmitting={isSubmitting}
             />
           </div>

@@ -5,7 +5,8 @@ export interface EnfantType {
   id?: string;
   nom: string;
   prenom: string;
-  age: number | string;
+  age: string | number;
+  numero_passport?: string;
   permanent_residence_id?: string;
 }
 
