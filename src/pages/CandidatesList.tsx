@@ -30,7 +30,6 @@ import { fr } from 'date-fns/locale';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import type { Database } from '@/integrations/supabase/types';
 
 // Types based on our database schema
 interface Candidate {
@@ -45,10 +44,8 @@ interface Candidate {
   identification_number?: string; // Identifiant unique
 }
 
-type VisaType = Database['public']['Enums']['visa_type'];
-
 interface CandidatesListProps {
-  filterByVisaType?: VisaType;
+  filterByVisaType?: 'Visiteur' | 'Travail' | 'Résidence Permanente';
 }
 
 // Format candidate data for display
@@ -71,7 +68,7 @@ const formatCandidateForDisplay = (candidate: any): Candidate => {
 };
 
 // Fetch candidates from Supabase
-const fetchCandidates = async (visaType?: VisaType) => {
+const fetchCandidates = async (visaType?: string) => {
   let query = supabase
     .from('candidates')
     .select('*')

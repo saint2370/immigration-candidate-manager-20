@@ -13,7 +13,6 @@ import NotFound from '@/pages/NotFound';
 import CandidatePortal from '@/pages/CandidatePortal';
 import CandidatePortalDetail from '@/pages/CandidatePortalDetail';
 import { LanguageProvider } from '@/contexts/LanguageContext';
-import type { Database } from '@/integrations/supabase/types';
 
 function App() {
   const [queryClient] = useState(() => new QueryClient());

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -34,11 +35,6 @@ type DocumentType = {
 };
 type DocumentStatus = Database['public']['Enums']['document_status'];
 
-// Component props interface
-interface CandidateDetailProps {
-  isNewCandidate?: boolean;
-}
-
 const statuses: StatusType[] = [
   'En cours', 'Approuvé', 'En attente', 'Rejeté', 'Complété', 'Expiré'
 ];
@@ -53,12 +49,12 @@ const bureaux = [
   'Tokyo', 'Moscou', 'Madrid', 'Séoul', 'Le Caire'
 ];
 
-const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = false }) => {
+const CandidateDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const isEditMode = location.pathname.includes('/edit/') || isNewCandidate;
+  const isEditMode = location.pathname.includes('/edit/');
   const [activeTab, setActiveTab] = useState('info');
 
   const [candidate, setCandidate] = useState<Database['public']['Tables']['candidates']['Row'] | null>(null);
@@ -490,7 +486,7 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
     return <div className="container mx-auto p-4 flex justify-center items-center h-64">Chargement...</div>;
   }
 
-  if (!candidate && !isNewCandidate) {
+  if (!candidate) {
     return <div className="container mx-auto p-4">Candidat non trouvé.</div>;
   }
 
@@ -889,4 +885,164 @@ const CandidateDetail: React.FC<CandidateDetailProps> = ({ isNewCandidate = fals
                   ) : (
                     <>
                       <Upload className="h-12 w-12 text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-500 mb-4">Clique
+                      <p className="text-sm text-gray-500 mb-4">Cliquez ou glissez-déposez une photo</p>
+                      <Button variant="outline" asChild>
+                        <Label htmlFor="photo-upload" className="cursor-pointer">
+                          Sélectionner une photo
+                          <Input
+                            id="photo-upload"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handlePhotoChange}
+                          />
+                        </Label>
+                      </Button>
+                    </>
+                  )}
+                </div>
+                
+                <div className="flex gap-4">
+                  {photoPreview && photoFile && (
+                    <p className="text-sm text-gray-500 italic">
+                      La photo sera téléversée lorsque vous enregistrerez les modifications
+                    </p>
+                  )}
+                  
+                  {(candidate?.photo_url || photoPreview) && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="flex items-center gap-2 text-red-600 hover:text-red-700"
+                      onClick={removePhoto}
+                    >
+                      <Trash className="h-4 w-4" />
+                      Supprimer la photo
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="documents" className="space-y-4">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">Documents</h2>
+              
+              <div className="mb-6">
+                <h3 className="text-lg font-medium mb-4">Documents existants</h3>
+                {documents.length > 0 ? (
+                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {documents.map(doc => (
+                      <li key={doc.id} className="border rounded-md p-4 flex justify-between items-center">
+                        <div>
+                          <span className="font-medium">{doc.document_types?.nom || 'Document sans type'}</span>
+                          {doc.document_types?.required && (
+                            <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800">Requis</span>
+                          )}
+                        </div>
+                        {doc.file_path && (
+                          <a 
+                            href={`https://msdvgjnugglqyjblbbgi.supabase.co/storage/v1/object/public/documents/${doc.file_path}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:text-blue-700 underline"
+                          >
+                            Voir
+                          </a>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>Aucun document trouvé pour ce candidat.</p>
+                )}
+              </div>
+
+              <div className="mt-8">
+                <h3 className="text-lg font-medium mb-4">Ajouter de nouveaux documents</h3>
+                
+                {isLoadingDocTypes ? (
+                  <p>Chargement des types de documents...</p>
+                ) : documentTypes.length > 0 ? (
+                  <div className="space-y-6">
+                    {documentTypes.map((docType) => {
+                      // Vérifier si ce type de document existe déjà
+                      const existingDoc = documents.find(doc => 
+                        doc.document_type_id === docType.id
+                      );
+                      
+                      if (existingDoc) return null; // Ne pas afficher si le document existe déjà
+                      
+                      return (
+                        <div key={docType.id} className="border rounded-md p-4">
+                          <div className="flex items-center mb-3">
+                            <span className="font-medium">{docType.nom}</span>
+                            {docType.required && (
+                              <Badge variant="destructive" className="ml-2">Requis</Badge>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="file"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0] || null;
+                                handleFileUpload(docType.id, file);
+                              }}
+                              className="flex-1"
+                            />
+                            {uploadedDocuments[docType.id] && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleFileUpload(docType.id, null)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                          
+                          {uploadedDocuments[docType.id] && (
+                            <p className="text-sm text-green-600 mt-2">
+                              Fichier sélectionné: {uploadedDocuments[docType.id]?.name}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p>Aucun type de document disponible pour ce type de visa.</p>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        <div className="flex justify-end gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate(`/candidate/${id}`)}
+          >
+            Annuler
+          </Button>
+          <Button 
+            type="submit" 
+            className="flex items-center gap-2"
+            disabled={isSaving || isUploading}
+          >
+            {(isSaving || isUploading) && (
+              <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-white rounded-full mr-2"></div>
+            )}
+            <Save className="h-4 w-4" />
+            Enregistrer
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default CandidateDetail;
