@@ -14,6 +14,13 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true
   },
   global: {
-    fetch: (url, options) => fetch(url, options)
+    fetch: (url, options) => fetch(url, {
+      ...options,
+      cache: 'no-store',
+    })
+  },
+  storage: {
+    // Enable auto-refresh of storage URLs
+    storageKey: 'storage-key',
   }
 });
