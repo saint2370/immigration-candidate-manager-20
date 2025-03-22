@@ -9,6 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Trash, Plus, UserPlus, Users, Save } from 'lucide-react';
 import { ResidencePermanenteFormProps, EnfantType, ImmigrationProgramType } from './ResidencePermanenteFormProps';
+import type { Database } from '@/integrations/supabase/types';
 
 const immigrationPrograms: ImmigrationProgramType[] = [
   'Entrée express',
@@ -101,7 +102,7 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
         const { error } = await supabase
           .from('enfants')
           .delete()
-          .eq('id', enfantId);
+          .eq('id', enfantId as string);
           
         if (error) {
           console.error('Error deleting enfant:', error);
@@ -150,7 +151,7 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
             conjoint_nom: formData.conjoint_nom || null,
             conjoint_prenom: formData.conjoint_prenom || null,
             conjoint_passport: formData.conjoint_passport || null
-          })
+          } as Database['public']['Tables']['permanent_residence_details']['Insert'])
           .select()
           .single();
           
@@ -158,7 +159,9 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
           throw insertError;
         }
         
-        prId = newPR.id;
+        if (newPR) {
+          prId = newPR.id;
+        }
       } else {
         // Mettre à jour un record existant
         const { error: updateError } = await supabase
@@ -169,8 +172,8 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
             conjoint_nom: formData.conjoint_nom || null,
             conjoint_prenom: formData.conjoint_prenom || null,
             conjoint_passport: formData.conjoint_passport || null
-          })
-          .eq('id', prId);
+          } as Database['public']['Tables']['permanent_residence_details']['Update'])
+          .eq('id', prId as string);
           
         if (updateError) {
           throw updateError;
@@ -183,13 +186,13 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
       const enfantsToUpdate = enfants.filter(e => !e.id.startsWith('temp-'));
       
       // Créer de nouveaux enfants
-      if (enfantsToCreate.length > 0) {
+      if (enfantsToCreate.length > 0 && prId) {
         const newEnfantsData = enfantsToCreate.map(enfant => ({
           nom: enfant.nom,
           prenom: enfant.prenom,
           age: parseInt(enfant.age.toString()) || 0, // Convertir en nombre
           permanent_residence_id: prId as string
-        }));
+        } as Database['public']['Tables']['enfants']['Insert']));
         
         const { data: createdEnfants, error: createError } = await supabase
           .from('enfants')
@@ -209,8 +212,8 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
             nom: enfant.nom,
             prenom: enfant.prenom,
             age: parseInt(enfant.age.toString()) || 0 // Convertir en nombre
-          })
-          .eq('id', enfant.id);
+          } as Database['public']['Tables']['enfants']['Update'])
+          .eq('id', enfant.id as string);
           
         if (updateError) {
           console.error('Error updating enfant:', updateError);
@@ -218,33 +221,37 @@ const ResidencePermanenteForm: React.FC<ResidencePermanenteFormProps> = ({
       }
       
       // 3. Récupérer les données mises à jour
-      const { data: updatedData, error: fetchError } = await supabase
-        .from('permanent_residence_details')
-        .select('*')
-        .eq('id', prId)
-        .single();
+      if (prId) {
+        const { data: updatedData, error: fetchError } = await supabase
+          .from('permanent_residence_details')
+          .select('*')
+          .eq('id', prId as string)
+          .single();
+          
+        if (fetchError) {
+          throw fetchError;
+        }
         
-      if (fetchError) {
-        throw fetchError;
-      }
-      
-      const { data: updatedEnfants, error: fetchEnfantsError } = await supabase
-        .from('enfants')
-        .select('*')
-        .eq('permanent_residence_id', prId);
+        const { data: updatedEnfants, error: fetchEnfantsError } = await supabase
+          .from('enfants')
+          .select('*')
+          .eq('permanent_residence_id', prId as string);
+          
+        if (fetchEnfantsError) {
+          throw fetchEnfantsError;
+        }
         
-      if (fetchEnfantsError) {
-        throw fetchEnfantsError;
+        // 4. Mettre à jour l'interface utilisateur avec les nouvelles données
+        if (updatedData && updatedEnfants) {
+          const formattedEnfants = updatedEnfants.map(enfant => ({
+            ...enfant,
+            age: enfant.age.toString()
+          }));
+          
+          // 5. Appeler le callback de succès
+          onSaved(updatedData, formattedEnfants);
+        }
       }
-      
-      // 4. Mettre à jour l'interface utilisateur avec les nouvelles données
-      const formattedEnfants = updatedEnfants.map(enfant => ({
-        ...enfant,
-        age: enfant.age.toString()
-      }));
-      
-      // 5. Appeler le callback de succès
-      onSaved(updatedData, formattedEnfants);
     } catch (error) {
       console.error('Error saving permanent residence data:', error);
       toast({

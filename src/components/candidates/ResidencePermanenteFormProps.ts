@@ -1,7 +1,7 @@
 
 import type { Database } from '@/integrations/supabase/types';
 
-export type ImmigrationProgramType = 'Entrée express' | 'Arrima' | 'Autre';
+export type ImmigrationProgramType = Database['public']['Enums']['immigration_program'];
 
 export type EnfantType = {
   id: string;

@@ -85,7 +85,7 @@ const CandidatesList = () => {
       .order('date_soumission', { ascending: false });
     
     if (selectedVisa && selectedVisa !== 'all') {
-      query = query.eq('visa_type', selectedVisa);
+      query = query.eq('visa_type', selectedVisa as VisaType);
     }
     
     const { data, error } = await query;
@@ -96,7 +96,7 @@ const CandidatesList = () => {
     }
     
     if (data) {
-      setCandidates(data);
+      setCandidates(data as Candidate[]);
     }
   };
 
@@ -106,7 +106,7 @@ const CandidatesList = () => {
     const { error } = await supabase
       .from('candidates')
       .delete()
-      .eq('id', candidateToDelete);
+      .eq('id', candidateToDelete as string);
 
     if (error) {
       console.error('Error deleting candidate:', error);

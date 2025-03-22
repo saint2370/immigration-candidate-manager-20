@@ -18,9 +18,5 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
       ...options,
       cache: 'no-store',
     })
-  },
-  storage: {
-    // Enable auto-refresh of storage URLs
-    storageKey: 'storage-key',
   }
 });
