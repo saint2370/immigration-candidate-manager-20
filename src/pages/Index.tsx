@@ -1,10 +1,12 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import IRCCHeader from '@/components/layout/IRCCHeader';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
+import BackgroundSlideshow from '@/components/animations/BackgroundSlideshow';
+import CounterAnimation from '@/components/animations/CounterAnimation';
 import { 
   Search, 
   Check, 
@@ -36,6 +38,30 @@ const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t, language } = useLanguage();
+  const { 
+    getSettingValue, 
+    getLocalizedValue, 
+    loading: settingsLoading 
+  } = useSiteSettings('home');
+  const { getSettingValue: getStatValue } = useSiteSettings('statistics');
+  const { getSettingValue: getContactValue } = useSiteSettings('contact');
+
+  // Récupérer les images d'arrière-plan
+  const backgroundImagesValue = getSettingValue('background_images');
+  const backgroundImages = backgroundImagesValue ? JSON.parse(backgroundImagesValue.toString()) : [];
+  
+  // Récupérer les informations sur les visas
+  const visasCounterValue = getStatValue('visas_counter');
+  const visasCount = visasCounterValue ? visasCounterValue.value : 5000;
+  const visasText = visasCounterValue ? 
+    (language === 'fr' ? visasCounterValue.text_fr : visasCounterValue.text_en) : 
+    '';
+  
+  // Récupérer les informations de contact
+  const contactInfo = getContactValue('contact_info') || {};
+  const phone = contactInfo.phone || '+1 (514) 123-4567';
+  const email = contactInfo.email || 'contact@irccstatut.ca';
+  const whatsapp = contactInfo.whatsapp || '+1 (514) 123-4567';
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +81,11 @@ const Index = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Arrière-plan animé */}
+      {!settingsLoading && backgroundImages.length > 0 && (
+        <BackgroundSlideshow images={backgroundImages} interval={7000} />
+      )}
+      
       {/* Header */}
       <IRCCHeader />
       
@@ -64,10 +95,10 @@ const Index = () => {
           <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="w-full md:w-1/2 space-y-6">
               <h1 className="text-3xl md:text-5xl font-bold text-gray-800">
-                {t('hero_title')}
+                {getLocalizedValue('hero_title', language)}
               </h1>
               <p className="text-lg md:text-xl text-gray-600">
-                {t('hero_subtitle')}
+                {getLocalizedValue('hero_subtitle', language)}
               </p>
               <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3">
                 <Input 
@@ -77,10 +108,22 @@ const Index = () => {
                   onChange={(e) => setImmigrationId(e.target.value)}
                 />
                 <Button type="submit" className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">
-                  {t('access_my_file')}
+                  {getLocalizedValue('access_button', language)}
                   <ChevronRight size={18} />
                 </Button>
               </form>
+              
+              {/* Compteur de visas */}
+              <div className="mt-8 bg-white bg-opacity-80 p-4 rounded-lg shadow-sm border border-red-100">
+                <CounterAnimation 
+                  startValue={450}
+                  endValue={visasCount}
+                  duration={3000}
+                  suffix={` ${visasText}`}
+                  className="text-2xl md:text-3xl text-red-600"
+                  formatNumber={true}
+                />
+              </div>
             </div>
             <div className="w-full md:w-1/2 flex justify-center">
               <div className="grid grid-cols-2 gap-4">
@@ -124,9 +167,11 @@ const Index = () => {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">{t('platform_title')}</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">
+              {getLocalizedValue('platform_title', language)}
+            </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              {t('platform_subtitle')}
+              {getLocalizedValue('platform_subtitle', language)}
             </p>
           </div>
           
@@ -347,24 +392,24 @@ const Index = () => {
                 <div className="bg-red-50 p-6 rounded-lg text-center hover:shadow-md transition-all duration-300 border border-red-100">
                   <Phone size={28} className="text-red-600 mx-auto mb-3" />
                   <h3 className="font-semibold mb-2">{t('phone')}</h3>
-                  <p className="text-gray-600">+1 (514) 123-4567</p>
+                  <p className="text-gray-600">{phone}</p>
                 </div>
                 
                 <div className="bg-red-50 p-6 rounded-lg text-center hover:shadow-md transition-all duration-300 border border-red-100">
                   <Mail size={28} className="text-red-600 mx-auto mb-3" />
                   <h3 className="font-semibold mb-2">{t('email')}</h3>
-                  <p className="text-gray-600">contact@irccstatut.ca</p>
+                  <p className="text-gray-600">{email}</p>
                 </div>
                 
                 <div className="bg-red-50 p-6 rounded-lg text-center hover:shadow-md transition-all duration-300 border border-red-100">
                   <MessageSquare size={28} className="text-red-600 mx-auto mb-3" />
                   <h3 className="font-semibold mb-2">WhatsApp</h3>
-                  <p className="text-gray-600">+1 (514) 123-4567</p>
+                  <p className="text-gray-600">{whatsapp}</p>
                 </div>
               </div>
               
               <div className="mt-8 text-center">
-                <a href="mailto:contact@irccstatut.ca">
+                <a href={`mailto:${email}`}>
                   <Button className="bg-red-600 hover:bg-red-700">
                     {t('contact_us')}
                   </Button>

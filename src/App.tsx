@@ -13,6 +13,7 @@ import NotFound from '@/pages/NotFound';
 import CandidatePortal from '@/pages/CandidatePortal';
 import CandidatePortalDetail from '@/pages/CandidatePortalDetail';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import SiteManagement from '@/pages/SiteManagement';
 
 function App() {
   const [queryClient] = useState(() => new QueryClient());
@@ -41,6 +42,7 @@ function App() {
               <Route path="candidate/:id" element={<CandidateDetail />} />
               <Route path="candidates/edit/:id" element={<CandidateDetail />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="site-management" element={<SiteManagement />} />
             </Route>
             
             {/* Legacy redirects to maintain backward compatibility */}
