@@ -12,7 +12,6 @@ import Settings from '@/pages/Settings';
 import NotFound from '@/pages/NotFound';
 import CandidatePortal from '@/pages/CandidatePortal';
 import CandidatePortalDetail from '@/pages/CandidatePortalDetail';
-import Register from '@/pages/Register';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 
 function App() {
@@ -30,7 +29,6 @@ function App() {
             {/* Public/Candidate routes as main routes */}
             <Route path="/" element={<Navigate to="/index" replace />} />
             <Route path="/index" element={<Index />} />
-            <Route path="/register" element={<Register />} />
             <Route path="/portal" element={<CandidatePortal />} />
             <Route path="/portal/candidate/:id" element={<CandidatePortalDetail />} />
             

@@ -18,9 +18,7 @@ export type Database = {
           date_soumission: string
           date_voyage: string | null
           delai_traitement: string | null
-          dernier_diplome: string | null
           email: string | null
-          emploi_actuel: string | null
           id: string
           identification_number: string | null
           lieu_naissance: string
@@ -44,9 +42,7 @@ export type Database = {
           date_soumission: string
           date_voyage?: string | null
           delai_traitement?: string | null
-          dernier_diplome?: string | null
           email?: string | null
-          emploi_actuel?: string | null
           id?: string
           identification_number?: string | null
           lieu_naissance: string
@@ -70,9 +66,7 @@ export type Database = {
           date_soumission?: string
           date_voyage?: string | null
           delai_traitement?: string | null
-          dernier_diplome?: string | null
           email?: string | null
-          emploi_actuel?: string | null
           id?: string
           identification_number?: string | null
           lieu_naissance?: string

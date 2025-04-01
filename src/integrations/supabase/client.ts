@@ -17,9 +17,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     fetch: (url, options) => fetch(url, {
       ...options,
       cache: 'no-store',
-    }),
-    headers: {
-      'x-supabase-cache-control': '0'
-    }
+    })
   }
 });
