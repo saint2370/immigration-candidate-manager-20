@@ -7,6 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import BackgroundSlideshow from '@/components/animations/BackgroundSlideshow';
 import CounterAnimation from '@/components/animations/CounterAnimation';
+import CanadaAdvantages from '@/components/home/CanadaAdvantages';
 import { 
   Search, 
   Check, 
@@ -46,16 +47,21 @@ const Index = () => {
   const { getSettingValue: getStatValue } = useSiteSettings('statistics');
   const { getSettingValue: getContactValue } = useSiteSettings('contact');
 
-  // Récupérer les images d'arrière-plan
-  const backgroundImagesValue = getSettingValue('background_images');
-  const backgroundImages = backgroundImagesValue ? JSON.parse(backgroundImagesValue.toString()) : [];
+  // Images d'arrière-plan dynamiques
+  const backgroundImages = [
+    '/lovable-uploads/558584bc-ea53-41a4-af28-c62cd053ac50.png',
+    '/lovable-uploads/2c6012c5-1aeb-427c-9537-6464053f3b55.png',
+    '/lovable-uploads/6741185c-18b1-4058-a6ab-670479ba19e7.png',
+    '/lovable-uploads/8723bfa1-a246-4a52-a6aa-e6917ee1059f.png',
+    '/lovable-uploads/a7798152-6004-45cd-82ac-015273e182fb.png',
+  ];
   
   // Récupérer les informations sur les visas
   const visasCounterValue = getStatValue('visas_counter');
   const visasCount = visasCounterValue ? visasCounterValue.value : 5000;
   const visasText = visasCounterValue ? 
     (language === 'fr' ? visasCounterValue.text_fr : visasCounterValue.text_en) : 
-    '';
+    (language === 'fr' ? 'visas délivrés' : 'visas issued');
   
   // Récupérer les informations de contact
   const contactInfo = getContactValue('contact_info') || {};
@@ -81,26 +87,26 @@ const Index = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Arrière-plan animé */}
-      {!settingsLoading && backgroundImages.length > 0 && (
-        <BackgroundSlideshow images={backgroundImages} interval={7000} />
-      )}
+      {/* Carrousel d'arrière-plan */}
+      <BackgroundSlideshow images={backgroundImages} interval={7000} />
       
       {/* Header */}
       <IRCCHeader />
       
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-red-50 to-white py-16 md:py-24">
+      <section className="bg-gradient-to-b from-red-50 to-white py-12 md:py-18">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="w-full md:w-1/2 space-y-6">
-              <h1 className="text-3xl md:text-5xl font-bold text-gray-800">
-                {getLocalizedValue('hero_title', language)}
+              <h1 className="text-3xl md:text-5xl font-bold text-gray-800 text-center md:text-left">
+                {language === 'fr' ? 'Suivez votre dossier d\'immigration canadienne' : 'Track your Canadian immigration file'}
               </h1>
-              <p className="text-lg md:text-xl text-gray-600">
-                {getLocalizedValue('hero_subtitle', language)}
+              <p className="text-lg md:text-xl text-gray-600 text-center md:text-left">
+                {language === 'fr' 
+                  ? 'Accédez facilement à votre dossier et suivez l\'évolution de votre demande de visa en temps réel.' 
+                  : 'Easily access your file and track the progress of your visa application in real time.'}
               </p>
-              <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3">
+              <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3 md:max-w-md mx-auto md:mx-0">
                 <Input 
                   placeholder={t('enter_immigration_id')} 
                   className="flex-1 border-red-200 focus:ring-red-500"
@@ -108,13 +114,13 @@ const Index = () => {
                   onChange={(e) => setImmigrationId(e.target.value)}
                 />
                 <Button type="submit" className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">
-                  {getLocalizedValue('access_button', language)}
-                  <ChevronRight size={18} />
+                  {language === 'fr' ? 'Accéder' : 'Access'}
+                  <ChevronRight size={18} className="ml-1" />
                 </Button>
               </form>
               
               {/* Compteur de visas */}
-              <div className="mt-8 bg-white bg-opacity-80 p-4 rounded-lg shadow-sm border border-red-100">
+              <div className="mt-6 bg-white bg-opacity-80 p-6 rounded-lg shadow-sm border border-red-100 max-w-md mx-auto md:mx-0">
                 <CounterAnimation 
                   startValue={450}
                   endValue={visasCount}
@@ -123,10 +129,15 @@ const Index = () => {
                   className="text-2xl md:text-3xl text-red-600"
                   formatNumber={true}
                 />
+                <p className="text-center text-gray-600 mt-2">
+                  {language === 'fr' 
+                    ? 'Nous aidons des milliers de candidats chaque année à réaliser leur rêve canadien'
+                    : 'We help thousands of candidates each year achieve their Canadian dream'}
+                </p>
               </div>
             </div>
-            <div className="w-full md:w-1/2 flex justify-center">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="w-full md:w-1/2">
+              <div className="grid grid-cols-2 gap-4 mx-auto max-w-md">
                 <img 
                   src="/lovable-uploads/8723bfa1-a246-4a52-a6aa-e6917ee1059f.png" 
                   alt="Nouveau arrivant" 
@@ -162,20 +173,25 @@ const Index = () => {
           <NotificationCarousel />
         </div>
       </section>
+
+      {/* Avantages d'immigrer au Canada */}
+      <CanadaAdvantages />
       
       {/* Presentation Section */}
-      <section className="py-16 bg-white">
+      <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-gray-800 mb-4">
-              {getLocalizedValue('platform_title', language)}
+              {language === 'fr' ? 'Une plateforme intuitive et sécurisée' : 'An intuitive and secure platform'}
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              {getLocalizedValue('platform_subtitle', language)}
+              {language === 'fr'
+                ? 'Notre plateforme vous offre un suivi complet et transparent de votre demande d\'immigration.'
+                : 'Our platform offers you complete and transparent monitoring of your immigration application.'}
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8 mt-12">
+          <div className="grid md:grid-cols-3 gap-8 mt-8">
             <div className="bg-red-50 p-6 rounded-lg text-center hover:shadow-lg transition-all duration-300 border border-red-100">
               <div className="bg-red-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Clock className="text-white" size={32} />
@@ -210,9 +226,9 @@ const Index = () => {
       </section>
       
       {/* Process Steps */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-gray-800 mb-4">{t('how_it_works')}</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               {t('how_it_works_subtitle')}
@@ -249,10 +265,10 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Testimonials */}
-      <section className="py-16 bg-white">
+      {/* Témoignages */}
+      <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-gray-800 mb-4">{t('testimonials_title')}</h2>
             <div className="flex items-center justify-center mb-4">
               {[...Array(5)].map((_, i) => (
@@ -306,9 +322,9 @@ const Index = () => {
       </section>
       
       {/* FAQ */}
-      <section id="faq" className="py-16 bg-gray-50">
+      <section id="faq" className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-gray-800 mb-4">{t('faq_title')}</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               {t('faq_subtitle')}
@@ -377,9 +393,9 @@ const Index = () => {
       </section>
       
       {/* Contact */}
-      <section id="contact" className="py-16 bg-white">
+      <section id="contact" className="py-12 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-gray-800 mb-4">{t('need_help')}</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               {t('need_help_subtitle')}

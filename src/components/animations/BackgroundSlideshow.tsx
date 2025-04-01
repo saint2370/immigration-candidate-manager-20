@@ -10,7 +10,7 @@ interface BackgroundSlideshowProps {
 
 const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({ 
   images, 
-  interval = 5000, 
+  interval = 7000, 
   className 
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -39,10 +39,14 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({
     return (
       <div 
         className={cn(
-          "fixed top-0 left-0 w-full h-full opacity-15 -z-10 bg-cover bg-center transition-all duration-1000", 
+          "fixed top-0 left-0 w-full h-full bg-cover bg-center transition-all duration-1000", 
           className
         )}
-        style={{ backgroundImage: `url(${images[0]})` }}
+        style={{ 
+          backgroundImage: `url(${images[0]})`,
+          opacity: 0.15,
+          zIndex: -10
+        }}
       />
     );
   }
@@ -51,19 +55,25 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({
     <>
       <div 
         className={cn(
-          "fixed top-0 left-0 w-full h-full opacity-15 -z-10 bg-cover bg-center transition-opacity duration-1000",
+          "fixed top-0 left-0 w-full h-full bg-cover bg-center transition-opacity duration-1000",
           transitioning ? "opacity-0" : "opacity-15",
           className
         )}
-        style={{ backgroundImage: `url(${images[currentIndex]})` }}
+        style={{ 
+          backgroundImage: `url(${images[currentIndex]})`,
+          zIndex: -10
+        }}
       />
       <div 
         className={cn(
-          "fixed top-0 left-0 w-full h-full opacity-15 -z-10 bg-cover bg-center transition-opacity duration-1000",
+          "fixed top-0 left-0 w-full h-full bg-cover bg-center transition-opacity duration-1000",
           transitioning ? "opacity-15" : "opacity-0",
           className
         )}
-        style={{ backgroundImage: `url(${images[nextIndex]})` }}
+        style={{ 
+          backgroundImage: `url(${images[nextIndex]})`,
+          zIndex: -10
+        }}
       />
     </>
   );
