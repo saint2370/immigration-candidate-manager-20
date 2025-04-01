@@ -91,6 +91,7 @@ serve(async (req) => {
       );
     }
     
+    // Create SMTP client
     const client = new SMTPClient({
       connection: {
         hostname: "smtp.gmail.com",
@@ -102,6 +103,9 @@ serve(async (req) => {
         },
       },
     });
+
+    // Website URL for the portal link
+    const websiteUrl = "https://irccstatut.ca";
 
     // Prepare HTML content for the email
     const emailContent = `
@@ -127,7 +131,7 @@ serve(async (req) => {
               
               <p>Seuls les employeurs sélectionnés pourront nous faire parvenir des contrats de travail et tout autre document lié à l'emploi au Canada, conformément aux normes en vigueur. De même, seuls les consultants en immigration agréés par l'État canadien, selon l'article A73.2 du code LIPR, peuvent soumettre des documents au nom des candidats.</p>
               
-              <p>Lorsque vos documents seront disponibles, vous pourrez les téléverser directement sur votre portail : <a href="https://irccstatut.ca/portal">https://irccstatut.ca/portal</a>.</p>
+              <p>Lorsque vos documents seront disponibles, vous pourrez les téléverser directement sur votre portail : <a href="${websiteUrl}/portal">${websiteUrl}/portal</a>.</p>
               
               <p>Cordialement,<br>IRCC Canada</p>
             </div>
