@@ -28,19 +28,21 @@ export function useSiteSettings(category?: string) {
     try {
       setLoading(true);
       
-      let query = supabase.from('site_settings').select('*');
+      // Utilisons la méthode plus générique pour éviter les problèmes de typage
+      let query = supabase.from('site_settings');
       
       if (category) {
         query = query.eq('category', category);
       }
       
-      const { data, error } = await query.order('key');
+      const { data, error: fetchError } = await query.order('key');
       
-      if (error) {
-        throw error;
+      if (fetchError) {
+        throw fetchError;
       }
       
-      setSettings(data);
+      // Cast explicite des données pour satisfaire TypeScript
+      setSettings(data as unknown as SiteSetting[]);
     } catch (err) {
       console.error('Erreur lors de la récupération des paramètres:', err);
       setError(err instanceof Error ? err : new Error('Une erreur est survenue'));
@@ -52,13 +54,14 @@ export function useSiteSettings(category?: string) {
   // Fonction pour mettre à jour un paramètre
   async function updateSetting(key: string, value: SiteSettingValue) {
     try {
-      const { error } = await supabase
+      // Utilisons la méthode plus générique pour éviter les problèmes de typage
+      const { error: updateError } = await supabase
         .from('site_settings')
         .update({ value })
         .eq('key', key);
       
-      if (error) {
-        throw error;
+      if (updateError) {
+        throw updateError;
       }
       
       // Mettre à jour le state local
