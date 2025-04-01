@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +20,8 @@ import {
   MessageSquare,
   Facebook,
   Twitter,
-  Linkedin
+  Linkedin,
+  User
 } from 'lucide-react';
 import { 
   Accordion,
@@ -31,11 +32,28 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { NotificationCarousel } from '@/components/notifications/NotificationCarousel';
 
+const backgroundImages = [
+  "/lovable-uploads/8723bfa1-a246-4a52-a6aa-e6917ee1059f.png",
+  "/lovable-uploads/6741185c-18b1-4058-a6ab-670479ba19e7.png",
+  "/lovable-uploads/2c6012c5-1aeb-427c-9537-6464053f3b55.png",
+  "/lovable-uploads/a7798152-6004-45cd-82ac-015273e182fb.png"
+];
+
 const Index = () => {
   const [immigrationId, setImmigrationId] = useState('');
+  const [currentBgIndex, setCurrentBgIndex] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t, language } = useLanguage();
+
+  // Effet pour faire défiler les images d'arrière-plan
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentBgIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length);
+    }, 5000); // Change l'image toutes les 5 secondes
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,53 +76,53 @@ const Index = () => {
       {/* Header */}
       <IRCCHeader />
       
-      {/* Hero Section */}
-      <section className="bg-gradient-to-b from-red-50 to-white py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center gap-8">
-            <div className="w-full md:w-1/2 space-y-6">
-              <h1 className="text-3xl md:text-5xl font-bold text-gray-800">
-                {t('hero_title')}
-              </h1>
-              <p className="text-lg md:text-xl text-gray-600">
-                {t('hero_subtitle')}
-              </p>
-              <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3">
-                <Input 
-                  placeholder={t('enter_immigration_id')} 
-                  className="flex-1 border-red-200 focus:ring-red-500"
-                  value={immigrationId}
-                  onChange={(e) => setImmigrationId(e.target.value)}
-                />
-                <Button type="submit" className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">
-                  {t('access_my_file')}
-                  <ChevronRight size={18} />
+      {/* Hero Section avec diaporama en arrière-plan */}
+      <section className="relative py-24 md:py-32">
+        {/* Diaporama en arrière-plan avec effet de fondu */}
+        {backgroundImages.map((image, index) => (
+          <div 
+            key={index}
+            className={`absolute inset-0 w-full h-full bg-cover bg-center transition-opacity duration-1000 ${
+              index === currentBgIndex ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{ 
+              backgroundImage: `url(${image})`,
+              zIndex: -10
+            }}
+          />
+        ))}
+        
+        {/* Overlay sombre pour améliorer la lisibilité du texte */}
+        <div className="absolute inset-0 bg-black bg-opacity-60" style={{ zIndex: -5 }}></div>
+        
+        {/* Contenu centré */}
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+              {t('hero_title')}
+            </h1>
+            <p className="text-lg md:text-xl text-gray-100 mb-8">
+              {t('hero_subtitle')}
+            </p>
+            <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3 w-full max-w-lg">
+              <Input 
+                placeholder={t('enter_immigration_id')} 
+                className="flex-1 border-red-200 focus:ring-red-500 bg-white/90"
+                value={immigrationId}
+                onChange={(e) => setImmigrationId(e.target.value)}
+              />
+              <Button type="submit" className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">
+                {t('access_my_file')}
+                <ChevronRight size={18} />
+              </Button>
+            </form>
+            <div className="mt-8">
+              <Link to="/register">
+                <Button variant="outline" className="bg-white hover:bg-gray-100">
+                  <User size={18} className="mr-2" />
+                  {language === 'fr' ? 'Créer un compte' : 'Create an account'}
                 </Button>
-              </form>
-            </div>
-            <div className="w-full md:w-1/2 flex justify-center">
-              <div className="grid grid-cols-2 gap-4">
-                <img 
-                  src="/lovable-uploads/8723bfa1-a246-4a52-a6aa-e6917ee1059f.png" 
-                  alt="Nouveau arrivant" 
-                  className="rounded-lg shadow-md transform hover:scale-105 transition-transform duration-300"
-                />
-                <img 
-                  src="/lovable-uploads/6741185c-18b1-4058-a6ab-670479ba19e7.png" 
-                  alt="Arrivée à l'aéroport" 
-                  className="rounded-lg shadow-md transform hover:scale-105 transition-transform duration-300"
-                />
-                <img 
-                  src="/lovable-uploads/2c6012c5-1aeb-427c-9537-6464053f3b55.png" 
-                  alt="Groupe d'immigrants" 
-                  className="rounded-lg shadow-md transform hover:scale-105 transition-transform duration-300"
-                />
-                <img 
-                  src="/lovable-uploads/a7798152-6004-45cd-82ac-015273e182fb.png" 
-                  alt="Immigrant avec bagages" 
-                  className="rounded-lg shadow-md transform hover:scale-105 transition-transform duration-300"
-                />
-              </div>
+              </Link>
             </div>
           </div>
         </div>
