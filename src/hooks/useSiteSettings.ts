@@ -28,8 +28,8 @@ export function useSiteSettings(category?: string) {
     try {
       setLoading(true);
       
-      // Utilisons la méthode plus générique pour éviter les problèmes de typage
-      let query = supabase.from('site_settings');
+      // Utiliser select() avant tout filtre pour retourner un objet PostgrestFilterBuilder correctement typé
+      let query = supabase.from('site_settings').select('*');
       
       if (category) {
         query = query.eq('category', category);
@@ -54,7 +54,7 @@ export function useSiteSettings(category?: string) {
   // Fonction pour mettre à jour un paramètre
   async function updateSetting(key: string, value: SiteSettingValue) {
     try {
-      // Utilisons la méthode plus générique pour éviter les problèmes de typage
+      // D'abord utiliser from et select pour obtenir un builder correctement typé
       const { error: updateError } = await supabase
         .from('site_settings')
         .update({ value })
