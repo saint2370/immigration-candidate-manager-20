@@ -48,12 +48,12 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({
       <div 
         className={cn(
           "fixed top-0 left-0 w-full h-full bg-cover bg-center transition-all duration-1000", 
-          blur && "backdrop-blur-sm",
+          blur && "backdrop-blur-[1px]",
           className
         )}
         style={{ 
           backgroundImage: `url(${images[0]})`,
-          opacity: 0.5, // Augmenté à 0.5 pour une meilleure visibilité
+          opacity: 0.6, // Augmenté à 0.6 pour une meilleure visibilité
           zIndex: -10
         }}
       />
@@ -65,8 +65,8 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({
       <div 
         className={cn(
           "fixed top-0 left-0 w-full h-full bg-cover bg-center transition-opacity duration-1000",
-          transitioning ? "opacity-0" : "opacity-50", // Augmenté à 0.5 pour une meilleure visibilité
-          blur && "backdrop-blur-[2px]", // Réduit le flou pour mieux voir les détails des images
+          transitioning ? "opacity-0" : "opacity-60", // Augmenté à 0.6 pour une meilleure visibilité
+          blur && "backdrop-blur-[1px]", // Réduit le flou pour mieux voir les détails des images
           className
         )}
         style={{ 
@@ -77,8 +77,8 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({
       <div 
         className={cn(
           "fixed top-0 left-0 w-full h-full bg-cover bg-center transition-opacity duration-1000",
-          transitioning ? "opacity-50" : "opacity-0", // Augmenté à 0.5 pour une meilleure visibilité
-          blur && "backdrop-blur-[2px]", // Réduit le flou pour mieux voir les détails des images
+          transitioning ? "opacity-60" : "opacity-0", // Augmenté à 0.6 pour une meilleure visibilité
+          blur && "backdrop-blur-[1px]", // Réduit le flou pour mieux voir les détails des images
           className
         )}
         style={{ 
@@ -86,7 +86,7 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({
           zIndex: -10
         }}
       />
-      <div className="fixed top-0 left-0 w-full h-full bg-black opacity-40 z-[-9]" /> {/* Réduit à 40% d'opacité pour moins d'assombrissement */}
+      <div className="fixed top-0 left-0 w-full h-full bg-black opacity-35 z-[-9]" /> {/* Réduit à 35% d'opacité pour moins d'assombrissement */}
     </>
   );
 };

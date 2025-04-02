@@ -40,7 +40,9 @@ const CounterAnimation: React.FC<CounterAnimationProps> = ({
     const elapsedTime = time - (startTimeRef.current || 0);
     const progress = Math.min(elapsedTime / duration, 1);
     
-    const newCount = Math.floor(startValue + (endValue - startValue) * progress);
+    // Utiliser une fonction d'easing pour un effet plus naturel
+    const easedProgress = easeOutQuad(progress);
+    const newCount = Math.floor(startValue + (endValue - startValue) * easedProgress);
     
     setCount(newCount);
 
@@ -49,6 +51,7 @@ const CounterAnimation: React.FC<CounterAnimationProps> = ({
     if (progress < 1) {
       requestRef.current = requestAnimationFrame(animate);
     } else {
+      setCount(endValue); // Assurez-vous que la valeur finale est exactement la valeur de fin
       setIsAnimating(false);
       if (loop) {
         setTimeout(() => {
@@ -59,6 +62,11 @@ const CounterAnimation: React.FC<CounterAnimationProps> = ({
         }, loopDelay);
       }
     }
+  };
+
+  // Fonction d'easing quadratique pour une animation plus douce
+  const easeOutQuad = (x: number): number => {
+    return 1 - (1 - x) * (1 - x);
   };
 
   useEffect(() => {

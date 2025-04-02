@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface CarouselItem {
@@ -14,6 +15,7 @@ const CanadaCarousel: React.FC = () => {
   const { language } = useLanguage();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const isMobile = useIsMobile();
   
   const carouselItems: CarouselItem[] = [
     {
@@ -21,28 +23,35 @@ const CanadaCarousel: React.FC = () => {
       description: language === 'fr' 
         ? 'Le Canada est régulièrement classé parmi les pays offrant la meilleure qualité de vie au monde, avec des villes propres, sûres et accueillantes.'
         : 'Canada is consistently ranked among the countries with the best quality of life in the world, with clean, safe, and welcoming cities.',
-      image: '/lovable-uploads/558584bc-ea53-41a4-af28-c62cd053ac50.png'
+      image: '/lovable-uploads/2f8168f1-37e3-4677-85cc-468195478835.png'
     },
     {
       title: language === 'fr' ? 'Système de santé de classe mondiale' : 'World-class healthcare system',
       description: language === 'fr'
         ? 'Bénéficiez d\'un système de santé public et universel, financé par les impôts et accessible à tous les résidents permanents et citoyens.'
         : 'Benefit from a public and universal healthcare system, funded by taxes and accessible to all permanent residents and citizens.',
-      image: '/lovable-uploads/8723bfa1-a246-4a52-a6aa-e6917ee1059f.png'
+      image: '/lovable-uploads/66eb6a03-8ac0-4497-be31-9da25750487f.png'
     },
     {
       title: language === 'fr' ? 'Opportunités d\'emploi abondantes' : 'Abundant job opportunities',
       description: language === 'fr'
         ? 'Découvrez un marché du travail dynamique avec des opportunités dans de nombreux secteurs et des programmes spécifiques pour les immigrants.'
         : 'Discover a dynamic job market with opportunities in many sectors and specific programs for immigrants.',
-      image: '/lovable-uploads/2c6012c5-1aeb-427c-9537-6464053f3b55.png'
+      image: '/lovable-uploads/00bef2f0-7b5c-4e04-b53a-d41885957983.png'
     },
     {
       title: language === 'fr' ? 'Culture diversifiée et inclusive' : 'Diverse and inclusive culture',
       description: language === 'fr'
         ? 'Le Canada est reconnu pour son multiculturalisme et son respect des différentes cultures, religions et modes de vie.'
         : 'Canada is known for its multiculturalism and respect for different cultures, religions, and ways of life.',
-      image: '/lovable-uploads/a7798152-6004-45cd-82ac-015273e182fb.png'
+      image: '/lovable-uploads/02cfee17-830e-4af9-a983-dea86ca2cc2a.png'
+    },
+    {
+      title: language === 'fr' ? 'Nature exceptionnelle' : 'Exceptional nature',
+      description: language === 'fr'
+        ? 'Profitez de paysages à couper le souffle, des montagnes majestueuses aux lacs cristallins, et d\'une multitude d\'activités de plein air tout au long de l\'année.'
+        : 'Enjoy breathtaking landscapes, from majestic mountains to crystal-clear lakes, and a multitude of outdoor activities throughout the year.',
+      image: '/lovable-uploads/173c1e3b-c129-4e78-850e-618cc040e16e.png'
     }
   ];
 
@@ -78,7 +87,7 @@ const CanadaCarousel: React.FC = () => {
   }, [activeIndex, isTransitioning]);
 
   return (
-    <section className="py-12 bg-gray-50 bg-opacity-95">
+    <section className="py-12 bg-white bg-opacity-95">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">
@@ -91,15 +100,15 @@ const CanadaCarousel: React.FC = () => {
           </p>
         </div>
         
-        <div className="flex flex-col md:flex-row gap-8 items-center">
+        <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-8 items-center`}>
           {/* Left side: Text content */}
-          <div className="md:w-1/2 space-y-4 relative min-h-[300px]">
+          <div className={`${isMobile ? 'w-full' : 'w-1/2'} space-y-4 relative min-h-[250px] md:min-h-[300px] flex flex-col justify-center`}>
             {carouselItems.map((item, index) => (
               <div
                 key={index}
-                className={`absolute inset-0 transition-all duration-500 flex flex-col justify-center ${
+                className={`absolute inset-0 transition-all duration-500 ${
                   index === activeIndex ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none"
-                }`}
+                } flex flex-col justify-center`}
               >
                 <h3 className="text-2xl font-bold text-red-600 mb-3">{item.title}</h3>
                 <p className="text-gray-700 text-lg">{item.description}</p>
@@ -125,7 +134,7 @@ const CanadaCarousel: React.FC = () => {
           </div>
           
           {/* Right side: Image */}
-          <div className="md:w-1/2 relative rounded-lg overflow-hidden shadow-lg h-[300px] md:h-[400px]">
+          <div className={`${isMobile ? 'w-full' : 'w-1/2'} relative rounded-lg overflow-hidden shadow-lg h-[250px] md:h-[400px]`}>
             {carouselItems.map((item, index) => (
               <div
                 key={index}
