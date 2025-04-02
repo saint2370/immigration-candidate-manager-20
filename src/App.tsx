@@ -14,6 +14,9 @@ import CandidatePortal from '@/pages/CandidatePortal';
 import CandidatePortalDetail from '@/pages/CandidatePortalDetail';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import SiteManagement from '@/pages/SiteManagement';
+import StudentVisa from '@/pages/immigration/StudentVisa';
+import WorkVisa from '@/pages/immigration/WorkVisa';
+import PermanentResidence from '@/pages/immigration/PermanentResidence';
 
 function App() {
   const [queryClient] = useState(() => new QueryClient());
@@ -32,6 +35,11 @@ function App() {
             <Route path="/index" element={<Index />} />
             <Route path="/portal" element={<CandidatePortal />} />
             <Route path="/portal/candidate/:id" element={<CandidatePortalDetail />} />
+            
+            {/* Immigration Program Pages */}
+            <Route path="/visa-etudiant" element={<StudentVisa />} />
+            <Route path="/visa-travail" element={<WorkVisa />} />
+            <Route path="/residence-permanente" element={<PermanentResidence />} />
             
             {/* Admin routes - with admin layout */}
             <Route path="/tableaudebord" element={<Layout><Outlet /></Layout>}>

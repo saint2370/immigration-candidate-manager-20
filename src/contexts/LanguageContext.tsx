@@ -1,197 +1,210 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode } from 'react';
 
-// Types de langues disponibles
-export type Language = 'fr' | 'en';
+type Language = 'en' | 'fr';
 
-// Type pour le contexte de langue
-type LanguageContextType = {
+interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
-};
+}
 
-// Création du contexte
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-
-// Translations
-const translations: Record<Language, Record<string, string>> = {
-  fr: {
-    // Header
-    'home': 'Accueil',
-    'track_application': 'Suivi du dossier',
-    'access_file': 'Accéder à mon dossier',
-    'contact': 'Contact',
-    
-    // Index page
-    'hero_title': 'Suivez votre dossier d\'immigration en toute simplicité !',
-    'hero_subtitle': 'Consultez en temps réel l\'état de votre demande et téléchargez vos documents en quelques clics.',
-    'enter_immigration_id': 'Entrez votre ID d\'immigration',
-    'access_my_file': 'Accéder à mon dossier',
-    
-    // Features
-    'platform_title': 'Notre Plateforme de Suivi de Dossier',
-    'platform_subtitle': 'Notre plateforme sécurisée vous permet de suivre l\'état d\'avancement de votre dossier d\'immigration, d\'accéder à vos documents et de rester informé des prochaines étapes de votre procédure.',
-    'quick_consultation': 'Consultation rapide',
-    'quick_consultation_desc': 'Accédez instantanément aux informations de votre dossier et consultez son état d\'avancement.',
-    'secure_access': 'Accès sécurisé',
-    'secure_access_desc': 'Vos documents et informations sont protégés et accessibles uniquement avec votre identifiant personnel.',
-    'personalized_tracking': 'Suivi personnalisé',
-    'personalized_tracking_desc': 'Bénéficiez d\'un accompagnement sur mesure et recevez des notifications sur l\'évolution de votre dossier.',
-    
-    // How it works
-    'how_it_works': 'Comment ça marche ?',
-    'how_it_works_subtitle': 'En seulement 3 étapes simples, accédez à toutes les informations de votre dossier d\'immigration',
-    'enter_id': 'Entrez votre ID',
-    'enter_id_desc': 'Saisissez votre numéro d\'identification d\'immigration unique',
-    'view_file': 'Consultez votre dossier',
-    'view_file_desc': 'Accédez à toutes vos informations et téléchargez vos documents',
-    'follow_updates': 'Suivez les mises à jour',
-    'follow_updates_desc': 'Restez informé de l\'évolution de votre dossier à chaque étape',
-    
-    // Testimonials
-    'testimonials_title': 'Ce que disent nos utilisateurs',
-    
-    // FAQ
-    'faq_title': 'Questions fréquentes',
-    'faq_subtitle': 'Trouvez rapidement des réponses aux questions les plus courantes',
-    
-    // Contact
-    'need_help': 'Besoin d\'aide ?',
-    'need_help_subtitle': 'Notre équipe est à votre disposition pour répondre à toutes vos questions',
-    'phone': 'Téléphone',
-    'email': 'Email',
-    'contact_us': 'Nous contacter',
-    
-    // Footer
-    'quick_links': 'Liens rapides',
-    'legal_info': 'Informations légales',
-    'follow_us': 'Suivez-nous',
-    'legal_notice': 'Mentions légales',
-    'privacy_policy': 'Politique de confidentialité',
-    'terms_of_use': 'Conditions d\'utilisation',
-    'all_rights_reserved': 'Tous droits réservés.',
-    
-    // Portal
-    'track_your_file': 'Suivez votre dossier',
-    'track_subtitle': 'Entrez votre numéro d\'identification pour consulter l\'état de votre dossier',
-    'search': 'Rechercher',
-    'file_details': 'Détails du dossier',
-    'application_status': 'État de la demande',
-    'personal_info': 'Informations personnelles',
-    'documents': 'Documents',
-    'download': 'Télécharger',
-    'no_documents': 'Aucun document disponible',
-    'status': 'Statut',
-    'next_steps': 'Prochaines étapes',
-    'error_missing_id': 'Veuillez entrer votre numéro d\'identification d\'immigration.',
-    'loading': 'Chargement...',
-    'error_loading': 'Erreur lors du chargement des données',
+const translations: Record<string, Record<Language, string>> = {
+  home: {
+    en: 'Home',
+    fr: 'Accueil'
   },
-  en: {
-    // Header
-    'home': 'Home',
-    'track_application': 'Track Application',
-    'access_file': 'Access my file',
-    'contact': 'Contact',
-    
-    // Index page
-    'hero_title': 'Track your immigration file with ease!',
-    'hero_subtitle': 'Check the status of your application in real time and download your documents in just a few clicks.',
-    'enter_immigration_id': 'Enter your immigration ID',
-    'access_my_file': 'Access my file',
-    
-    // Features
-    'platform_title': 'Our File Tracking Platform',
-    'platform_subtitle': 'Our secure platform allows you to track the progress of your immigration file, access your documents and stay informed of the next steps in your procedure.',
-    'quick_consultation': 'Quick consultation',
-    'quick_consultation_desc': 'Instantly access your file information and check its progress.',
-    'secure_access': 'Secure access',
-    'secure_access_desc': 'Your documents and information are protected and accessible only with your personal ID.',
-    'personalized_tracking': 'Personalized tracking',
-    'personalized_tracking_desc': 'Benefit from tailored support and receive notifications on the progress of your file.',
-    
-    // How it works
-    'how_it_works': 'How it works?',
-    'how_it_works_subtitle': 'In just 3 simple steps, access all the information in your immigration file',
-    'enter_id': 'Enter your ID',
-    'enter_id_desc': 'Enter your unique immigration identification number',
-    'view_file': 'View your file',
-    'view_file_desc': 'Access all your information and download your documents',
-    'follow_updates': 'Follow updates',
-    'follow_updates_desc': 'Stay informed of the progress of your file at each step',
-    
-    // Testimonials
-    'testimonials_title': 'What our users say',
-    
-    // FAQ
-    'faq_title': 'Frequently Asked Questions',
-    'faq_subtitle': 'Quickly find answers to the most common questions',
-    
-    // Contact
-    'need_help': 'Need help?',
-    'need_help_subtitle': 'Our team is at your disposal to answer all your questions',
-    'phone': 'Phone',
-    'email': 'Email',
-    'contact_us': 'Contact us',
-    
-    // Footer
-    'quick_links': 'Quick links',
-    'legal_info': 'Legal information',
-    'follow_us': 'Follow us',
-    'legal_notice': 'Legal notice',
-    'privacy_policy': 'Privacy policy',
-    'terms_of_use': 'Terms of use',
-    'all_rights_reserved': 'All rights reserved.',
-    
-    // Portal
-    'track_your_file': 'Track your file',
-    'track_subtitle': 'Enter your identification number to check the status of your file',
-    'search': 'Search',
-    'file_details': 'File details',
-    'application_status': 'Application status',
-    'personal_info': 'Personal information',
-    'documents': 'Documents',
-    'download': 'Download',
-    'no_documents': 'No documents available',
-    'status': 'Status',
-    'next_steps': 'Next steps',
-    'error_missing_id': 'Please enter your immigration identification number.',
-    'loading': 'Loading...',
-    'error_loading': 'Error loading data',
+  track_application: {
+    en: 'Track Application',
+    fr: 'Suivi de dossier'
+  },
+  contact: {
+    en: 'Contact',
+    fr: 'Contact'
+  },
+  quick_links: {
+    en: 'Quick Links',
+    fr: 'Liens rapides'
+  },
+  legal_info: {
+    en: 'Legal Information',
+    fr: 'Informations légales'
+  },
+  legal_notice: {
+    en: 'Legal Notice',
+    fr: 'Mentions légales'
+  },
+  privacy_policy: {
+    en: 'Privacy Policy',
+    fr: 'Politique de confidentialité'
+  },
+  terms_of_use: {
+    en: 'Terms of Use',
+    fr: 'Conditions d\'utilisation'
+  },
+  follow_us: {
+    en: 'Follow Us',
+    fr: 'Suivez-nous'
+  },
+  all_rights_reserved: {
+    en: 'All rights reserved',
+    fr: 'Tous droits réservés'
+  },
+  file_details: {
+    en: 'File Details',
+    fr: 'Détails du dossier'
+  },
+  enter_immigration_id: {
+    en: 'Enter your immigration ID',
+    fr: 'Entrez votre ID d\'immigration'
+  },
+  access_file: {
+    en: 'Access Your File',
+    fr: 'Accéder à votre dossier'
+  },
+  need_help: {
+    en: 'Need Help?',
+    fr: 'Besoin d\'aide?'
+  },
+  need_help_subtitle: {
+    en: 'Our team is here to assist you with any questions about your immigration process.',
+    fr: 'Notre équipe est là pour vous aider avec toutes vos questions sur votre processus d\'immigration.'
+  },
+  phone: {
+    en: 'Phone',
+    fr: 'Téléphone'
+  },
+  email: {
+    en: 'Email',
+    fr: 'Email'
+  },
+  contact_us: {
+    en: 'Contact Us',
+    fr: 'Contactez-nous'
+  },
+  quick_consultation: {
+    en: 'Quick Consultation',
+    fr: 'Consultation rapide'
+  },
+  quick_consultation_desc: {
+    en: 'Get immediate access to your file status and application details.',
+    fr: 'Obtenez un accès immédiat à l\'état de votre dossier et aux détails de votre demande.'
+  },
+  secure_access: {
+    en: 'Secure Access',
+    fr: 'Accès sécurisé'
+  },
+  secure_access_desc: {
+    en: 'Your personal information is protected with advanced encryption.',
+    fr: 'Vos informations personnelles sont protégées par un cryptage avancé.'
+  },
+  personalized_tracking: {
+    en: 'Personalized Tracking',
+    fr: 'Suivi personnalisé'
+  },
+  personalized_tracking_desc: {
+    en: 'Follow each step of your application with real-time updates.',
+    fr: 'Suivez chaque étape de votre demande avec des mises à jour en temps réel.'
+  },
+  how_it_works: {
+    en: 'How It Works',
+    fr: 'Comment ça marche'
+  },
+  how_it_works_subtitle: {
+    en: 'Access your immigration file in just a few simple steps',
+    fr: 'Accédez à votre dossier d\'immigration en quelques étapes simples'
+  },
+  enter_id: {
+    en: 'Enter Your ID',
+    fr: 'Entrez votre ID'
+  },
+  enter_id_desc: {
+    en: 'Fill in your immigration ID in the search field.',
+    fr: 'Renseignez votre ID d\'immigration dans le champ de recherche.'
+  },
+  view_file: {
+    en: 'View Your File',
+    fr: 'Consultez votre dossier'
+  },
+  view_file_desc: {
+    en: 'Access all your application information and status.',
+    fr: 'Accédez à toutes les informations et au statut de votre demande.'
+  },
+  follow_updates: {
+    en: 'Follow Updates',
+    fr: 'Suivez les mises à jour'
+  },
+  follow_updates_desc: {
+    en: 'Receive notifications on your application progress.',
+    fr: 'Recevez des notifications sur l\'avancement de votre demande.'
+  },
+  testimonials_title: {
+    en: 'What Our Users Say',
+    fr: 'Ce que disent nos utilisateurs'
+  },
+  faq_title: {
+    en: 'Frequently Asked Questions',
+    fr: 'Questions fréquemment posées'
+  },
+  faq_subtitle: {
+    en: 'Find answers to common questions about our platform and immigration process',
+    fr: 'Trouvez des réponses aux questions courantes sur notre plateforme et le processus d\'immigration'
+  },
+  error_missing_id: {
+    en: 'Please enter a valid immigration ID',
+    fr: 'Veuillez entrer un ID d\'immigration valide'
+  },
+  // New translation keys for immigration programs
+  immigration_programs: {
+    en: 'Immigration Programs',
+    fr: 'Programmes d\'immigration'
+  },
+  student_visa: {
+    en: 'Student Visa',
+    fr: 'Visa étudiant'
+  },
+  student_visa_desc: {
+    en: 'Study at world-class Canadian institutions',
+    fr: 'Étudiez dans des établissements canadiens de classe mondiale'
+  },
+  work_visa: {
+    en: 'Work Visa',
+    fr: 'Visa de travail'
+  },
+  work_visa_desc: {
+    en: 'Opportunities in the Canadian job market',
+    fr: 'Opportunités sur le marché du travail canadien'
+  },
+  permanent_residence: {
+    en: 'Permanent Residence',
+    fr: 'Résidence permanente'
+  },
+  permanent_residence_desc: {
+    en: 'Start a new life in Canada',
+    fr: 'Commencez une nouvelle vie au Canada'
   }
 };
 
-// Provider du contexte de langue
-export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguage] = useState<Language>('fr');
 
-  // Fonction pour traduire une clé
-  const translate = (key: string): string => {
-    return translations[language][key] || key;
+  const t = (key: string): string => {
+    if (!translations[key]) {
+      console.warn(`Translation key not found: ${key}`);
+      return key;
+    }
+    return translations[key][language] || key;
   };
 
-  // Sauvegarder la langue dans le localStorage
-  useEffect(() => {
-    localStorage.setItem('language', language);
-  }, [language]);
-
-  // Récupérer la langue du localStorage au chargement
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') as Language;
-    if (savedLanguage && (savedLanguage === 'fr' || savedLanguage === 'en')) {
-      setLanguage(savedLanguage);
-    }
-  }, []);
-
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t: translate }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
 };
 
-// Hook personnalisé pour utiliser le contexte de langue
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
   if (context === undefined) {

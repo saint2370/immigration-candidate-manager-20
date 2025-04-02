@@ -5,6 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 
 const IRCCHeader = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -33,7 +41,7 @@ const IRCCHeader = () => {
   };
 
   return (
-    <header className="w-full bg-white border-b border-gray-200">
+    <header className="w-full bg-white border-b border-gray-200 z-30">
       <div className="container mx-auto px-4">
         {/* Top bar */}
         <div className="flex flex-col md:flex-row items-center justify-between py-3">
@@ -90,7 +98,7 @@ const IRCCHeader = () => {
                 <span className="font-medium">MENU</span>
               </button>
               
-              {/* Mobile and Desktop Menu */}
+              {/* Mobile Menu */}
               {isMenuOpen && (
                 <div className="absolute top-full left-0 w-64 bg-white shadow-lg z-50 border border-gray-200">
                   <div className="py-2">
@@ -108,6 +116,38 @@ const IRCCHeader = () => {
                     >
                       {t('track_application')}
                     </Link>
+                    
+                    {/* New dropdown menu for mobile */}
+                    <div className="relative group">
+                      <button className="flex items-center justify-between w-full px-4 py-2 text-gray-800 hover:bg-red-50">
+                        {t('immigration_programs')}
+                        <ChevronDown size={16} />
+                      </button>
+                      <div className="pl-6 hidden group-hover:block">
+                        <Link 
+                          to="/visa-etudiant" 
+                          className="block px-4 py-2 text-gray-800 hover:bg-red-50"
+                          onClick={toggleMenu}
+                        >
+                          {t('student_visa')}
+                        </Link>
+                        <Link 
+                          to="/visa-travail" 
+                          className="block px-4 py-2 text-gray-800 hover:bg-red-50"
+                          onClick={toggleMenu}
+                        >
+                          {t('work_visa')}
+                        </Link>
+                        <Link 
+                          to="/residence-permanente" 
+                          className="block px-4 py-2 text-gray-800 hover:bg-red-50"
+                          onClick={toggleMenu}
+                        >
+                          {t('permanent_residence')}
+                        </Link>
+                      </div>
+                    </div>
+                    
                     <a 
                       href="/index#faq" 
                       className="block px-4 py-2 text-gray-800 hover:bg-red-50"
@@ -127,13 +167,75 @@ const IRCCHeader = () => {
               )}
             </div>
             
-            <nav className="hidden md:flex">
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center">
               <Link to="/index" className={`py-3 px-4 hover:bg-red-800 transition-colors ${location.pathname === '/index' ? 'bg-red-800' : ''}`}>
                 {t('home')}
               </Link>
               <Link to="/portal" className={`py-3 px-4 hover:bg-red-800 transition-colors ${location.pathname.includes('/portal') ? 'bg-red-800' : ''}`}>
                 {t('track_application')}
               </Link>
+              
+              {/* Desktop Navigation Menu for Programs */}
+              <NavigationMenu>
+                <NavigationMenuList>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className={`py-3 px-4 hover:bg-red-800 transition-colors bg-transparent text-white ${location.pathname.includes('/visa') || location.pathname.includes('/residence') ? 'bg-red-800' : ''}`}>
+                      {t('immigration_programs')}
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent className="bg-white">
+                      <ul className="grid gap-3 p-4 w-[300px]">
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              to="/visa-etudiant"
+                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-red-50"
+                            >
+                              <div className="text-sm font-medium leading-none text-red-600">
+                                {t('student_visa')}
+                              </div>
+                              <p className="line-clamp-2 text-sm leading-snug text-gray-500">
+                                {t('student_visa_desc')}
+                              </p>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              to="/visa-travail"
+                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-red-50"
+                            >
+                              <div className="text-sm font-medium leading-none text-red-600">
+                                {t('work_visa')}
+                              </div>
+                              <p className="line-clamp-2 text-sm leading-snug text-gray-500">
+                                {t('work_visa_desc')}
+                              </p>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              to="/residence-permanente"
+                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-red-50"
+                            >
+                              <div className="text-sm font-medium leading-none text-red-600">
+                                {t('permanent_residence')}
+                              </div>
+                              <p className="line-clamp-2 text-sm leading-snug text-gray-500">
+                                {t('permanent_residence_desc')}
+                              </p>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                      </ul>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                </NavigationMenuList>
+              </NavigationMenu>
+              
               <a href="/index#faq" className="py-3 px-4 hover:bg-red-800 transition-colors">
                 FAQ
               </a>
@@ -165,7 +267,13 @@ const IRCCHeader = () => {
                     ? t('file_details')
                     : location.pathname === '/portal' 
                       ? t('track_application')
-                      : t('home')}
+                      : location.pathname === '/visa-etudiant'
+                        ? t('student_visa')
+                        : location.pathname === '/visa-travail'
+                          ? t('work_visa')
+                          : location.pathname === '/residence-permanente'
+                            ? t('permanent_residence')
+                            : t('home')}
                 </span>
               </>
             )}
