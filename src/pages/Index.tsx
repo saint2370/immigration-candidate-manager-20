@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,22 +8,20 @@ import { useSiteSettings } from '@/hooks/useSiteSettings';
 import BackgroundSlideshow from '@/components/animations/BackgroundSlideshow';
 import CounterAnimation from '@/components/animations/CounterAnimation';
 import CanadaAdvantages from '@/components/home/CanadaAdvantages';
+import CanadaCarousel from '@/components/home/CanadaCarousel';
 import { 
-  Search, 
-  Check, 
-  Shield, 
-  UserCheck, 
   ChevronRight, 
   ArrowRight, 
   Lock, 
   Clock, 
-  Star, 
+  UserCheck, 
   Phone, 
   Mail, 
   MessageSquare,
   Facebook,
   Twitter,
-  Linkedin
+  Linkedin,
+  Star
 } from 'lucide-react';
 import { 
   Accordion,
@@ -59,9 +57,6 @@ const Index = () => {
   // Récupérer les informations sur les visas
   const visasCounterValue = getStatValue('visas_counter');
   const visasCount = visasCounterValue ? visasCounterValue.value : 5000;
-  const visasText = visasCounterValue ? 
-    (language === 'fr' ? visasCounterValue.text_fr : visasCounterValue.text_en) : 
-    (language === 'fr' ? 'visas délivrés' : 'visas issued');
   
   // Récupérer les informations de contact
   const contactInfo = getContactValue('contact_info') || {};
@@ -87,7 +82,7 @@ const Index = () => {
 
   return (
     <div className="flex flex-col min-h-screen relative">
-      {/* Carrousel d'arrière-plan */}
+      {/* Carrousel d'arrière-plan avec moins de flou et plus de visibilité */}
       <BackgroundSlideshow images={backgroundImages} interval={7000} blur={true} />
       
       {/* Header */}
@@ -119,20 +114,22 @@ const Index = () => {
                 </Button>
               </form>
               
-              {/* Compteur de visas */}
+              {/* Compteur de visas mis à jour avec texte plus informatif */}
               <div className="mt-6 bg-white bg-opacity-90 p-6 rounded-lg shadow-md border border-red-100 max-w-md mx-auto">
                 <CounterAnimation 
                   startValue={450}
                   endValue={visasCount}
                   duration={3000}
-                  suffix={` ${visasText}`}
+                  suffix={language === 'fr' ? " visas" : " visas"}
                   className="text-2xl md:text-3xl text-red-600 font-bold"
                   formatNumber={true}
+                  loop={true}
+                  loopDelay={10000}
                 />
                 <p className="text-center text-gray-700 mt-2">
                   {language === 'fr' 
-                    ? 'Nous aidons des milliers de candidats chaque année à réaliser leur rêve canadien'
-                    : 'We help thousands of candidates each year achieve their Canadian dream'}
+                    ? 'Chaque année, nous accueillons des milliers de personnes venues du monde entier pour s\'installer au Canada.'
+                    : 'Each year, we welcome thousands of people from around the world to settle in Canada.'}
                 </p>
               </div>
             </div>
@@ -150,11 +147,14 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Avantages d'immigrer au Canada */}
+      {/* Section Canada Carousel - nouveau composant synchronisé texte + image */}
+      <CanadaCarousel />
+      
+      {/* Avantages de la plateforme - avec mise en page moderne */}
       <CanadaAdvantages />
       
       {/* Presentation Section */}
-      <section className="py-10 bg-white bg-opacity-95">
+      <section className="py-10 bg-gray-50 bg-opacity-95">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-800 mb-3">
@@ -168,7 +168,7 @@ const Index = () => {
           </div>
           
           <div className="grid md:grid-cols-3 gap-6 mt-6">
-            <div className="bg-red-50 p-6 rounded-lg text-center hover:shadow-lg transition-all duration-300 border border-red-100">
+            <div className="bg-white p-6 rounded-lg shadow-md text-center hover:shadow-lg transition-all duration-300 border border-red-100">
               <div className="bg-red-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Clock className="text-white" size={32} />
               </div>
@@ -178,7 +178,7 @@ const Index = () => {
               </p>
             </div>
             
-            <div className="bg-red-50 p-6 rounded-lg text-center hover:shadow-lg transition-all duration-300 border border-red-100">
+            <div className="bg-white p-6 rounded-lg shadow-md text-center hover:shadow-lg transition-all duration-300 border border-red-100">
               <div className="bg-red-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Lock className="text-white" size={32} />
               </div>
@@ -188,7 +188,7 @@ const Index = () => {
               </p>
             </div>
             
-            <div className="bg-red-50 p-6 rounded-lg text-center hover:shadow-lg transition-all duration-300 border border-red-100">
+            <div className="bg-white p-6 rounded-lg shadow-md text-center hover:shadow-lg transition-all duration-300 border border-red-100">
               <div className="bg-red-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <UserCheck className="text-white" size={32} />
               </div>
@@ -202,7 +202,7 @@ const Index = () => {
       </section>
       
       {/* Process Steps */}
-      <section className="py-10 bg-gray-50 bg-opacity-95">
+      <section className="py-10 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-800 mb-3">{t('how_it_works')}</h2>
@@ -212,7 +212,7 @@ const Index = () => {
           </div>
           
           <div className="flex flex-col md:flex-row justify-between items-center gap-6 mt-6">
-            <div className="bg-white p-6 rounded-lg shadow-md text-center flex-1 max-w-xs border-t-4 border-red-600">
+            <div className="bg-gray-50 p-6 rounded-lg shadow-md text-center flex-1 max-w-xs border-t-4 border-red-600">
               <div className="bg-red-600 text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">1</div>
               <h3 className="text-xl font-semibold mb-2">{t('enter_id')}</h3>
               <p className="text-gray-600">{t('enter_id_desc')}</p>
@@ -222,7 +222,7 @@ const Index = () => {
               <ArrowRight className="text-red-600" size={40} />
             </div>
             
-            <div className="bg-white p-6 rounded-lg shadow-md text-center flex-1 max-w-xs border-t-4 border-red-600">
+            <div className="bg-gray-50 p-6 rounded-lg shadow-md text-center flex-1 max-w-xs border-t-4 border-red-600">
               <div className="bg-red-600 text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
               <h3 className="text-xl font-semibold mb-2">{t('view_file')}</h3>
               <p className="text-gray-600">{t('view_file_desc')}</p>
@@ -232,7 +232,7 @@ const Index = () => {
               <ArrowRight className="text-red-600" size={40} />
             </div>
             
-            <div className="bg-white p-6 rounded-lg shadow-md text-center flex-1 max-w-xs border-t-4 border-red-600">
+            <div className="bg-gray-50 p-6 rounded-lg shadow-md text-center flex-1 max-w-xs border-t-4 border-red-600">
               <div className="bg-red-600 text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">3</div>
               <h3 className="text-xl font-semibold mb-2">{t('follow_updates')}</h3>
               <p className="text-gray-600">{t('follow_updates_desc')}</p>
@@ -242,7 +242,7 @@ const Index = () => {
       </section>
       
       {/* Témoignages */}
-      <section className="py-10 bg-white bg-opacity-95">
+      <section className="py-10 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-800 mb-3">{t('testimonials_title')}</h2>
@@ -298,7 +298,7 @@ const Index = () => {
       </section>
       
       {/* FAQ */}
-      <section id="faq" className="py-10 bg-gray-50 bg-opacity-95">
+      <section id="faq" className="py-10 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-800 mb-3">{t('faq_title')}</h2>
@@ -369,7 +369,7 @@ const Index = () => {
       </section>
       
       {/* Contact */}
-      <section id="contact" className="py-10 bg-white bg-opacity-95">
+      <section id="contact" className="py-10 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-800 mb-3">{t('need_help')}</h2>

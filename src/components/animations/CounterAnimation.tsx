@@ -10,6 +10,8 @@ interface CounterAnimationProps {
   suffix?: string;
   className?: string;
   formatNumber?: boolean;
+  loop?: boolean;
+  loopDelay?: number;
 }
 
 const CounterAnimation: React.FC<CounterAnimationProps> = ({
@@ -19,44 +21,57 @@ const CounterAnimation: React.FC<CounterAnimationProps> = ({
   prefix = '',
   suffix = '',
   className,
-  formatNumber = true
+  formatNumber = true,
+  loop = false,
+  loopDelay = 5000
 }) => {
   const [count, setCount] = useState(startValue);
+  const [isAnimating, setIsAnimating] = useState(true);
   const requestRef = useRef<number>();
   const startTimeRef = useRef<number>();
   const previousTimeRef = useRef<number>();
 
-  useEffect(() => {
-    startTimeRef.current = undefined; // Réinitialiser à chaque changement de endValue
-    
-    const animate = (time: number) => {
-      if (startTimeRef.current === undefined) {
-        startTimeRef.current = time;
-        previousTimeRef.current = time;
-      }
-
-      const elapsedTime = time - startTimeRef.current;
-      const progress = Math.min(elapsedTime / duration, 1);
-      
-      const newCount = Math.floor(startValue + (endValue - startValue) * progress);
-      
-      setCount(newCount);
-
+  const animate = (time: number) => {
+    if (startTimeRef.current === undefined) {
+      startTimeRef.current = time;
       previousTimeRef.current = time;
+    }
 
-      if (progress < 1) {
-        requestRef.current = requestAnimationFrame(animate);
+    const elapsedTime = time - (startTimeRef.current || 0);
+    const progress = Math.min(elapsedTime / duration, 1);
+    
+    const newCount = Math.floor(startValue + (endValue - startValue) * progress);
+    
+    setCount(newCount);
+
+    previousTimeRef.current = time;
+
+    if (progress < 1) {
+      requestRef.current = requestAnimationFrame(animate);
+    } else {
+      setIsAnimating(false);
+      if (loop) {
+        setTimeout(() => {
+          startTimeRef.current = undefined;
+          setIsAnimating(true);
+          setCount(startValue);
+          requestRef.current = requestAnimationFrame(animate);
+        }, loopDelay);
       }
-    };
+    }
+  };
 
-    requestRef.current = requestAnimationFrame(animate);
+  useEffect(() => {
+    if (isAnimating) {
+      requestRef.current = requestAnimationFrame(animate);
+    }
     
     return () => {
       if (requestRef.current) {
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [endValue, startValue, duration]);
+  }, [endValue, startValue, duration, isAnimating, loop]);
 
   const formatCountNumber = (num: number): string => {
     if (!formatNumber) return num.toString();

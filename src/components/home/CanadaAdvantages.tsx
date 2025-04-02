@@ -1,7 +1,17 @@
 
 import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Briefcase, Heart, Shield, Users, DollarSign } from 'lucide-react';
+import { 
+  Shield, 
+  Users, 
+  DollarSign, 
+  Clock, 
+  Globe, 
+  Lock, 
+  Bell, 
+  CheckCircle
+} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface AdvantageCardProps {
   title: string;
@@ -11,73 +21,70 @@ interface AdvantageCardProps {
 
 const AdvantageCard: React.FC<AdvantageCardProps> = ({ title, description, icon }) => {
   return (
-    <div className="bg-white rounded-lg p-6 shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-300">
-      <div className="bg-red-600 rounded-full w-14 h-14 flex items-center justify-center mx-auto mb-4">
-        <div className="text-white">{icon}</div>
-      </div>
-      <h3 className="text-lg font-semibold text-center mb-2">{title}</h3>
-      <p className="text-gray-600 text-center">{description}</p>
-    </div>
+    <Card className="hover:shadow-lg transition-shadow duration-300 border border-gray-100">
+      <CardContent className="p-6 flex flex-col items-center md:items-start md:flex-row gap-4">
+        <div className="bg-red-600 rounded-full w-14 h-14 flex items-center justify-center shrink-0">
+          <div className="text-white">{icon}</div>
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold mb-2">{title}</h3>
+          <p className="text-gray-600">{description}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
 const CanadaAdvantages: React.FC = () => {
   const { language } = useLanguage();
   
-  const advantages = [
+  const platformAdvantages = [
     {
-      title: language === 'fr' ? 'Salaire compétitif' : 'Competitive salary',
+      title: language === 'fr' ? 'Accès sécurisé' : 'Secure access',
       description: language === 'fr' 
-        ? 'Profitez d\'une rémunération attractive et d\'une stabilité financière grâce à l\'économie canadienne robuste.'
-        : 'Enjoy attractive compensation and financial stability thanks to Canada\'s robust economy.',
-      icon: <DollarSign size={28} />
+        ? 'Accédez en toute sécurité à vos documents et informations personnelles avec notre système de protection avancé.'
+        : 'Access your documents and personal information securely with our advanced protection system.',
+      icon: <Lock size={28} />
     },
     {
-      title: language === 'fr' ? 'Qualité de vie' : 'Quality of life',
+      title: language === 'fr' ? 'Informations officielles' : 'Official information',
       description: language === 'fr'
-        ? 'Bénéficiez d\'une excellente qualité de vie avec des infrastructures modernes dans un environnement sûr et agréable.'
-        : 'Benefit from an excellent quality of life with modern infrastructure in a safe and pleasant environment.',
-      icon: <Shield size={28} />
+        ? 'Recevez des informations fiables et vérifiées, évitant ainsi les arnaques et les fausses informations.'
+        : 'Receive reliable and verified information, avoiding scams and false information.',
+      icon: <Globe size={28} />
     },
     {
-      title: language === 'fr' ? 'Soins de santé' : 'Healthcare',
+      title: language === 'fr' ? 'Suivi en temps réel' : 'Real-time tracking',
       description: language === 'fr'
-        ? 'Accédez à des soins de santé universels et de qualité pour vous et votre famille.'
-        : 'Access universal, quality healthcare for you and your family.',
-      icon: <Heart size={28} />
+        ? 'Suivez l\'évolution de votre dossier d\'immigration à tout moment et soyez informé des mises à jour importantes.'
+        : 'Track the progress of your immigration file at any time and be informed of important updates.',
+      icon: <CheckCircle size={28} />
     },
     {
-      title: language === 'fr' ? 'Opportunités d\'emploi' : 'Job opportunities',
+      title: language === 'fr' ? 'Notifications instantanées' : 'Instant notifications',
       description: language === 'fr'
-        ? 'Découvrez un marché du travail dynamique offrant de nombreuses opportunités dans divers secteurs.'
-        : 'Discover a dynamic job market offering numerous opportunities in various sectors.',
-      icon: <Briefcase size={28} />
-    },
-    {
-      title: language === 'fr' ? 'Culture diversifiée' : 'Diverse culture',
-      description: language === 'fr'
-        ? 'Rejoignez une société multiculturelle et inclusive qui célèbre la diversité et accueille les immigrants.'
-        : 'Join a multicultural and inclusive society that celebrates diversity and welcomes immigrants.',
-      icon: <Users size={28} />
+        ? 'Recevez des alertes et notifications en temps réel concernant les changements de statut et les étapes à suivre.'
+        : 'Receive real-time alerts and notifications about status changes and next steps.',
+      icon: <Bell size={28} />
     }
   ];
 
   return (
-    <section className="py-12 bg-gray-50">
+    <section className="py-12 bg-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">
-            {language === 'fr' ? 'Pourquoi immigrer au Canada ?' : 'Why immigrate to Canada?'}
+            {language === 'fr' ? 'Avantages de notre plateforme' : 'Our platform advantages'}
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
             {language === 'fr' 
-              ? 'Le Canada offre une qualité de vie exceptionnelle et de nombreuses opportunités pour les nouveaux arrivants.'
-              : 'Canada offers an exceptional quality of life and numerous opportunities for newcomers.'}
+              ? 'Notre plateforme vous offre de nombreux avantages pour faciliter votre processus d\'immigration.'
+              : 'Our platform offers you many advantages to facilitate your immigration process.'}
           </p>
         </div>
         
-        <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-6">
-          {advantages.map((advantage, index) => (
+        <div className="grid md:grid-cols-2 gap-6">
+          {platformAdvantages.map((advantage, index) => (
             <AdvantageCard 
               key={index}
               title={advantage.title}
