@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import StaticBackground from '@/components/animations/StaticBackground';
 import VisaUpdatesSection from '@/components/notifications/VisaUpdatesSection';
-import CanadaCarousel from '@/components/home/CanadaCarousel';
 import WhyImmigrate from '@/components/home/WhyImmigrate';
 import PlatformAdvantages from '@/components/home/PlatformAdvantages';
 import IntuitiveSecurePlatform from '@/components/home/IntuitiveSecurePlatform';
@@ -20,8 +20,7 @@ import {
   MessageSquare,
   Facebook,
   Twitter,
-  Linkedin,
-  Star
+  Linkedin
 } from 'lucide-react';
 import { 
   Accordion,
@@ -45,7 +44,7 @@ const Index = () => {
   const { getSettingValue: getContactValue } = useSiteSettings('contact');
 
   // Image d'arrière-plan statique
-  const backgroundImage = '/lovable-uploads/1.png';
+  const backgroundImage = '/lovable-uploads/7f62a887-7e55-4ec9-b913-cd152c1d0706.png';
   
   // Get contact information
   const contactInfo = getContactValue('contact_info') || {};
@@ -109,9 +108,6 @@ const Index = () => {
       
       {/* Section mise à jour des visas - Nouvelle version avec colonnes */}
       <VisaUpdatesSection />
-
-      {/* Section Canada Carousel avec nouvelles images */}
-      <CanadaCarousel />
       
       {/* Section Pourquoi Immigrer au Canada - Nouvelle version avec images en arrière-plan */}
       <WhyImmigrate />
@@ -248,7 +244,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             <div>
-              <h3 className="text-lg md:text-xl font-bold mb-3">Immigration Canada</h3>
+              <h3 className="text-lg md:text-xl font-bold mb-3">IRCC Statut Canada</h3>
               <p className="text-gray-100 text-sm md:text-base">
                 {language === 'fr' 
                   ? 'Votre plateforme de suivi des dossiers d\'immigration canadienne' 
@@ -261,6 +257,9 @@ const Index = () => {
               <ul className="space-y-2 text-sm md:text-base">
                 <li><Link to="/index" className="text-gray-100 hover:text-white transition-colors">{t('home')}</Link></li>
                 <li><Link to="/portal" className="text-gray-100 hover:text-white transition-colors">{t('track_application')}</Link></li>
+                <li><Link to="/nouveaux-programmes" className="text-gray-100 hover:text-white transition-colors">
+                  {language === 'fr' ? 'Nouveaux Programmes 2025' : 'New 2025 Programs'}
+                </Link></li>
                 <li><a href="#faq" className="text-gray-100 hover:text-white transition-colors">FAQ</a></li>
                 <li><a href="#contact" className="text-gray-100 hover:text-white transition-colors">{t('contact')}</a></li>
               </ul>
@@ -292,7 +291,7 @@ const Index = () => {
           </div>
           
           <div className="border-t border-red-600 mt-6 pt-6 text-center text-gray-100 text-sm">
-            <p>© {new Date().getFullYear()} Immigration Canada. {t('all_rights_reserved')}</p>
+            <p>© {new Date().getFullYear()} IRCC Statut Canada. {t('all_rights_reserved')}</p>
           </div>
         </div>
       </footer>

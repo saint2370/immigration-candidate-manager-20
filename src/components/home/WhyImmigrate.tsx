@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 interface AdvantageItemProps {
@@ -41,28 +40,28 @@ const WhyImmigrate: React.FC = () => {
       description: language === 'fr' 
         ? 'Le Canada offre l\'un des meilleurs systèmes de santé universels, une éducation de qualité mondiale et un environnement sécuritaire pour les familles.'
         : 'Canada offers one of the best universal healthcare systems, world-class education and a safe environment for families.',
-      image: '/lovable-uploads/ex1.png'
+      image: '/lovable-uploads/0ecd56d9-ac2f-4dfd-953c-751381164189.png'
     },
     {
       title: language === 'fr' ? 'Une économie dynamique' : 'A dynamic economy',
       description: language === 'fr'
         ? 'Avec un marché du travail florissant et des opportunités dans de nombreux secteurs, le Canada continue d\'attirer des talents du monde entier.'
         : 'With a thriving job market and opportunities in many sectors, Canada continues to attract talent from around the world.',
-      image: '/lovable-uploads/ex2.png'
+      image: '/lovable-uploads/b6719299-9011-4648-9c54-88eb56f3bf2b.png'
     },
     {
       title: language === 'fr' ? 'Diversité et inclusion' : 'Diversity and inclusion',
       description: language === 'fr'
         ? 'Le multiculturalisme est au cœur de l\'identité canadienne. Chacun est bienvenu et respecté, quelle que soit son origine ou sa culture.'
         : 'Multiculturalism is at the heart of Canadian identity. Everyone is welcome and respected, regardless of their origin or culture.',
-      image: '/lovable-uploads/ex3.png'
+      image: '/lovable-uploads/3f408027-7f4c-4b71-b735-880bee6a8fc1.png'
     },
     {
       title: language === 'fr' ? 'Environnement naturel préservé' : 'Preserved natural environment',
       description: language === 'fr'
         ? 'Des montagnes majestueuses aux lacs cristallins, le Canada possède des paysages à couper le souffle et une nature préservée incomparable.'
         : 'From majestic mountains to crystal-clear lakes, Canada has breathtaking landscapes and unparalleled preserved nature.',
-      image: '/lovable-uploads/ex4.png'
+      image: '/lovable-uploads/2e4a0ceb-7358-49e3-8a50-e0e6b9a1b419.png'
     }
   ];
 

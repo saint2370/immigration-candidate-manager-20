@@ -37,8 +37,8 @@ export const VisaUpdatesSection = () => {
       title: language === 'fr' ? 'Visas Travailleurs' : 'Worker Visas',
       count: workerVisas,
       content: language === 'fr' 
-        ? `visas de travail délivrés aujourd'hui`
-        : `work visas issued today`,
+        ? `délivrés aujourd'hui`
+        : `issued today`,
     },
     {
       id: 2,
@@ -80,18 +80,18 @@ export const VisaUpdatesSection = () => {
             {item.icon}
             <h3 className="font-bold ml-2 text-gray-800">{item.title}</h3>
           </div>
-          <Button variant="ghost" size="sm" className="p-0 h-8 w-8 rounded-full">
-            <Plus size={16} />
-          </Button>
         </div>
         
         <div className="mt-2">
           <div className="flex items-baseline">
+            <Button variant="ghost" size="sm" className="p-0 h-8 rounded-full mr-1 text-red-600 hover:text-red-700">
+              <Plus size={16} className="mr-1" /> Plus de
+            </Button>
             <CounterAnimation
               startValue={item.count - 200}
               endValue={item.count}
               duration={2000}
-              className="text-xl font-bold text-red-600 mr-1"
+              className="text-xl font-bold text-red-600 mx-1"
               loop={true}
               randomize={true}
               minValue={100}

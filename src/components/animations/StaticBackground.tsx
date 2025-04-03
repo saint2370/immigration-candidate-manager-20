@@ -6,12 +6,14 @@ interface StaticBackgroundProps {
   image: string;
   className?: string;
   blur?: boolean;
+  opacity?: number;
 }
 
 const StaticBackground: React.FC<StaticBackgroundProps> = ({ 
   image, 
   className,
-  blur = false
+  blur = false,
+  opacity = 0.85
 }) => {
   return (
     <>
@@ -23,7 +25,7 @@ const StaticBackground: React.FC<StaticBackgroundProps> = ({
         )}
         style={{ 
           backgroundImage: `url(${image})`,
-          opacity: 0.85,
+          opacity: opacity,
           zIndex: -10
         }}
       />

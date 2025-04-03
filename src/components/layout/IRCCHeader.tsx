@@ -45,7 +45,7 @@ const IRCCHeader = () => {
       <div className="container mx-auto px-4">
         {/* Top bar - Ajustements pour mobile */}
         <div className="flex flex-col md:flex-row items-center justify-between py-3">
-          <div className="flex items-center mb-4 md:mb-0">
+          <div className="flex items-center justify-between w-full md:w-auto mb-4 md:mb-0">
             {/* Logo and site title */}
             <Link to="/index" className="flex items-center">
               <div className="mr-4">
@@ -56,30 +56,49 @@ const IRCCHeader = () => {
                 />
               </div>
             </Link>
-          </div>
-          
-          <div className="flex items-center space-x-4">
+            
             {/* Bouton de langue monté en haut pour mobile */}
             <Button 
               variant="ghost" 
-              className="text-red-600 hover:text-red-700 hover:bg-red-50 order-first md:order-last"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 md:hidden"
               onClick={toggleLanguage}
             >
               {language === 'fr' ? 'English' : 'Français'}
             </Button>
+          </div>
+          
+          <div className="flex flex-col md:flex-row items-center w-full md:w-auto">
+            <div className="hidden md:block">
+              <Button 
+                variant="ghost" 
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={toggleLanguage}
+              >
+                {language === 'fr' ? 'English' : 'Français'}
+              </Button>
+            </div>
             
-            <form onSubmit={handleSearchSubmit} className="relative">
-              <Input 
-                placeholder={t('enter_immigration_id')} 
-                className="pl-10 pr-4 h-10 w-64 border-red-200 focus:ring-red-500"
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-              />
-              <Search 
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={18}
-              />
-            </form>
+            <div className="flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-4 w-full md:w-auto">
+              <Button 
+                className="w-full md:w-auto py-2 px-4 bg-red-600 text-white hover:bg-red-700 transition-colors md:hidden"
+                onClick={handleAccessFile}
+              >
+                {language === 'fr' ? 'Se connecter' : 'Login'}
+              </Button>
+              
+              <form onSubmit={handleSearchSubmit} className="relative w-full md:w-auto">
+                <Input 
+                  placeholder={t('enter_immigration_id')} 
+                  className="pl-10 pr-4 h-10 w-full md:w-64 border-red-200 focus:ring-red-500"
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                />
+                <Search 
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={18}
+                />
+              </form>
+            </div>
           </div>
         </div>
       </div>
@@ -143,6 +162,23 @@ const IRCCHeader = () => {
                           onClick={toggleMenu}
                         >
                           {t('permanent_residence')}
+                        </Link>
+                      </div>
+                    </div>
+                    
+                    {/* New section for Nouveaux Programmes */}
+                    <div className="relative group">
+                      <button className="flex items-center justify-between w-full px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100">
+                        {language === 'fr' ? 'Nouveaux Programmes d\'Immigration' : 'New Immigration Programs'}
+                        <ChevronDown size={16} />
+                      </button>
+                      <div className="pl-6 hidden group-hover:block">
+                        <Link 
+                          to="/nouveaux-programmes" 
+                          className="block px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100"
+                          onClick={toggleMenu}
+                        >
+                          {language === 'fr' ? 'Découvrir les programmes 2025' : 'Discover 2025 Programs'}
                         </Link>
                       </div>
                     </div>
@@ -235,6 +271,38 @@ const IRCCHeader = () => {
                 </NavigationMenuList>
               </NavigationMenu>
               
+              {/* New Desktop Navigation Menu for 2025 Programs */}
+              <NavigationMenu>
+                <NavigationMenuList>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className="py-3 px-4 hover:bg-red-800 transition-colors bg-transparent text-white">
+                      {language === 'fr' ? 'Nouveaux Programmes d\'Immigration' : 'New Immigration Programs'}
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent className="bg-white">
+                      <ul className="grid gap-3 p-4 w-[300px]">
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              to="/nouveaux-programmes"
+                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-red-50"
+                            >
+                              <div className="text-sm font-medium leading-none text-red-600">
+                                {language === 'fr' ? 'Programmes 2025' : '2025 Programs'}
+                              </div>
+                              <p className="line-clamp-2 text-sm leading-snug text-gray-500">
+                                {language === 'fr' 
+                                  ? 'Découvrez les nouveaux programmes d\'immigration pour 2025' 
+                                  : 'Discover the new immigration programs for 2025'}
+                              </p>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                      </ul>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                </NavigationMenuList>
+              </NavigationMenu>
+              
               <a href="/index#faq" className="py-3 px-4 hover:bg-red-800 transition-colors">
                 FAQ
               </a>
@@ -257,7 +325,7 @@ const IRCCHeader = () => {
       <div className="bg-gray-100 py-2">
         <div className="container mx-auto px-4">
           <nav className="text-sm">
-            <Link to="/index" className="text-red-600 hover:underline">Immigration Canada</Link>
+            <Link to="/index" className="text-red-600 hover:underline">IRCC Statut Canada</Link>
             {location.pathname !== '/index' && (
               <>
                 <span className="mx-2">›</span>
@@ -272,7 +340,9 @@ const IRCCHeader = () => {
                           ? t('work_visa')
                           : location.pathname === '/residence-permanente'
                             ? t('permanent_residence')
-                            : t('home')}
+                            : location.pathname === '/nouveaux-programmes'
+                              ? language === 'fr' ? 'Nouveaux Programmes d\'Immigration' : 'New Immigration Programs'
+                              : t('home')}
                 </span>
               </>
             )}

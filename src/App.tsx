@@ -17,6 +17,7 @@ import SiteManagement from '@/pages/SiteManagement';
 import StudentVisa from '@/pages/immigration/StudentVisa';
 import WorkVisa from '@/pages/immigration/WorkVisa';
 import PermanentResidence from '@/pages/immigration/PermanentResidence';
+import NewImmigrationPrograms from '@/pages/immigration/NewImmigrationPrograms';
 
 function App() {
   const [queryClient] = useState(() => new QueryClient());
@@ -40,6 +41,7 @@ function App() {
             <Route path="/visa-etudiant" element={<StudentVisa />} />
             <Route path="/visa-travail" element={<WorkVisa />} />
             <Route path="/residence-permanente" element={<PermanentResidence />} />
+            <Route path="/nouveaux-programmes" element={<NewImmigrationPrograms />} />
             
             {/* Admin routes - with admin layout */}
             <Route path="/tableaudebord" element={<Layout><Outlet /></Layout>}>
