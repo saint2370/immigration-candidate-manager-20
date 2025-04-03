@@ -43,7 +43,7 @@ const IRCCHeader = () => {
   return (
     <header className="w-full bg-white border-b border-gray-200 z-30">
       <div className="container mx-auto px-4">
-        {/* Top bar */}
+        {/* Top bar - Ajustements pour mobile */}
         <div className="flex flex-col md:flex-row items-center justify-between py-3">
           <div className="flex items-center mb-4 md:mb-0">
             {/* Logo and site title */}
@@ -55,11 +55,19 @@ const IRCCHeader = () => {
                   className="h-8"
                 />
               </div>
-              {/* "IRCC Statut" text removed as requested */}
             </Link>
           </div>
           
           <div className="flex items-center space-x-4">
+            {/* Bouton de langue monté en haut pour mobile */}
+            <Button 
+              variant="ghost" 
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 order-first md:order-last"
+              onClick={toggleLanguage}
+            >
+              {language === 'fr' ? 'English' : 'Français'}
+            </Button>
+            
             <form onSubmit={handleSearchSubmit} className="relative">
               <Input 
                 placeholder={t('enter_immigration_id')} 
@@ -72,13 +80,6 @@ const IRCCHeader = () => {
                 size={18}
               />
             </form>
-            <Button 
-              variant="ghost" 
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-              onClick={toggleLanguage}
-            >
-              {language === 'fr' ? 'English' : 'Français'}
-            </Button>
           </div>
         </div>
       </div>
@@ -96,49 +97,49 @@ const IRCCHeader = () => {
                 <span className="font-medium">MENU</span>
               </button>
               
-              {/* Mobile Menu */}
+              {/* Mobile Menu - Amélioré avec meilleur espacement */}
               {isMenuOpen && (
                 <div className="absolute top-full left-0 w-64 bg-white shadow-lg z-50 border border-gray-200">
                   <div className="py-2">
                     <Link 
                       to="/index" 
-                      className="block px-4 py-2 text-gray-800 hover:bg-red-50"
+                      className="block px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100"
                       onClick={toggleMenu}
                     >
                       {t('home')}
                     </Link>
                     <Link 
                       to="/portal" 
-                      className="block px-4 py-2 text-gray-800 hover:bg-red-50"
+                      className="block px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100"
                       onClick={toggleMenu}
                     >
                       {t('track_application')}
                     </Link>
                     
-                    {/* New dropdown menu for mobile */}
+                    {/* New dropdown menu for mobile - Amélioré avec espacement */}
                     <div className="relative group">
-                      <button className="flex items-center justify-between w-full px-4 py-2 text-gray-800 hover:bg-red-50">
+                      <button className="flex items-center justify-between w-full px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100">
                         {t('immigration_programs')}
                         <ChevronDown size={16} />
                       </button>
                       <div className="pl-6 hidden group-hover:block">
                         <Link 
                           to="/visa-etudiant" 
-                          className="block px-4 py-2 text-gray-800 hover:bg-red-50"
+                          className="block px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100"
                           onClick={toggleMenu}
                         >
                           {t('student_visa')}
                         </Link>
                         <Link 
                           to="/visa-travail" 
-                          className="block px-4 py-2 text-gray-800 hover:bg-red-50"
+                          className="block px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100"
                           onClick={toggleMenu}
                         >
                           {t('work_visa')}
                         </Link>
                         <Link 
                           to="/residence-permanente" 
-                          className="block px-4 py-2 text-gray-800 hover:bg-red-50"
+                          className="block px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100"
                           onClick={toggleMenu}
                         >
                           {t('permanent_residence')}
@@ -148,14 +149,14 @@ const IRCCHeader = () => {
                     
                     <a 
                       href="/index#faq" 
-                      className="block px-4 py-2 text-gray-800 hover:bg-red-50"
+                      className="block px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100"
                       onClick={toggleMenu}
                     >
                       FAQ
                     </a>
                     <a 
                       href="/index#contact" 
-                      className="block px-4 py-2 text-gray-800 hover:bg-red-50"
+                      className="block px-4 py-3 text-gray-800 hover:bg-red-50"
                       onClick={toggleMenu}
                     >
                       {t('contact')}
@@ -246,7 +247,7 @@ const IRCCHeader = () => {
               className="py-3 px-4 bg-white text-red-600 hover:bg-gray-100 transition-colors hidden md:block font-medium"
               onClick={handleAccessFile}
             >
-              {language === 'fr' ? 'Se connecter' : 'Login'} {/* Changed from "Accéder à votre dossier" to "Se connecter" */}
+              {language === 'fr' ? 'Se connecter' : 'Login'}
             </Button>
           </div>
         </div>
