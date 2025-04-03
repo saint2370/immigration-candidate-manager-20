@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Search, Menu, X, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -51,13 +50,11 @@ const IRCCHeader = () => {
               <div className="mr-4">
                 <img 
                   src="https://www.canada.ca/etc/designs/canada/wet-boew/assets/sig-blk-fr.svg" 
-                  alt="IRCC Statut" 
+                  alt="Immigration Canada" 
                   className="h-8"
                 />
               </div>
-              <div className="text-sm">
-                <div className="font-semibold text-lg">IRCC Statut</div>
-              </div>
+              {/* Removed "IRCC Statut" text as requested */}
             </Link>
           </div>
           
@@ -258,7 +255,7 @@ const IRCCHeader = () => {
       <div className="bg-gray-100 py-2">
         <div className="container mx-auto px-4">
           <nav className="text-sm">
-            <Link to="/index" className="text-red-600 hover:underline">IRCC Statut</Link>
+            <Link to="/index" className="text-red-600 hover:underline">Immigration Canada</Link>
             {location.pathname !== '/index' && (
               <>
                 <span className="mx-2">›</span>

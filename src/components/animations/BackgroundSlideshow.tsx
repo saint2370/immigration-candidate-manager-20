@@ -53,7 +53,7 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({
         )}
         style={{ 
           backgroundImage: `url(${images[0]})`,
-          opacity: 0.7, // Augmenté pour une meilleure visibilité
+          opacity: 0.85, // Augmenté pour une meilleure visibilité
           zIndex: -10
         }}
       />
@@ -65,7 +65,7 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({
       <div 
         className={cn(
           "fixed top-0 left-0 w-full h-full bg-cover bg-center transition-opacity duration-1000",
-          transitioning ? "opacity-0" : "opacity-70", // Augmenté pour une meilleure visibilité
+          transitioning ? "opacity-0" : "opacity-85", // Augmenté pour une meilleure visibilité
           blur && "backdrop-blur-[1px]", // Réduit le flou pour mieux voir les détails des images
           className
         )}
@@ -77,7 +77,7 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({
       <div 
         className={cn(
           "fixed top-0 left-0 w-full h-full bg-cover bg-center transition-opacity duration-1000",
-          transitioning ? "opacity-70" : "opacity-0", // Augmenté pour une meilleure visibilité
+          transitioning ? "opacity-85" : "opacity-0", // Augmenté pour une meilleure visibilité
           blur && "backdrop-blur-[1px]", // Réduit le flou pour mieux voir les détails des images
           className
         )}

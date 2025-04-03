@@ -21,10 +21,10 @@ const generateNotifications = (language: string) => {
   const month = today.getMonth();
   
   // Generate numbers based on the date for consistency but variability
-  const workerVisas = 1000 + (day % 400);
-  const permanentVisas = 1500 + (day % 500);
-  const studentVisas = 1200 + (day % 300);
-  const familyVisas = 800 + (day % 200);
+  const workerVisas = 1000 + (day % 1000);
+  const permanentVisas = 1500 + (day % 1200);
+  const studentVisas = 1200 + (day % 800);
+  const familyVisas = 800 + (day % 600);
   
   return [
     {
@@ -90,7 +90,7 @@ export const NotificationCarousel = () => {
       >
         <CarouselContent>
           {notifications.map((notification) => (
-            <CarouselItem key={notification.id} className="md:basis-1/2 lg:basis-1/3">
+            <CarouselItem key={notification.id} className="md:basis-1/2 lg:basis-1/4">
               <div className="p-1">
                 <Card className={`${notification.color} border shadow-sm hover:shadow-md transition-shadow`}>
                   <CardContent className="flex items-start p-4 gap-3">
@@ -107,8 +107,8 @@ export const NotificationCarousel = () => {
                           className="text-lg font-bold text-red-600 mr-1"
                           loop={true}
                           randomize={true}
-                          minValue={notification.counter - 200}
-                          maxValue={notification.counter + 200}
+                          minValue={500}
+                          maxValue={50000}
                           loopDelay={10000}
                         />
                         <p className="text-gray-700">{notification.content}</p>

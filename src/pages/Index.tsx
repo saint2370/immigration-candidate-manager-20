@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -47,13 +46,15 @@ const Index = () => {
   const { getSettingValue: getStatValue } = useSiteSettings('statistics');
   const { getSettingValue: getContactValue } = useSiteSettings('contact');
 
-  // Images d'arrière-plan optimisées
+  // Images d'arrière-plan mises à jour avec les nouvelles images
   const backgroundImages = [
-    '/lovable-uploads/2f8168f1-37e3-4677-85cc-468195478835.png',
-    '/lovable-uploads/00bef2f0-7b5c-4e04-b53a-d41885957983.png',
-    '/lovable-uploads/02cfee17-830e-4af9-a983-dea86ca2cc2a.png',
-    '/lovable-uploads/173c1e3b-c129-4e78-850e-618cc040e16e.png',
-    '/lovable-uploads/d6dda840-bc8c-4664-b871-93daaadbad82.png',
+    '/lovable-uploads/1.png',
+    '/lovable-uploads/2.png',
+    '/lovable-uploads/3.png',
+    '/lovable-uploads/4.png',
+    '/lovable-uploads/5.png',
+    '/lovable-uploads/6.png',
+    '/lovable-uploads/7.png',
   ];
   
   // Récupérer les informations de contact
@@ -107,12 +108,10 @@ const Index = () => {
                   onChange={(e) => setImmigrationId(e.target.value)}
                 />
                 <Button type="submit" className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">
-                  {language === 'fr' ? 'Accéder' : 'Access'}
+                  {language === 'fr' ? 'Se connecter' : 'Login'}
                   <ChevronRight size={18} className="ml-1" />
                 </Button>
               </form>
-              
-              {/* Compteur de visas - Supprimé car maintenant intégré dans le carousel de notifications */}
             </div>
           </div>
         </div>
