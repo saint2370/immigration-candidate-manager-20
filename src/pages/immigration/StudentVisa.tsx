@@ -54,7 +54,7 @@ const StudentVisa = () => {
   return (
     <ImmigrationPageLayout
       title={language === 'fr' ? "Visa Étudiant" : "Student Visa"}
-      headerImage="/lovable-uploads/558584bc-ea53-41a4-af28-c62cd053ac50.png"
+      headerImage="/lovable-uploads/0791dc74-a2c6-4108-b35f-44c5bba6ddfb.png"
       intro={language === 'fr' 
         ? "Découvrez comment étudier au Canada et profiter d'un système éducatif de classe mondiale." 
         : "Discover how to study in Canada and benefit from a world-class education system."}

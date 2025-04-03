@@ -54,7 +54,7 @@ const WorkVisa = () => {
   return (
     <ImmigrationPageLayout
       title={language === 'fr' ? "Visa de Travail" : "Work Visa"}
-      headerImage="/lovable-uploads/e83d4090-759f-4383-a50e-0935b0dff46f.png"
+      headerImage="/lovable-uploads/fd39e6b7-2604-4a75-9d31-0e861c44104d.png"
       intro={language === 'fr' 
         ? "Découvrez comment obtenir un permis de travail pour accéder au marché du travail canadien." 
         : "Discover how to obtain a work permit to access the Canadian job market."}

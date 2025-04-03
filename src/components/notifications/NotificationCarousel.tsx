@@ -12,6 +12,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { UserCheck, Plane, Award, Briefcase } from 'lucide-react';
+import CounterAnimation from '@/components/animations/CounterAnimation';
 
 // Generate dynamic notifications based on date
 const generateNotifications = (language: string) => {
@@ -20,10 +21,10 @@ const generateNotifications = (language: string) => {
   const month = today.getMonth();
   
   // Generate numbers based on the date for consistency but variability
-  const workerVisas = 50 + (day % 50);
-  const permanentVisas = 150 + (day % 100);
-  const studentVisas = 80 + (day % 70);
-  const familyVisas = 30 + (day % 25);
+  const workerVisas = 1000 + (day % 400);
+  const permanentVisas = 1500 + (day % 500);
+  const studentVisas = 1200 + (day % 300);
+  const familyVisas = 800 + (day % 200);
   
   return [
     {
@@ -31,8 +32,9 @@ const generateNotifications = (language: string) => {
       icon: <UserCheck className="text-green-600" size={24} />,
       title: language === 'fr' ? 'Visas Travailleurs' : 'Worker Visas',
       content: language === 'fr' 
-        ? `${workerVisas} visas de travail viennent d'être délivrés aujourd'hui`
-        : `${workerVisas} work visas have been issued today`,
+        ? `visas de travail viennent d'être délivrés aujourd'hui`
+        : `work visas have been issued today`,
+      counter: workerVisas,
       color: 'bg-red-100 border-red-200'
     },
     {
@@ -40,8 +42,9 @@ const generateNotifications = (language: string) => {
       icon: <Award className="text-blue-600" size={24} />,
       title: language === 'fr' ? 'Résidence Permanente' : 'Permanent Residence',
       content: language === 'fr'
-        ? `${permanentVisas} demandes de résidence permanente approuvées ce mois-ci`
-        : `${permanentVisas} permanent residence applications approved this month`,
+        ? `demandes de résidence permanente approuvées ce mois-ci`
+        : `permanent residence applications approved this month`,
+      counter: permanentVisas,
       color: 'bg-white border-red-200'
     },
     {
@@ -49,17 +52,19 @@ const generateNotifications = (language: string) => {
       icon: <Briefcase className="text-purple-600" size={24} />,
       title: language === 'fr' ? 'Visas Étudiants' : 'Student Visas',
       content: language === 'fr'
-        ? `${studentVisas} étudiants internationaux ont reçu leur visa cette semaine`
-        : `${studentVisas} international students received their visa this week`,
+        ? `étudiants internationaux ont reçu leur visa cette semaine`
+        : `international students received their visa this week`,
+      counter: studentVisas,
       color: 'bg-red-100 border-red-200'
     },
     {
       id: 4,
       icon: <Plane className="text-teal-600" size={24} />,
-      title: language === 'fr' ? 'Réunion Familiale' : 'Family Reunification',
+      title: language === 'fr' ? 'Visiteurs' : 'Visitors',
       content: language === 'fr'
-        ? `${familyVisas} familles réunies grâce au programme de regroupement familial`
-        : `${familyVisas} families reunited through the family reunification program`,
+        ? `visiteurs accueillis au Canada ce mois-ci`
+        : `visitors welcomed to Canada this month`,
+      counter: familyVisas,
       color: 'bg-white border-red-200'
     }
   ];
@@ -94,7 +99,20 @@ export const NotificationCarousel = () => {
                     </div>
                     <div>
                       <h3 className="font-bold text-gray-800">{notification.title}</h3>
-                      <p className="text-gray-700">{notification.content}</p>
+                      <div className="flex items-baseline">
+                        <CounterAnimation
+                          startValue={notification.counter - Math.floor(notification.counter/3)}
+                          endValue={notification.counter}
+                          duration={2000}
+                          className="text-lg font-bold text-red-600 mr-1"
+                          loop={true}
+                          randomize={true}
+                          minValue={notification.counter - 200}
+                          maxValue={notification.counter + 200}
+                          loopDelay={10000}
+                        />
+                        <p className="text-gray-700">{notification.content}</p>
+                      </div>
                       <p className="text-xs text-gray-500 mt-2">
                         {format(new Date(), language === 'fr' ? 'd MMMM yyyy' : 'MMMM d, yyyy', { locale: language === 'fr' ? fr : undefined })}
                       </p>

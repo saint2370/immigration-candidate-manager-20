@@ -47,7 +47,7 @@ const Index = () => {
   const { getSettingValue: getStatValue } = useSiteSettings('statistics');
   const { getSettingValue: getContactValue } = useSiteSettings('contact');
 
-  // Images d'arrière-plan dynamiques - nouvelles images
+  // Images d'arrière-plan optimisées
   const backgroundImages = [
     '/lovable-uploads/2f8168f1-37e3-4677-85cc-468195478835.png',
     '/lovable-uploads/00bef2f0-7b5c-4e04-b53a-d41885957983.png',
@@ -55,10 +55,6 @@ const Index = () => {
     '/lovable-uploads/173c1e3b-c129-4e78-850e-618cc040e16e.png',
     '/lovable-uploads/d6dda840-bc8c-4664-b871-93daaadbad82.png',
   ];
-  
-  // Récupérer les informations sur les visas
-  const visasCounterValue = getStatValue('visas_counter');
-  const visasCount = visasCounterValue ? visasCounterValue.value : 5000;
   
   // Récupérer les informations de contact
   const contactInfo = getContactValue('contact_info') || {};
@@ -116,30 +112,13 @@ const Index = () => {
                 </Button>
               </form>
               
-              {/* Compteur de visas mis à jour avec texte plus informatif */}
-              <div className="mt-5 bg-white bg-opacity-90 p-5 rounded-lg shadow-md border border-red-100 max-w-md mx-auto">
-                <CounterAnimation 
-                  startValue={450}
-                  endValue={visasCount}
-                  duration={3000}
-                  suffix={language === 'fr' ? " visas" : " visas"}
-                  className="text-2xl md:text-3xl text-red-600 font-bold"
-                  formatNumber={true}
-                  loop={true}
-                  loopDelay={10000}
-                />
-                <p className="text-center text-gray-700 mt-2">
-                  {language === 'fr' 
-                    ? 'Chaque année, nous accueillons des milliers de personnes venues du monde entier pour s\'installer au Canada.'
-                    : 'Each year, we welcome thousands of people from around the world to settle in Canada.'}
-                </p>
-              </div>
+              {/* Compteur de visas - Supprimé car maintenant intégré dans le carousel de notifications */}
             </div>
           </div>
         </div>
       </section>
       
-      {/* Notification Carousel Section */}
+      {/* Notification Carousel Section avec les compteurs intégrés */}
       <section className="py-5 bg-white bg-opacity-95 border-y border-gray-100">
         <div className="container mx-auto px-4">
           <h2 className="text-xl md:text-2xl font-bold text-center mb-3 text-gray-800">
@@ -149,7 +128,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Section Canada Carousel - avec nouvelles images */}
+      {/* Section Canada Carousel */}
       <CanadaCarousel />
       
       {/* Avantages de la plateforme */}
