@@ -21,36 +21,36 @@ const CanadaCarousel: React.FC = () => {
     {
       title: language === 'fr' ? 'Qualité de vie exceptionnelle' : 'Exceptional quality of life',
       description: language === 'fr' 
-        ? 'Le Canada est régulièrement classé parmi les pays offrant la meilleure qualité de vie au monde. Ses villes propres, sûres et accueillantes offrent un environnement idéal pour s\'épanouir et élever une famille. Le pays se distingue par un faible taux de criminalité, une excellente qualité de l\'air et de l\'eau, ainsi qu\'un système social développé.'
-        : 'Canada is consistently ranked among the countries with the best quality of life in the world. Its clean, safe, and welcoming cities offer an ideal environment to thrive and raise a family. The country stands out for its low crime rate, excellent air and water quality, as well as a developed social system.',
+        ? 'Le Canada est régulièrement classé parmi les pays offrant la meilleure qualité de vie au monde. Ses villes propres, sûres et accueillantes offrent un environnement idéal pour s\'épanouir et élever une famille. Le pays se distingue par un faible taux de criminalité, une excellente qualité de l\'air et de l\'eau, ainsi qu\'un système social développé qui garantit l\'équité et la protection des droits de tous les citoyens.'
+        : 'Canada is consistently ranked among the countries with the best quality of life in the world. Its clean, safe, and welcoming cities offer an ideal environment to thrive and raise a family. The country stands out for its low crime rate, excellent air and water quality, as well as a developed social system that ensures equity and protection of the rights of all citizens.',
       image: '/lovable-uploads/ex1.png'
     },
     {
       title: language === 'fr' ? 'Système de santé de classe mondiale' : 'World-class healthcare system',
       description: language === 'fr'
-        ? 'Bénéficiez d\'un système de santé public et universel, financé par les impôts et accessible à tous les résidents permanents et citoyens. Les services médicaux essentiels sont couverts, garantissant des soins de qualité sans frais directs. Chaque province gère son propre système de santé, offrant une couverture complète et équitable pour tous.'
-        : 'Benefit from a public and universal healthcare system, funded by taxes and accessible to all permanent residents and citizens. Essential medical services are covered, ensuring quality care without direct costs. Each province manages its own healthcare system, offering comprehensive and equitable coverage for all.',
+        ? 'Bénéficiez d\'un système de santé public et universel, financé par les impôts et accessible à tous les résidents permanents et citoyens. Les services médicaux essentiels sont couverts, garantissant des soins de qualité sans frais directs. Chaque province gère son propre système de santé, offrant une couverture complète et équitable pour tous, indépendamment de votre situation économique ou sociale.'
+        : 'Benefit from a public and universal healthcare system, funded by taxes and accessible to all permanent residents and citizens. Essential medical services are covered, ensuring quality care without direct costs. Each province manages its own healthcare system, offering comprehensive and equitable coverage for all, regardless of your economic or social situation.',
       image: '/lovable-uploads/ex2.png'
     },
     {
       title: language === 'fr' ? 'Opportunités d\'emploi abondantes' : 'Abundant job opportunities',
       description: language === 'fr'
-        ? 'Découvrez un marché du travail dynamique avec des opportunités dans de nombreux secteurs. Le Canada fait face à une pénurie de main-d\'œuvre qualifiée dans plusieurs domaines comme la santé, l\'ingénierie, les technologies de l\'information et la construction. Des programmes spécifiques facilitent l\'intégration des immigrants dans le monde du travail canadien.'
-        : 'Discover a dynamic job market with opportunities in many sectors. Canada faces a shortage of skilled labor in several fields such as healthcare, engineering, information technology, and construction. Specific programs facilitate the integration of immigrants into the Canadian workforce.',
+        ? 'Découvrez un marché du travail dynamique avec des opportunités dans de nombreux secteurs. Le Canada fait face à une pénurie de main-d\'œuvre qualifiée dans plusieurs domaines comme la santé, l\'ingénierie, les technologies de l\'information et la construction. Des programmes spécifiques facilitent l\'intégration des immigrants dans le monde du travail canadien, avec des salaires compétitifs et d\'excellentes conditions de travail.'
+        : 'Discover a dynamic job market with opportunities in many sectors. Canada faces a shortage of skilled labor in several fields such as healthcare, engineering, information technology, and construction. Specific programs facilitate the integration of immigrants into the Canadian workforce, with competitive salaries and excellent working conditions.',
       image: '/lovable-uploads/ex3.png'
     },
     {
       title: language === 'fr' ? 'Culture diversifiée et inclusive' : 'Diverse and inclusive culture',
       description: language === 'fr'
-        ? 'Le Canada est reconnu pour son multiculturalisme et son respect des différentes cultures, religions et modes de vie. Cette diversité culturelle est célébrée à travers de nombreux festivals et événements tout au long de l\'année. Les politiques canadiennes encouragent activement l\'inclusion et la tolérance, créant une société où chacun peut s\'exprimer librement.'
-        : 'Canada is known for its multiculturalism and respect for different cultures, religions, and ways of life. This cultural diversity is celebrated through numerous festivals and events throughout the year. Canadian policies actively encourage inclusion and tolerance, creating a society where everyone can express themselves freely.',
+        ? 'Le Canada est reconnu pour son multiculturalisme et son respect des différentes cultures, religions et modes de vie. Cette diversité culturelle est célébrée à travers de nombreux festivals et événements tout au long de l\'année. Les politiques canadiennes encouragent activement l\'inclusion et la tolérance, créant une société où chacun peut s\'exprimer librement tout en participant pleinement à la vie communautaire.'
+        : 'Canada is known for its multiculturalism and respect for different cultures, religions, and ways of life. This cultural diversity is celebrated through numerous festivals and events throughout the year. Canadian policies actively encourage inclusion and tolerance, creating a society where everyone can express themselves freely while fully participating in community life.',
       image: '/lovable-uploads/ex4.png'
     },
     {
       title: language === 'fr' ? 'Nature exceptionnelle' : 'Exceptional nature',
       description: language === 'fr'
-        ? 'Profitez de paysages à couper le souffle, des montagnes majestueuses aux lacs cristallins. Le Canada possède 48 parcs nationaux et réserves préservant la biodiversité et offrant des espaces naturels immenses pour les activités en plein air. Explorez des forêts denses, des plaines infinies, des glaciers impressionnants et des côtes spectaculaires à travers les quatre saisons distinctes.'
-        : 'Enjoy breathtaking landscapes, from majestic mountains to crystal-clear lakes. Canada has 48 national parks and reserves preserving biodiversity and offering vast natural spaces for outdoor activities. Explore dense forests, endless plains, impressive glaciers, and spectacular coastlines through the four distinct seasons.',
+        ? 'Profitez de paysages à couper le souffle, des montagnes majestueuses aux lacs cristallins. Le Canada possède 48 parcs nationaux et réserves préservant la biodiversité et offrant des espaces naturels immenses pour les activités en plein air. Explorez des forêts denses, des plaines infinies, des glaciers impressionnants et des côtes spectaculaires à travers les quatre saisons distinctes qui offrent chacune leur propre beauté unique.'
+        : 'Enjoy breathtaking landscapes, from majestic mountains to crystal-clear lakes. Canada has 48 national parks and reserves preserving biodiversity and offering vast natural spaces for outdoor activities. Explore dense forests, endless plains, impressive glaciers, and spectacular coastlines through the four distinct seasons, each offering their own unique beauty.',
       image: '/lovable-uploads/ex5.png'
     }
   ];

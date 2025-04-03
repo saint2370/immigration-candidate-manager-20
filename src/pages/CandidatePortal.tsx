@@ -131,7 +131,7 @@ const CandidatePortal = () => {
                       </svg>
                       Recherche en cours...
                     </span>
-                  ) : "Accéder à mon dossier"}
+                  ) : "Se connecter"} {/* Changed from "Accéder à mon dossier" to "Se connecter" */}
                 </Button>
               </form>
               

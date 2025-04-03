@@ -27,7 +27,7 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({
       
       setTimeout(() => {
         setCurrentIndex(nextIndex);
-        // Générer un index aléatoire différent du courant
+        // Generate a different random index from the current one
         let newNextIndex;
         do {
           newNextIndex = Math.floor(Math.random() * images.length);
@@ -35,7 +35,7 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({
         
         setNextIndex(newNextIndex);
         setTransitioning(false);
-      }, 1000); // Durée de la transition
+      }, 1000); // Transition duration
     }, interval);
     
     return () => clearInterval(timer);
@@ -53,7 +53,7 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({
         )}
         style={{ 
           backgroundImage: `url(${images[0]})`,
-          opacity: 0.85, // Augmenté pour une meilleure visibilité
+          opacity: 0.9, // Increased for better visibility
           zIndex: -10
         }}
       />
@@ -65,8 +65,8 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({
       <div 
         className={cn(
           "fixed top-0 left-0 w-full h-full bg-cover bg-center transition-opacity duration-1000",
-          transitioning ? "opacity-0" : "opacity-85", // Augmenté pour une meilleure visibilité
-          blur && "backdrop-blur-[1px]", // Réduit le flou pour mieux voir les détails des images
+          transitioning ? "opacity-0" : "opacity-90", // Increased for better visibility
+          blur && "backdrop-blur-[1px]", // Reduced blur for better visibility of image details
           className
         )}
         style={{ 
@@ -77,8 +77,8 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({
       <div 
         className={cn(
           "fixed top-0 left-0 w-full h-full bg-cover bg-center transition-opacity duration-1000",
-          transitioning ? "opacity-85" : "opacity-0", // Augmenté pour une meilleure visibilité
-          blur && "backdrop-blur-[1px]", // Réduit le flou pour mieux voir les détails des images
+          transitioning ? "opacity-90" : "opacity-0", // Increased for better visibility
+          blur && "backdrop-blur-[1px]", // Reduced blur for better visibility of image details
           className
         )}
         style={{ 
@@ -86,7 +86,7 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({
           zIndex: -10
         }}
       />
-      <div className="fixed top-0 left-0 w-full h-full bg-black opacity-30 z-[-9]" /> {/* Réduit à 30% d'opacité pour moins d'assombrissement */}
+      <div className="fixed top-0 left-0 w-full h-full bg-black opacity-25 z-[-9]" /> {/* Reduced to 25% opacity for less darkening */}
     </>
   );
 };

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -46,7 +47,7 @@ const Index = () => {
   const { getSettingValue: getStatValue } = useSiteSettings('statistics');
   const { getSettingValue: getContactValue } = useSiteSettings('contact');
 
-  // Images d'arrière-plan mises à jour avec les nouvelles images
+  // Updated background images with the new images
   const backgroundImages = [
     '/lovable-uploads/1.png',
     '/lovable-uploads/2.png',
@@ -57,7 +58,7 @@ const Index = () => {
     '/lovable-uploads/7.png',
   ];
   
-  // Récupérer les informations de contact
+  // Get contact information
   const contactInfo = getContactValue('contact_info') || {};
   const phone = contactInfo.phone || '+1 (514) 123-4567';
   const email = contactInfo.email || 'contact@irccstatut.ca';
@@ -81,7 +82,7 @@ const Index = () => {
 
   return (
     <div className="flex flex-col min-h-screen relative">
-      {/* Carrousel d'arrière-plan avec moins de flou et plus de visibilité */}
+      {/* Background slideshow with improved visibility and reduced blur */}
       <BackgroundSlideshow images={backgroundImages} interval={7000} blur={false} />
       
       {/* Header */}
@@ -108,7 +109,7 @@ const Index = () => {
                   onChange={(e) => setImmigrationId(e.target.value)}
                 />
                 <Button type="submit" className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">
-                  {language === 'fr' ? 'Se connecter' : 'Login'}
+                  {language === 'fr' ? 'Se connecter' : 'Login'} {/* Changed from "Accéder à votre dossier" to "Se connecter" */}
                   <ChevronRight size={18} className="ml-1" />
                 </Button>
               </form>
@@ -117,7 +118,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Notification Carousel Section avec les compteurs intégrés */}
+      {/* Notification Carousel Section with integrated counters */}
       <section className="py-5 bg-white bg-opacity-95 border-y border-gray-100">
         <div className="container mx-auto px-4">
           <h2 className="text-xl md:text-2xl font-bold text-center mb-3 text-gray-800">
@@ -127,10 +128,10 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Section Canada Carousel */}
+      {/* Section Canada Carousel with new images */}
       <CanadaCarousel />
       
-      {/* Avantages de la plateforme */}
+      {/* Platform advantages */}
       <CanadaAdvantages />
       
       {/* Presentation Section */}
@@ -221,7 +222,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Témoignages - Maintenant en carrousel */}
+      {/* Testimonials - Now in carousel */}
       <section className="py-8 md:py-10 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-6 md:mb-8">
@@ -353,7 +354,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Footer - Plus compact et mieux aligné */}
+      {/* Footer - More compact and better aligned */}
       <footer className="bg-red-700 text-white py-8">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">

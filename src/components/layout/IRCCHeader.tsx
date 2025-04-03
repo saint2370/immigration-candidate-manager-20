@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Search, Menu, X, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -54,7 +55,7 @@ const IRCCHeader = () => {
                   className="h-8"
                 />
               </div>
-              {/* Removed "IRCC Statut" text as requested */}
+              {/* "IRCC Statut" text removed as requested */}
             </Link>
           </div>
           
@@ -245,7 +246,7 @@ const IRCCHeader = () => {
               className="py-3 px-4 bg-white text-red-600 hover:bg-gray-100 transition-colors hidden md:block font-medium"
               onClick={handleAccessFile}
             >
-              {t('access_file')}
+              {language === 'fr' ? 'Se connecter' : 'Login'} {/* Changed from "Accéder à votre dossier" to "Se connecter" */}
             </Button>
           </div>
         </div>
