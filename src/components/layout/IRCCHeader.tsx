@@ -46,9 +46,9 @@ const IRCCHeader = () => {
       id: 'immigration',
       title: language === 'fr' ? 'Immigration et Réfugiés' : 'Immigration and Refugees',
       subsections: [
-        { id: 'programs', title: language === 'fr' ? 'Programmes d\'immigration' : 'Immigration Programs', link: '/nouveaux-programmes' },
-        { id: 'family', title: language === 'fr' ? 'Parrainage familial' : 'Family Sponsorship', link: '/nouveaux-programmes' },
-        { id: 'refugees', title: language === 'fr' ? 'Réfugiés et demandes d\'asile' : 'Refugees and Asylum', link: '/nouveaux-programmes' },
+        { id: 'programs', title: language === 'fr' ? 'Programmes d\'immigration' : 'Immigration Programs', link: '/programmes-immigration' },
+        { id: 'family', title: language === 'fr' ? 'Parrainage familial' : 'Family Sponsorship', link: '/parrainage-familial' },
+        { id: 'refugees', title: language === 'fr' ? 'Réfugiés et demandes d\'asile' : 'Refugees and Asylum', link: '/refugies-asile' },
         { id: 'permanent', title: language === 'fr' ? 'Résidence permanente' : 'Permanent Residence', link: '/residence-permanente' },
       ]
     },
@@ -56,17 +56,18 @@ const IRCCHeader = () => {
       id: 'services',
       title: language === 'fr' ? 'Services' : 'Services',
       subsections: [
+        { id: 'calculator', title: language === 'fr' ? 'Calculateur d\'éligibilité' : 'Eligibility Calculator', link: '/calculateur-eligibilite' },
         { id: 'application', title: language === 'fr' ? 'Ma demande' : 'My Application', link: '/portal' },
-        { id: 'forms', title: language === 'fr' ? 'Formulaires et guides' : 'Forms and Guides', link: '#' },
-        { id: 'newcomers', title: language === 'fr' ? 'Services aux nouveaux arrivants' : 'Newcomer Services', link: '#' },
-        { id: 'biometrics', title: language === 'fr' ? 'Rendez-vous biométriques' : 'Biometric Appointments', link: '/portal' },
+        { id: 'forms', title: language === 'fr' ? 'Formulaires et guides' : 'Forms and Guides', link: '/formulaires-guides' },
+        { id: 'newcomers', title: language === 'fr' ? 'Services aux nouveaux arrivants' : 'Newcomer Services', link: '/services-nouveaux-arrivants' },
+        { id: 'biometrics', title: language === 'fr' ? 'Rendez-vous biométriques' : 'Biometric Appointments', link: '/rendez-vous-biometriques' },
       ]
     },
     {
       id: 'applications',
       title: language === 'fr' ? 'Demandes' : 'Applications',
       subsections: [
-        { id: 'visit', title: language === 'fr' ? 'Visiter le Canada' : 'Visit Canada', link: '/nouveaux-programmes' },
+        { id: 'visit', title: language === 'fr' ? 'Visiter le Canada' : 'Visit Canada', link: '/visiter-canada' },
         { id: 'study', title: language === 'fr' ? 'Étudier au Canada' : 'Study in Canada', link: '/visa-etudiant' },
         { id: 'work', title: language === 'fr' ? 'Travailler au Canada' : 'Work in Canada', link: '/visa-travail' },
         { id: 'tracking', title: language === 'fr' ? 'Suivi des demandes' : 'Application Tracking', link: '/portal' },
@@ -76,9 +77,9 @@ const IRCCHeader = () => {
       id: 'resources',
       title: language === 'fr' ? 'Ressources' : 'Resources',
       subsections: [
-        { id: 'support', title: language === 'fr' ? 'Centre de soutien à la clientèle' : 'Client Support Center', link: '#contact' },
-        { id: 'publications', title: language === 'fr' ? 'Publications et manuels' : 'Publications and Manuals', link: '#' },
-        { id: 'guides', title: language === 'fr' ? 'Guides officiels' : 'Official Guides', link: '#' },
+        { id: 'support', title: language === 'fr' ? 'Centre de soutien à la clientèle' : 'Client Support Center', link: '/centre-soutien' },
+        { id: 'publications', title: language === 'fr' ? 'Publications et manuels' : 'Publications and Manuals', link: '/publications' },
+        { id: 'guides', title: language === 'fr' ? 'Guides officiels' : 'Official Guides', link: '/guides-officiels' },
         { id: 'contact', title: language === 'fr' ? 'Contactez IRCC' : 'Contact IRCC', link: '#contact' },
       ]
     }

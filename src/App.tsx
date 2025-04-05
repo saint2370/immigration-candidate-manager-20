@@ -30,6 +30,7 @@ import BiometricAppointments from '@/pages/services/BiometricAppointments';
 import ClientSupportCenter from '@/pages/resources/ClientSupportCenter';
 import Publications from '@/pages/resources/Publications';
 import OfficialGuides from '@/pages/resources/OfficialGuides';
+import EligibilityCalculator from '@/pages/services/EligibilityCalculator';
 
 function App() {
   const [queryClient] = useState(() => new QueryClient());
@@ -63,6 +64,7 @@ function App() {
             <Route path="/formulaires-guides" element={<FormsAndGuides />} />
             <Route path="/services-nouveaux-arrivants" element={<NewcomerServices />} />
             <Route path="/rendez-vous-biometriques" element={<BiometricAppointments />} />
+            <Route path="/calculateur-eligibilite" element={<EligibilityCalculator />} />
             
             {/* Resources Pages */}
             <Route path="/centre-soutien" element={<ClientSupportCenter />} />

@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
 type Language = 'en' | 'fr';
@@ -182,7 +181,49 @@ const translations: Record<string, Record<Language, string>> = {
   permanent_residence_desc: {
     en: 'Start a new life in Canada',
     fr: 'Commencez une nouvelle vie au Canada'
-  }
+  },
+  
+  // New translations for Eligibility Calculator
+  eligibility_calculator: {
+    en: 'Eligibility Calculator',
+    fr: 'Calculateur d\'éligibilité'
+  },
+  eligibility_calculator_desc: {
+    en: 'Assess your immigration eligibility',
+    fr: 'Évaluez votre éligibilité à l\'immigration'
+  },
+  start_assessment: {
+    en: 'Start Assessment',
+    fr: 'Commencer l\'évaluation'
+  },
+  your_profile: {
+    en: 'Your Immigration Profile',
+    fr: 'Votre profil d\'immigration'
+  },
+  assessment_result: {
+    en: 'Your Assessment Result',
+    fr: 'Résultat de votre évaluation'
+  },
+  excellent_eligibility: {
+    en: 'Excellent Eligibility',
+    fr: 'Excellente éligibilité'
+  },
+  good_eligibility: {
+    en: 'Good Eligibility',
+    fr: 'Bonne éligibilité'
+  },
+  average_eligibility: {
+    en: 'Average Eligibility',
+    fr: 'Éligibilité moyenne'
+  },
+  limited_eligibility: {
+    en: 'Limited Eligibility',
+    fr: 'Éligibilité limitée'
+  },
+  recommended_programs: {
+    en: 'Recommended Programs',
+    fr: 'Programmes recommandés'
+  },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
