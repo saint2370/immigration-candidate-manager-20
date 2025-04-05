@@ -1,5 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { ArrowUp } from 'lucide-react';
+import CounterAnimation from '@/components/animations/CounterAnimation';
 
 interface VisaUpdateCounterProps {
   type: string;
@@ -38,7 +40,12 @@ const VisaUpdatesCounter: React.FC<VisaUpdateCounterProps> = ({ type }) => {
 
   return (
     <div className="flex items-center text-green-600">
-      <span className="font-medium">Plus de {count} délivrés aujourd'hui</span>
+      <span className="font-medium">Plus de <CounterAnimation 
+        startValue={Math.max(count - 100, 0)} 
+        endValue={count} 
+        duration={1500} 
+        className="inline font-medium"
+      /> délivrés aujourd'hui</span>
       <ArrowUp size={16} className="ml-1" />
     </div>
   );
