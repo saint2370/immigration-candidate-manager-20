@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import IRCCHeader from '@/components/layout/IRCCHeader';
-import { FileText, Download, ExternalLink, Search, Check } from 'lucide-react';
+import { FileText, Download, ExternalLink, Search, Check, Clock as ClockIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -400,7 +399,7 @@ const FormsAndGuides = () => {
                   className="bg-white p-5 rounded-lg shadow-sm border border-gray-200 flex items-start hover:shadow-md transition-all duration-300"
                 >
                   <div className="p-2 rounded-md bg-green-50 mr-4">
-                    <Clock className="h-6 w-6 text-green-600" />
+                    <ClockIcon className="h-6 w-6 text-green-600" />
                   </div>
                   <div>
                     <h3 className="text-lg font-medium text-gray-800 mb-1">
