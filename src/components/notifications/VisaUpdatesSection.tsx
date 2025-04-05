@@ -14,7 +14,7 @@ const VisaUpdatesSection = () => {
       icon: <Plane size={24} className="text-blue-600" />,
       title: language === 'fr' ? 'Visa Visiteur' : 'Visitor Visa',
       description: language === 'fr' ? 'Pour les séjours touristiques et visites familiales' : 'For tourism and family visits',
-      link: '/nouveaux-programmes',
+      link: '/visiter-canada',
       type: 'visitor'
     },
     {

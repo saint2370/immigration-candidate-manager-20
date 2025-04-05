@@ -19,6 +19,18 @@ import WorkVisa from '@/pages/immigration/WorkVisa';
 import PermanentResidence from '@/pages/immigration/PermanentResidence';
 import NewImmigrationPrograms from '@/pages/immigration/NewImmigrationPrograms';
 
+// New page imports
+import ImmigrationPrograms from '@/pages/immigration/ImmigrationPrograms';
+import FamilySponsorshipProgram from '@/pages/immigration/FamilySponsorshipProgram';
+import RefugeesAsylum from '@/pages/immigration/RefugeesAsylum';
+import VisitorVisa from '@/pages/immigration/VisitorVisa';
+import FormsAndGuides from '@/pages/services/FormsAndGuides';
+import NewcomerServices from '@/pages/services/NewcomerServices';
+import BiometricAppointments from '@/pages/services/BiometricAppointments';
+import ClientSupportCenter from '@/pages/resources/ClientSupportCenter';
+import Publications from '@/pages/resources/Publications';
+import OfficialGuides from '@/pages/resources/OfficialGuides';
+
 function App() {
   const [queryClient] = useState(() => new QueryClient());
 
@@ -42,6 +54,20 @@ function App() {
             <Route path="/visa-travail" element={<WorkVisa />} />
             <Route path="/residence-permanente" element={<PermanentResidence />} />
             <Route path="/nouveaux-programmes" element={<NewImmigrationPrograms />} />
+            <Route path="/programmes-immigration" element={<ImmigrationPrograms />} />
+            <Route path="/parrainage-familial" element={<FamilySponsorshipProgram />} />
+            <Route path="/refugies-asile" element={<RefugeesAsylum />} />
+            <Route path="/visiter-canada" element={<VisitorVisa />} />
+            
+            {/* Services Pages */}
+            <Route path="/formulaires-guides" element={<FormsAndGuides />} />
+            <Route path="/services-nouveaux-arrivants" element={<NewcomerServices />} />
+            <Route path="/rendez-vous-biometriques" element={<BiometricAppointments />} />
+            
+            {/* Resources Pages */}
+            <Route path="/centre-soutien" element={<ClientSupportCenter />} />
+            <Route path="/publications" element={<Publications />} />
+            <Route path="/guides-officiels" element={<OfficialGuides />} />
             
             {/* Admin routes - with admin layout */}
             <Route path="/tableaudebord" element={<Layout><Outlet /></Layout>}>

@@ -24,7 +24,7 @@ const ImmigrationSections = () => {
       description: language === 'fr' 
         ? 'Découvrez tous les programmes disponibles pour immigrer au Canada'
         : 'Discover all available programs to immigrate to Canada',
-      link: '/nouveaux-programmes'
+      link: '/programmes-immigration'
     },
     {
       id: 'family',
@@ -33,16 +33,16 @@ const ImmigrationSections = () => {
       description: language === 'fr'
         ? 'Parrainer un membre de votre famille pour qu\'il s\'installe au Canada'
         : 'Sponsor a family member to settle in Canada',
-      link: '/nouveaux-programmes'
+      link: '/parrainage-familial'
     },
     {
       id: 'refugees',
       icon: <Heart className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Réfugiés et demandes d\'asile' : 'Refugees and Asylum',
+      title: language === 'fr' ? 'Réfugiés et demandeurs d\'asile' : 'Refugees and Asylum',
       description: language === 'fr'
         ? 'Information sur les programmes d\'accueil des réfugiés au Canada'
         : 'Information on refugee reception programs in Canada',
-      link: '/nouveaux-programmes'
+      link: '/refugies-asile'
     },
     {
       id: 'permanent',
@@ -73,25 +73,25 @@ const ImmigrationSections = () => {
       description: language === 'fr'
         ? 'Accédez aux formulaires et guides pour votre demande'
         : 'Access forms and guides for your application',
-      link: '#'
+      link: '/formulaires-guides'
     },
     {
-      id: 'biometrics',
+      id: 'newcomers',
       icon: <Calendar className="text-red-600" size={42} />,
       title: language === 'fr' ? 'Services aux nouveaux arrivants' : 'Newcomer Services',
       description: language === 'fr'
         ? 'Découvrez les services disponibles pour vous aider à vous établir'
         : 'Discover services available to help you settle',
-      link: '#'
+      link: '/services-nouveaux-arrivants'
     },
     {
-      id: 'updates',
+      id: 'biometrics',
       icon: <AlertCircle className="text-red-600" size={42} />,
       title: language === 'fr' ? 'Rendez-vous biométriques' : 'Biometric Appointments',
       description: language === 'fr'
         ? 'Prenez rendez-vous pour vos données biométriques'
         : 'Schedule an appointment for your biometric data',
-      link: '/portal'
+      link: '/rendez-vous-biometriques'
     }
   ];
 
@@ -104,7 +104,7 @@ const ImmigrationSections = () => {
       description: language === 'fr'
         ? 'Comment faire une demande de visa pour visiter le Canada'
         : 'How to apply for a visa to visit Canada',
-      link: '/nouveaux-programmes'
+      link: '/visiter-canada'
     },
     {
       id: 'study',
@@ -144,7 +144,7 @@ const ImmigrationSections = () => {
       description: language === 'fr'
         ? 'Obtenez de l\'aide pour vos questions d\'immigration'
         : 'Get help with your immigration questions',
-      link: '#contact'
+      link: '/centre-soutien'
     },
     {
       id: 'publications',
@@ -153,7 +153,7 @@ const ImmigrationSections = () => {
       description: language === 'fr'
         ? 'Accédez aux publications et manuels officiels d\'IRCC'
         : 'Access official IRCC publications and manuals',
-      link: '#'
+      link: '/publications'
     },
     {
       id: 'guides',
@@ -162,7 +162,7 @@ const ImmigrationSections = () => {
       description: language === 'fr'
         ? 'Consultez les guides officiels pour mieux comprendre les procédures'
         : 'Consult the official guides to better understand the procedures',
-      link: '#'
+      link: '/guides-officiels'
     },
     {
       id: 'contact',
@@ -171,7 +171,7 @@ const ImmigrationSections = () => {
       description: language === 'fr'
         ? 'Contactez-nous pour toute question concernant votre demande'
         : 'Contact us for any questions regarding your application',
-      link: '#contact'
+      link: 'https://www.canada.ca/fr/immigration-refugies-citoyennete.html'
     }
   ];
 
@@ -214,12 +214,21 @@ const ImmigrationSections = () => {
               </div>
               <h3 className="text-xl font-semibold text-gray-800 mb-3">{item.title}</h3>
               <p className="text-gray-600 mb-4 flex-grow">{item.description}</p>
-              <Link to={item.link}>
-                <Button variant="outline" className="border-red-300 text-red-700 hover:bg-red-50">
-                  {language === 'fr' ? 'En savoir plus' : 'Learn more'}
-                  <ChevronRight size={16} className="ml-1" />
-                </Button>
-              </Link>
+              {item.id === 'contact' ? (
+                <a href={item.link} target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" className="border-red-300 text-red-700 hover:bg-red-50">
+                    {language === 'fr' ? 'En savoir plus' : 'Learn more'}
+                    <ChevronRight size={16} className="ml-1" />
+                  </Button>
+                </a>
+              ) : (
+                <Link to={item.link}>
+                  <Button variant="outline" className="border-red-300 text-red-700 hover:bg-red-50">
+                    {language === 'fr' ? 'En savoir plus' : 'Learn more'}
+                    <ChevronRight size={16} className="ml-1" />
+                  </Button>
+                </Link>
+              )}
             </div>
           ))}
         </div>
