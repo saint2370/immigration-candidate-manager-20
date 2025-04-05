@@ -23,7 +23,7 @@ function App() {
   const [queryClient] = useState(() => new QueryClient());
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', true);
+    document.documentElement.classList.toggle('dark', false);
   }, []);
 
   return (
@@ -32,8 +32,8 @@ function App() {
         <BrowserRouter>
           <Routes>
             {/* Public/Candidate routes as main routes */}
-            <Route path="/" element={<Navigate to="/index" replace />} />
-            <Route path="/index" element={<Index />} />
+            <Route path="/" element={<Index />} />
+            <Route path="/index" element={<Navigate to="/" replace />} />
             <Route path="/portal" element={<CandidatePortal />} />
             <Route path="/portal/candidate/:id" element={<CandidatePortalDetail />} />
             

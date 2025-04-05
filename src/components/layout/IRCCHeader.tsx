@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Search, Menu, X, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Menu, X, ChevronDown, Globe } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -9,17 +9,25 @@ import {
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 
 const IRCCHeader = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
   const { language, setLanguage, t } = useLanguage();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Check scroll position to show/hide elements
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -29,326 +37,232 @@ const IRCCHeader = () => {
     setLanguage(language === 'fr' ? 'en' : 'fr');
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchValue.trim()) {
-      navigate(`/portal?id=${encodeURIComponent(searchValue)}`);
-    }
-  };
-
-  const handleAccessFile = () => {
+  const handleLoginClick = () => {
     navigate('/portal');
   };
 
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+    setIsMenuOpen(false);
+  };
+
+  const mainSections = [
+    {
+      id: 'immigration',
+      title: language === 'fr' ? 'Immigration et Réfugiés' : 'Immigration and Refugees',
+      subsections: [
+        { id: 'programs', title: language === 'fr' ? 'Programmes d\'immigration' : 'Immigration Programs' },
+        { id: 'family', title: language === 'fr' ? 'Parrainage familial' : 'Family Sponsorship' },
+        { id: 'refugees', title: language === 'fr' ? 'Accueil des réfugiés' : 'Refugee Reception' },
+        { id: 'permanent', title: language === 'fr' ? 'Résidence permanente' : 'Permanent Residence' },
+      ]
+    },
+    {
+      id: 'services',
+      title: language === 'fr' ? 'Services' : 'Services',
+      subsections: [
+        { id: 'status', title: language === 'fr' ? 'Vérification du statut' : 'Status Check' },
+        { id: 'documents', title: language === 'fr' ? 'Téléchargement de documents' : 'Document Upload' },
+        { id: 'biometrics', title: language === 'fr' ? 'Rendez-vous biométriques' : 'Biometric Appointments' },
+        { id: 'updates', title: language === 'fr' ? 'Mises à jour' : 'Updates' },
+      ]
+    },
+    {
+      id: 'applications',
+      title: language === 'fr' ? 'Demandes' : 'Applications',
+      subsections: [
+        { id: 'visa', title: language === 'fr' ? 'Demande de visa' : 'Visa Application' },
+        { id: 'study', title: language === 'fr' ? 'Permis d\'étude' : 'Study Permit' },
+        { id: 'work', title: language === 'fr' ? 'Permis de travail' : 'Work Permit' },
+        { id: 'tracking', title: language === 'fr' ? 'Suivi des demandes' : 'Application Tracking' },
+      ]
+    },
+    {
+      id: 'resources',
+      title: language === 'fr' ? 'Ressources' : 'Resources',
+      subsections: [
+        { id: 'forms', title: language === 'fr' ? 'Formulaires' : 'Forms' },
+        { id: 'help', title: language === 'fr' ? 'Centres d\'aide' : 'Help Centers' },
+        { id: 'guides', title: language === 'fr' ? 'Guides officiels' : 'Official Guides' },
+        { id: 'contact', title: language === 'fr' ? 'Contact' : 'Contact' },
+      ]
+    }
+  ];
+
   return (
-    <header className="w-full bg-white border-b border-gray-200 z-30">
-      <div className="container mx-auto px-4">
-        {/* Top bar - Ajustements pour mobile */}
-        <div className="flex flex-col md:flex-row items-center justify-between py-3">
-          <div className="flex items-center justify-between w-full md:w-auto mb-4 md:mb-0">
-            {/* Logo and site title */}
-            <Link to="/index" className="flex items-center">
-              <div className="mr-4">
+    <header className="w-full bg-white border-b border-gray-200 z-30 sticky top-0">
+      {/* Top bar */}
+      <div className="bg-red-700 text-white py-1 hidden md:block">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <img 
+                src="https://www.canada.ca/etc/designs/canada/wet-boew/assets/wmms-blk.svg" 
+                alt="Symbol of the Government of Canada" 
+                className="h-5"
+              />
+            </div>
+            <Button 
+              variant="ghost" 
+              className="text-white hover:text-gray-200 p-1 h-auto"
+              onClick={toggleLanguage}
+            >
+              <Globe size={16} className="mr-1" />
+              <span className="text-xs font-medium">
+                {language === 'fr' ? 'English' : 'Français'}
+              </span>
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Main header */}
+      <div className="bg-white py-2 md:py-4">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between">
+            {/* Logo on the left */}
+            <div className="flex items-center">
+              <Link to="/" className="flex items-center">
                 <img 
                   src="https://www.canada.ca/etc/designs/canada/wet-boew/assets/sig-blk-fr.svg" 
                   alt="Immigration Canada" 
-                  className="h-8"
+                  className="h-7 md:h-8"
                 />
-              </div>
-            </Link>
-            
-            {/* Bouton de langue monté en haut pour mobile */}
-            <Button 
-              variant="ghost" 
-              className="text-red-600 hover:text-red-700 hover:bg-red-50 md:hidden"
-              onClick={toggleLanguage}
-            >
-              {language === 'fr' ? 'English' : 'Français'}
-            </Button>
-          </div>
-          
-          <div className="flex flex-col md:flex-row items-center w-full md:w-auto">
-            <div className="hidden md:block">
-              <Button 
-                variant="ghost" 
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={toggleLanguage}
-              >
-                {language === 'fr' ? 'English' : 'Français'}
-              </Button>
+              </Link>
             </div>
             
-            <div className="flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-4 w-full md:w-auto">
+            {/* Mobile controls */}
+            <div className="flex items-center md:hidden space-x-1">
               <Button 
-                className="w-full md:w-auto py-2 px-4 bg-red-600 text-white hover:bg-red-700 transition-colors md:hidden"
-                onClick={handleAccessFile}
+                variant="ghost" 
+                size="sm"
+                className="text-gray-700 p-1 h-auto"
+                onClick={toggleLanguage}
+              >
+                <Globe size={16} className="mr-1" />
+                <span className="text-xs font-medium">
+                  {language === 'fr' ? 'EN' : 'FR'}
+                </span>
+              </Button>
+              
+              <Button
+                size="sm"
+                className="text-xs px-2 py-1 h-auto bg-red-700 hover:bg-red-800 text-white"
+                onClick={handleLoginClick}
               >
                 {language === 'fr' ? 'Se connecter' : 'Login'}
               </Button>
               
-              <form onSubmit={handleSearchSubmit} className="relative w-full md:w-auto">
-                <Input 
-                  placeholder={t('enter_immigration_id')} 
-                  className="pl-10 pr-4 h-10 w-full md:w-64 border-red-200 focus:ring-red-500"
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                />
-                <Search 
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  size={18}
-                />
-              </form>
+              <button 
+                className="p-1 text-gray-700"
+                onClick={toggleMenu}
+                aria-label="Toggle menu"
+              >
+                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
+            
+            {/* Desktop search */}
+            <div className="hidden md:flex items-center space-x-4">
+              <Button 
+                className="bg-red-700 hover:bg-red-800 text-white"
+                onClick={handleLoginClick}
+              >
+                {language === 'fr' ? 'Se connecter' : 'Login'}
+              </Button>
             </div>
           </div>
         </div>
       </div>
       
-      {/* Main navigation */}
-      <div className="bg-red-700 text-white">
+      {/* Desktop navigation */}
+      <div className="bg-gray-100 border-b border-gray-300 hidden md:block">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center">
-            <div className="relative">
-              <button 
-                className="py-3 px-4 flex items-center focus:outline-none"
-                onClick={toggleMenu}
-              >
-                {isMenuOpen ? <X className="mr-2" size={20} /> : <Menu className="mr-2" size={20} />}
-                <span className="font-medium">MENU</span>
-              </button>
-              
-              {/* Mobile Menu - Amélioré avec meilleur espacement */}
-              {isMenuOpen && (
-                <div className="absolute top-full left-0 w-64 bg-white shadow-lg z-50 border border-gray-200">
-                  <div className="py-2">
-                    <Link 
-                      to="/index" 
-                      className="block px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100"
-                      onClick={toggleMenu}
-                    >
-                      {t('home')}
-                    </Link>
-                    <Link 
-                      to="/portal" 
-                      className="block px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100"
-                      onClick={toggleMenu}
-                    >
-                      {t('track_application')}
-                    </Link>
-                    
-                    {/* New dropdown menu for mobile - Amélioré avec espacement */}
-                    <div className="relative group">
-                      <button className="flex items-center justify-between w-full px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100">
-                        {t('immigration_programs')}
-                        <ChevronDown size={16} />
-                      </button>
-                      <div className="pl-6 hidden group-hover:block">
-                        <Link 
-                          to="/visa-etudiant" 
-                          className="block px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100"
-                          onClick={toggleMenu}
+          <div className="flex justify-between">
+            <nav className="flex">
+              {mainSections.map((section) => (
+                <div key={section.id} className="relative group">
+                  <button 
+                    className="py-3 px-4 text-gray-700 font-medium hover:bg-red-700 hover:text-white transition-colors"
+                    onClick={() => scrollToSection(section.id)}
+                  >
+                    {section.title}
+                  </button>
+                  <div className="absolute left-0 mt-0 w-64 bg-white shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-40">
+                    <div className="py-2">
+                      {section.subsections.map((subsection) => (
+                        <button
+                          key={subsection.id}
+                          className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-red-50 hover:text-red-700"
+                          onClick={() => scrollToSection(`${section.id}-${subsection.id}`)}
                         >
-                          {t('student_visa')}
-                        </Link>
-                        <Link 
-                          to="/visa-travail" 
-                          className="block px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100"
-                          onClick={toggleMenu}
-                        >
-                          {t('work_visa')}
-                        </Link>
-                        <Link 
-                          to="/residence-permanente" 
-                          className="block px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100"
-                          onClick={toggleMenu}
-                        >
-                          {t('permanent_residence')}
-                        </Link>
-                      </div>
+                          {subsection.title}
+                        </button>
+                      ))}
                     </div>
-                    
-                    {/* New section for Nouveaux Programmes */}
-                    <div className="relative group">
-                      <button className="flex items-center justify-between w-full px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100">
-                        {language === 'fr' ? 'Nouveaux Programmes d\'Immigration' : 'New Immigration Programs'}
-                        <ChevronDown size={16} />
-                      </button>
-                      <div className="pl-6 hidden group-hover:block">
-                        <Link 
-                          to="/nouveaux-programmes" 
-                          className="block px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100"
-                          onClick={toggleMenu}
-                        >
-                          {language === 'fr' ? 'Découvrir les programmes 2025' : 'Discover 2025 Programs'}
-                        </Link>
-                      </div>
-                    </div>
-                    
-                    <a 
-                      href="/index#faq" 
-                      className="block px-4 py-3 text-gray-800 hover:bg-red-50 border-b border-gray-100"
-                      onClick={toggleMenu}
-                    >
-                      FAQ
-                    </a>
-                    <a 
-                      href="/index#contact" 
-                      className="block px-4 py-3 text-gray-800 hover:bg-red-50"
-                      onClick={toggleMenu}
-                    >
-                      {t('contact')}
-                    </a>
                   </div>
                 </div>
-              )}
-            </div>
-            
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center">
-              <Link to="/index" className={`py-3 px-4 hover:bg-red-800 transition-colors ${location.pathname === '/index' ? 'bg-red-800' : ''}`}>
-                {t('home')}
-              </Link>
-              <Link to="/portal" className={`py-3 px-4 hover:bg-red-800 transition-colors ${location.pathname.includes('/portal') ? 'bg-red-800' : ''}`}>
-                {t('track_application')}
-              </Link>
-              
-              {/* Desktop Navigation Menu for Programs */}
-              <NavigationMenu>
-                <NavigationMenuList>
-                  <NavigationMenuItem>
-                    <NavigationMenuTrigger className={`py-3 px-4 hover:bg-red-800 transition-colors bg-transparent text-white ${location.pathname.includes('/visa') || location.pathname.includes('/residence') ? 'bg-red-800' : ''}`}>
-                      {t('immigration_programs')}
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent className="bg-white">
-                      <ul className="grid gap-3 p-4 w-[300px]">
-                        <li>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              to="/visa-etudiant"
-                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-red-50"
-                            >
-                              <div className="text-sm font-medium leading-none text-red-600">
-                                {t('student_visa')}
-                              </div>
-                              <p className="line-clamp-2 text-sm leading-snug text-gray-500">
-                                {t('student_visa_desc')}
-                              </p>
-                            </Link>
-                          </NavigationMenuLink>
-                        </li>
-                        <li>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              to="/visa-travail"
-                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-red-50"
-                            >
-                              <div className="text-sm font-medium leading-none text-red-600">
-                                {t('work_visa')}
-                              </div>
-                              <p className="line-clamp-2 text-sm leading-snug text-gray-500">
-                                {t('work_visa_desc')}
-                              </p>
-                            </Link>
-                          </NavigationMenuLink>
-                        </li>
-                        <li>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              to="/residence-permanente"
-                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-red-50"
-                            >
-                              <div className="text-sm font-medium leading-none text-red-600">
-                                {t('permanent_residence')}
-                              </div>
-                              <p className="line-clamp-2 text-sm leading-snug text-gray-500">
-                                {t('permanent_residence_desc')}
-                              </p>
-                            </Link>
-                          </NavigationMenuLink>
-                        </li>
-                      </ul>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                </NavigationMenuList>
-              </NavigationMenu>
-              
-              {/* New Desktop Navigation Menu for 2025 Programs */}
-              <NavigationMenu>
-                <NavigationMenuList>
-                  <NavigationMenuItem>
-                    <NavigationMenuTrigger className="py-3 px-4 hover:bg-red-800 transition-colors bg-transparent text-white">
-                      {language === 'fr' ? 'Nouveaux Programmes d\'Immigration' : 'New Immigration Programs'}
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent className="bg-white">
-                      <ul className="grid gap-3 p-4 w-[300px]">
-                        <li>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              to="/nouveaux-programmes"
-                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-red-50"
-                            >
-                              <div className="text-sm font-medium leading-none text-red-600">
-                                {language === 'fr' ? 'Programmes 2025' : '2025 Programs'}
-                              </div>
-                              <p className="line-clamp-2 text-sm leading-snug text-gray-500">
-                                {language === 'fr' 
-                                  ? 'Découvrez les nouveaux programmes d\'immigration pour 2025' 
-                                  : 'Discover the new immigration programs for 2025'}
-                              </p>
-                            </Link>
-                          </NavigationMenuLink>
-                        </li>
-                      </ul>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                </NavigationMenuList>
-              </NavigationMenu>
-              
-              <a href="/index#faq" className="py-3 px-4 hover:bg-red-800 transition-colors">
-                FAQ
-              </a>
-              <a href="/index#contact" className="py-3 px-4 hover:bg-red-800 transition-colors">
-                {t('contact')}
-              </a>
+              ))}
             </nav>
-            
-            <Button 
-              className="py-3 px-4 bg-white text-red-600 hover:bg-gray-100 transition-colors hidden md:block font-medium"
-              onClick={handleAccessFile}
-            >
-              {language === 'fr' ? 'Se connecter' : 'Login'}
-            </Button>
           </div>
         </div>
       </div>
       
-      {/* Secondary navigation - Breadcrumb */}
-      <div className="bg-gray-100 py-2">
-        <div className="container mx-auto px-4">
-          <nav className="text-sm">
-            <Link to="/index" className="text-red-600 hover:underline">IRCC Statut Canada</Link>
-            {location.pathname !== '/index' && (
-              <>
-                <span className="mx-2">›</span>
-                <span className="font-medium">
-                  {location.pathname.includes('/portal/candidate') 
-                    ? t('file_details')
-                    : location.pathname === '/portal' 
-                      ? t('track_application')
-                      : location.pathname === '/visa-etudiant'
-                        ? t('student_visa')
-                        : location.pathname === '/visa-travail'
-                          ? t('work_visa')
-                          : location.pathname === '/residence-permanente'
-                            ? t('permanent_residence')
-                            : location.pathname === '/nouveaux-programmes'
-                              ? language === 'fr' ? 'Nouveaux Programmes d\'Immigration' : 'New Immigration Programs'
-                              : t('home')}
-                </span>
-              </>
-            )}
-          </nav>
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 bg-white z-50 md:hidden overflow-y-auto">
+          <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+            <Link to="/" className="flex items-center" onClick={() => setIsMenuOpen(false)}>
+              <img 
+                src="https://www.canada.ca/etc/designs/canada/wet-boew/assets/sig-blk-fr.svg" 
+                alt="Immigration Canada" 
+                className="h-7"
+              />
+            </Link>
+            <button onClick={toggleMenu} className="p-2 text-gray-700">
+              <X size={24} />
+            </button>
+          </div>
+          
+          <div className="p-4">
+            {mainSections.map((section) => (
+              <div key={section.id} className="mb-4">
+                <button
+                  className="w-full text-left font-medium text-gray-800 py-2 px-1 border-b border-gray-200 flex justify-between items-center"
+                  onClick={() => scrollToSection(section.id)}
+                >
+                  {section.title}
+                </button>
+                <div className="pl-4 mt-2 space-y-1">
+                  {section.subsections.map((subsection) => (
+                    <button
+                      key={subsection.id}
+                      className="w-full text-left py-2 text-gray-600 hover:text-red-700"
+                      onClick={() => scrollToSection(`${section.id}-${subsection.id}`)}
+                    >
+                      {subsection.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <Button
+                className="w-full bg-red-700 hover:bg-red-800 text-white"
+                onClick={() => {
+                  handleLoginClick();
+                  setIsMenuOpen(false);
+                }}
+              >
+                {language === 'fr' ? 'Se connecter' : 'Login'}
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </header>
   );
 };

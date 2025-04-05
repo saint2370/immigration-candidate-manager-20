@@ -1,27 +1,25 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { UserCheck, Plane, Award, Briefcase, Plus } from 'lucide-react';
-import CounterAnimation from '@/components/animations/CounterAnimation';
+import { UserCheck, Plane, Award, Briefcase } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 
-// Générer des nombres dynamiques basés sur la date
-const generateVisaNumbers = (day: number) => ({
-  workerVisas: 1000 + (day % 1000),
-  permanentVisas: 1500 + (day % 1200),
-  studentVisas: 1200 + (day % 800),
-  familyVisas: 800 + (day % 600),
-});
+// LocalStorage keys
+const VISA_COUNTS_KEY = 'visa_counts';
+const VISA_DATE_KEY = 'visa_counts_date';
 
-export const VisaUpdatesSection = () => {
+const VisaUpdatesSection = () => {
   const { language } = useLanguage();
   const today = new Date();
-  const day = today.getDate();
-  
-  const { workerVisas, permanentVisas, studentVisas, familyVisas } = generateVisaNumbers(day);
+  const [visaCounts, setVisaCounts] = useState({
+    workerVisas: 0,
+    studentVisas: 0,
+    visitorVisas: 0,
+    permanentVisas: 0
+  });
+  const [countersVisible, setCountersVisible] = useState(false);
   
   const formattedDate = format(
     today,
@@ -29,13 +27,62 @@ export const VisaUpdatesSection = () => {
     { locale: language === 'fr' ? fr : undefined }
   );
   
+  // Check if we need to generate new random visa numbers
+  useEffect(() => {
+    const initializeVisaCounts = () => {
+      // Check if we have stored visa counts and if they're from today
+      const storedDate = localStorage.getItem(VISA_DATE_KEY);
+      const storedCounts = localStorage.getItem(VISA_COUNTS_KEY);
+      const currentDate = today.toDateString();
+      
+      // Generate new counts if no stored counts or if they're not from today
+      if (!storedCounts || storedDate !== currentDate) {
+        const newCounts = {
+          workerVisas: Math.floor(Math.random() * 4900) + 100, // 100-5000
+          studentVisas: Math.floor(Math.random() * 4900) + 100,
+          visitorVisas: Math.floor(Math.random() * 4900) + 100,
+          permanentVisas: Math.floor(Math.random() * 4900) + 100
+        };
+        
+        // Store the new counts and current date
+        localStorage.setItem(VISA_COUNTS_KEY, JSON.stringify(newCounts));
+        localStorage.setItem(VISA_DATE_KEY, currentDate);
+        
+        setVisaCounts(newCounts);
+      } else {
+        // Use stored counts
+        setVisaCounts(JSON.parse(storedCounts));
+      }
+    };
+    
+    initializeVisaCounts();
+    
+    // Use Intersection Observer to detect when section is visible
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        setCountersVisible(true);
+      }
+    }, { threshold: 0.1 });
+    
+    const visaSection = document.getElementById('visa-updates-section');
+    if (visaSection) {
+      observer.observe(visaSection);
+    }
+    
+    return () => {
+      if (visaSection) {
+        observer.unobserve(visaSection);
+      }
+    };
+  }, [today]);
+  
   // Mise à jour des visas - données organisées en colonnes
   const leftColumnUpdates = [
     {
       id: 1,
       icon: <UserCheck className="text-red-600" size={24} />,
       title: language === 'fr' ? 'Visas Travailleurs' : 'Worker Visas',
-      count: workerVisas,
+      count: visaCounts.workerVisas,
       content: language === 'fr' 
         ? `délivrés aujourd'hui`
         : `issued today`,
@@ -44,7 +91,7 @@ export const VisaUpdatesSection = () => {
       id: 2,
       icon: <Plane className="text-red-600" size={24} />,
       title: language === 'fr' ? 'Visas Visiteurs' : 'Visitor Visas',
-      count: familyVisas,
+      count: visaCounts.visitorVisas,
       content: language === 'fr'
         ? `visiteurs accueillis au Canada aujourd'hui`
         : `visitors welcomed to Canada today`,
@@ -56,7 +103,7 @@ export const VisaUpdatesSection = () => {
       id: 3,
       icon: <Briefcase className="text-red-600" size={24} />,
       title: language === 'fr' ? 'Visas Étudiants' : 'Student Visas',
-      count: studentVisas,
+      count: visaCounts.studentVisas,
       content: language === 'fr'
         ? `étudiants internationaux ont reçu leur visa`
         : `international students received their visa`,
@@ -65,7 +112,7 @@ export const VisaUpdatesSection = () => {
       id: 4,
       icon: <Award className="text-red-600" size={24} />,
       title: language === 'fr' ? 'Résidence Permanente' : 'Permanent Residence',
-      count: permanentVisas,
+      count: visaCounts.permanentVisas,
       content: language === 'fr'
         ? `demandes de résidence permanente approuvées`
         : `permanent residence applications approved`,
@@ -84,20 +131,12 @@ export const VisaUpdatesSection = () => {
         
         <div className="mt-2">
           <div className="flex items-baseline">
-            <Button variant="ghost" size="sm" className="p-0 h-8 rounded-full mr-1 text-red-600 hover:text-red-700">
-              <Plus size={16} className="mr-1" /> Plus de
-            </Button>
-            <CounterAnimation
-              startValue={item.count - 200}
-              endValue={item.count}
-              duration={2000}
-              className="text-xl font-bold text-red-600 mx-1"
-              loop={true}
-              randomize={true}
-              minValue={100}
-              maxValue={5000}
-              loopDelay={10000}
-            />
+            <span className="text-red-600 font-medium text-sm">
+              {language === 'fr' ? 'Plus de ' : 'More than '}
+            </span>
+            <span className="text-xl font-bold text-red-600 mx-1">
+              {countersVisible ? new Intl.NumberFormat().format(item.count) : "---"}
+            </span>
             <span className="text-sm text-gray-700">{item.content}</span>
           </div>
         </div>
@@ -110,7 +149,7 @@ export const VisaUpdatesSection = () => {
   );
   
   return (
-    <section className="py-5 bg-white bg-opacity-95 border-y border-gray-100">
+    <section id="visa-updates-section" className="py-5 bg-white bg-opacity-95 border-y border-gray-100">
       <div className="container mx-auto px-4">
         <h2 className="text-xl md:text-2xl font-bold text-center mb-3 text-gray-800">
           {language === 'fr' ? 'Dernières mises à jour sur les visas' : 'Latest Visa Updates'}
