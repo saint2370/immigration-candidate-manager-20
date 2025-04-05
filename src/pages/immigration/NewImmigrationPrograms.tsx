@@ -1,126 +1,107 @@
 
 import React from 'react';
-import ImmigrationPageLayout from '@/components/immigration/ImmigrationPageLayout';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import { FileText, Users, Briefcase, GraduationCap, Clock, ChevronRight } from 'lucide-react';
+import ImmigrationPageLayout from '@/components/immigration/ImmigrationPageLayout';
+import { Card } from '@/components/ui/card';
+import { Briefcase, Users, GraduationCap, Clock, Building } from 'lucide-react';
 
 const NewImmigrationPrograms = () => {
   const { language } = useLanguage();
   
-  // Header image for the page
-  const headerImage = '/lovable-uploads/7f62a887-7e55-4ec9-b913-cd152c1d0706.png';
+  const headerImage = "https://www.canada.ca/content/dam/ircc/images/services/visit-canada/8-banner.jpg";
   
-  // FAQ items
-  const faqItems = [
-    {
-      question: language === 'fr' 
-        ? 'Quand les nouveaux programmes 2025 seront-ils disponibles ?' 
-        : 'When will the new 2025 programs be available?',
-      answer: language === 'fr'
-        ? 'Les nouveaux programmes d\'immigration 2025 seront progressivement disponibles à partir de janvier 2025. Certains programmes pilotes pourraient être lancés dès le dernier trimestre 2024.'
-        : 'The new 2025 immigration programs will be gradually available from January 2025. Some pilot programs may be launched from the last quarter of 2024.'
-    },
-    {
-      question: language === 'fr' 
-        ? 'Comment puis-je savoir si je suis admissible à ces nouveaux programmes ?' 
-        : 'How can I know if I am eligible for these new programs?',
-      answer: language === 'fr'
-        ? 'Chaque programme a ses propres critères d\'admissibilité. Nous vous recommandons de consulter les détails spécifiques de chaque programme sur notre site ou de contacter un conseiller en immigration pour une évaluation personnalisée.'
-        : 'Each program has its own eligibility criteria. We recommend that you consult the specific details of each program on our website or contact an immigration advisor for a personalized assessment.'
-    },
-    {
-      question: language === 'fr' 
-        ? 'Les demandes peuvent-elles être faites en ligne ?' 
-        : 'Can applications be made online?',
-      answer: language === 'fr'
-        ? 'Oui, tous les nouveaux programmes d\'immigration de 2025 accepteront les demandes en ligne. Notre portail sera mis à jour pour intégrer les formulaires spécifiques à chaque programme dès leur lancement.'
-        : 'Yes, all new 2025 immigration programs will accept online applications. Our portal will be updated to include forms specific to each program as soon as they are launched.'
-    },
-    {
-      question: language === 'fr' 
-        ? 'Quels sont les délais de traitement prévus pour ces nouveaux programmes ?' 
-        : 'What are the expected processing times for these new programs?',
-      answer: language === 'fr'
-        ? 'Les délais de traitement varieront selon le programme et le volume de demandes. En règle générale, nous visons un traitement de 3 à 6 mois pour les demandes complètes et sans complications.'
-        : 'Processing times will vary by program and volume of applications. As a general rule, we aim for 3 to 6 months processing for complete and uncomplicated applications.'
-    }
-  ];
-  
-  // Program data
   const programs = [
     {
-      id: 'family',
       icon: <Users size={36} className="text-red-600" />,
       title: language === 'fr' ? 'Parrainage des familles' : 'Family Sponsorship',
-      description: language === 'fr'
-        ? 'Programme de regroupement familial modernisé pour 2025, avec traitement plus rapide et exigences simplifiées. Permet de parrainer conjoint, enfants, parents et grands-parents avec nouvelles voies accélérées.'
-        : 'Modernized family reunification program for 2025, with faster processing and simplified requirements. Allows sponsorship of spouse, children, parents and grandparents with new expedited pathways.',
+      description: language === 'fr' 
+        ? 'Programme permettant aux citoyens canadiens et aux résidents permanents de parrainer des membres de leur famille proche pour venir au Canada. En 2025, les délais de traitement sont réduits et le processus simplifié.'
+        : 'Program allowing Canadian citizens and permanent residents to sponsor close family members to come to Canada. In 2025, processing times are reduced and the process is simplified.',
       eligibility: language === 'fr'
-        ? ['Être citoyen canadien ou résident permanent', 'Avoir au moins 18 ans', 'Démontrer la capacité financière de subvenir aux besoins des personnes parrainées', 'S\'engager à soutenir financièrement les membres de la famille pendant 3 à 20 ans selon leur lien de parenté']
-        : ['Be a Canadian citizen or permanent resident', 'Be at least 18 years old', 'Demonstrate financial ability to provide for sponsored individuals', 'Commit to financially supporting family members for 3 to 20 years depending on their relationship'],
-      benefits: language === 'fr'
-        ? ['Traitement accéléré des demandes (délai réduit à 6-12 mois)', 'Réduction des frais de demande pour les familles nombreuses', 'Option de statut temporaire pendant le traitement', 'Accès rapide aux soins de santé et services sociaux']
-        : ['Expedited application processing (reduced time to 6-12 months)', 'Reduced application fees for large families', 'Temporary status option during processing', 'Quick access to healthcare and social services']
+        ? 'Être citoyen canadien ou résident permanent, avoir plus de 18 ans, et démontrer la capacité financière de subvenir aux besoins des membres de la famille parrainés.'
+        : 'Be a Canadian citizen or permanent resident, be over 18 years old, and demonstrate the financial capacity to support sponsored family members.',
+      process: language === 'fr'
+        ? 'Soumission de la demande de parrainage, paiement des frais, vérification d\'admissibilité, puis traitement de la demande de résidence permanente du membre de la famille.'
+        : 'Submit sponsorship application, pay fees, eligibility check, then process the family member\'s permanent residence application.'
     },
     {
-      id: 'skilled',
       icon: <Briefcase size={36} className="text-red-600" />,
       title: language === 'fr' ? 'Programme des travailleurs qualifiés' : 'Skilled Worker Program',
       description: language === 'fr'
-        ? 'Nouveau système de points pour 2025, favorisant l\'expertise technologique, scientifique et médicale. Accès facilité aux permis de travail et à la résidence permanente pour professionnels hautement qualifiés.'
-        : 'New points system for 2025, favoring technological, scientific and medical expertise. Facilitated access to work permits and permanent residence for highly skilled professionals.',
+        ? 'Programme destiné aux travailleurs ayant des compétences recherchées au Canada. Les nouveaux critères 2025 accordent plus de points pour l\'expérience canadienne et les compétences linguistiques.'
+        : 'Program for workers with skills in demand in Canada. The new 2025 criteria award more points for Canadian experience and language skills.',
       eligibility: language === 'fr'
-        ? ['Minimum d\'un an d\'expérience professionnelle dans une profession qualifiée', 'Score minimum de 67 points sur 100 selon les nouveaux critères 2025', 'Niveau de langue minimum (français ou anglais)', 'Diplôme d\'études postsecondaires reconnu']
-        : ['Minimum one year of professional experience in a skilled occupation', 'Minimum score of 67 points out of 100 according to new 2025 criteria', 'Minimum language level (French or English)', 'Recognized post-secondary diploma'],
-      benefits: language === 'fr'
-        ? ['Voie accélérée vers la résidence permanente', 'Possibilité de faire venir sa famille', 'Programmes d\'intégration améliorés', 'Accès à des formations professionnelles subventionnées']
-        : ['Fast track to permanent residence', 'Ability to bring your family', 'Improved integration programs', 'Access to subsidized professional training']
+        ? 'Avoir au moins un an d\'expérience professionnelle dans une profession qualifiée, connaissance du français ou de l\'anglais, et un niveau d\'éducation suffisant.'
+        : 'Have at least one year of work experience in a skilled occupation, knowledge of French or English, and sufficient education level.',
+      process: language === 'fr'
+        ? 'Création d\'un profil Entrée express, réception d\'une invitation à présenter une demande si sélectionné, soumission de la demande de résidence permanente.'
+        : 'Create an Express Entry profile, receive an invitation to apply if selected, submit permanent residence application.'
     },
     {
-      id: 'business',
-      icon: <FileText size={36} className="text-red-600" />,
+      icon: <Building size={36} className="text-red-600" />,
       title: language === 'fr' ? 'Visa pour entrepreneurs et investisseurs' : 'Entrepreneur and Investor Visa',
       description: language === 'fr'
-        ? 'Programme repensé pour attirer entrepreneurs innovants et investisseurs. Offre un parcours accéléré vers la résidence permanente avec moins d\'exigences d\'investissement mais plus d\'impact économique.'
-        : 'Redesigned program to attract innovative entrepreneurs and investors. Offers an accelerated path to permanent residence with fewer investment requirements but greater economic impact.',
+        ? 'Programme conçu pour les entrepreneurs qui souhaitent créer une entreprise au Canada ou les investisseurs prêts à investir dans l\'économie canadienne. Le programme 2025 offre des voies accélérées pour les startups innovantes.'
+        : 'Program designed for entrepreneurs wishing to start a business in Canada or investors ready to invest in the Canadian economy. The 2025 program offers accelerated pathways for innovative startups.',
       eligibility: language === 'fr'
-        ? ['Posséder une entreprise viable ou avoir un plan d\'affaires solide', 'Investissement minimum réduit à 150 000 CAD (secteurs prioritaires) ou 300 000 CAD', 'Créer au moins 2 emplois pour citoyens canadiens ou résidents permanents', 'Démontrer une expérience de gestion d\'entreprise']
-        : ['Own a viable business or have a solid business plan', 'Reduced minimum investment to CAD 150,000 (priority sectors) or CAD 300,000', 'Create at least 2 jobs for Canadian citizens or permanent residents', 'Demonstrate business management experience'],
-      benefits: language === 'fr'
-        ? ['Résidence temporaire immédiate avec voie vers la permanence', 'Accès à des réseaux d\'affaires et mentors canadiens', 'Incitatifs fiscaux pour certains secteurs d\'activité', 'Moins de restrictions géographiques (par rapport aux programmes provinciaux)']
-        : ['Immediate temporary residence with path to permanence', 'Access to Canadian business networks and mentors', 'Tax incentives for certain business sectors', 'Fewer geographical restrictions (compared to provincial programs)']
+        ? 'Avoir une expérience de gestion d\'entreprise, un patrimoine net minimal, et un plan d\'affaires viable ou un investissement qualifié. Des critères spécifiques s\'appliquent selon la province.'
+        : 'Have business management experience, minimum net worth, and a viable business plan or qualified investment. Specific criteria apply depending on the province.',
+      process: language === 'fr'
+        ? 'Soumission d\'un plan d\'affaires ou d\'une proposition d\'investissement, entretien avec les responsables du programme, obtention d\'un visa conditionnel, puis résidence permanente après conditions remplies.'
+        : 'Submit a business plan or investment proposal, interview with program officials, obtain a conditional visa, then permanent residence after conditions are met.'
     },
     {
-      id: 'students',
       icon: <GraduationCap size={36} className="text-red-600" />,
       title: language === 'fr' ? 'Programme pour étudiants internationaux' : 'International Student Program',
       description: language === 'fr'
-        ? 'Version 2025 du programme avec focus sur la rétention des diplômés. Permis d\'études bonifiés, stages rémunérés intégrés, et transition automatique vers résidence permanente pour diplômés dans secteurs stratégiques.'
-        : '2025 version of the program with focus on graduate retention. Enhanced study permits, integrated paid internships, and automatic transition to permanent residence for graduates in strategic sectors.',
+        ? 'Nouveau programme facilitant l\'accès à la résidence permanente pour les diplômés internationaux d\'établissements canadiens. Le programme 2025 inclut des voies spécifiques pour les étudiants dans des domaines à forte demande.'
+        : 'New program facilitating access to permanent residence for international graduates of Canadian institutions. The 2025 program includes specific pathways for students in high-demand fields.',
       eligibility: language === 'fr'
-        ? ['Être admis dans un établissement d\'enseignement désigné canadien', 'Démontrer une capacité financière suffisante', 'Maîtriser le français ou l\'anglais au niveau requis', 'S\'engager à respecter les conditions du permis d\'études']
-        : ['Be admitted to a designated Canadian educational institution', 'Demonstrate sufficient financial capacity', 'Master French or English at the required level', 'Commit to complying with study permit conditions'],
-      benefits: language === 'fr'
-        ? ['Permis de travail inclus (20h/semaine pendant études, temps plein pendant congés)', 'Permis de travail post-diplôme étendu à 3 ans pour tous les programmes', 'Accès à la résidence permanente via le programme d\'expérience canadienne simplifié', 'Accès prioritaire aux programmes de bourses canadiennes']
-        : ['Work permit included (20h/week during studies, full time during breaks)', 'Post-graduate work permit extended to 3 years for all programs', 'Access to permanent residence via simplified Canadian experience program', 'Priority access to Canadian scholarship programs']
+        ? 'Avoir obtenu un diplôme d\'un établissement d\'enseignement canadien reconnu, une expérience de travail canadienne post-diplôme, et démontrer des compétences linguistiques adéquates.'
+        : 'Have graduated from a recognized Canadian educational institution, have post-graduation Canadian work experience, and demonstrate adequate language skills.',
+      process: language === 'fr'
+        ? 'Obtention d\'un permis de travail post-diplôme, acquisition d\'expérience professionnelle canadienne qualifiante, puis demande de résidence permanente via Entrée express ou un programme provincial.'
+        : 'Obtain a post-graduation work permit, acquire qualifying Canadian work experience, then apply for permanent residence through Express Entry or a provincial program.'
     },
     {
-      id: 'temporary',
       icon: <Clock size={36} className="text-red-600" />,
       title: language === 'fr' ? 'Programme des résidences temporaires et prolongations' : 'Temporary Residence and Extensions Program',
       description: language === 'fr'
-        ? 'Nouvelle approche flexible des séjours temporaires pour 2025. Permet prolongations multiples et changement de statut sans quitter le pays. Intègre un système de points pour transition vers résidence permanente.'
-        : 'New flexible approach to temporary stays for 2025. Allows multiple extensions and status changes without leaving the country. Integrates a points system for transition to permanent residence.',
+        ? 'Programme simplifié pour les visiteurs, travailleurs et étudiants temporaires souhaitant prolonger leur séjour au Canada. Les modifications 2025 permettent des extensions en ligne et des transitions plus faciles entre statuts.'
+        : 'Simplified program for temporary visitors, workers and students wishing to extend their stay in Canada. The 2025 changes allow for online extensions and easier transitions between statuses.',
       eligibility: language === 'fr'
-        ? ['Avoir un statut légal temporaire au Canada (visiteur, étudiant, travailleur)', 'Respecter les conditions du permis initial', 'Démontrer la raison de prolongation ou changement de statut', 'Maintenir une couverture d\'assurance maladie valide']
-        : ['Have legal temporary status in Canada (visitor, student, worker)', 'Comply with initial permit conditions', 'Demonstrate reason for extension or status change', 'Maintain valid health insurance coverage'],
-      benefits: language === 'fr'
-        ? ['Processus de prolongation en ligne simplifié', 'Possibilité de changer de type de permis sans quitter le Canada', 'Accumulation de points pour admissibilité à la résidence permanente', 'Services d\'orientation gratuits pour les transitions de statut']
-        : ['Simplified online extension process', 'Ability to change permit types without leaving Canada', 'Accumulation of points for permanent residence eligibility', 'Free orientation services for status transitions']
+        ? 'Avoir un statut légal au Canada, démontrer l\'intention de quitter le Canada à la fin de la période autorisée, et répondre aux exigences spécifiques selon le type de permis temporaire.'
+        : 'Have legal status in Canada, demonstrate intent to leave Canada at the end of the authorized period, and meet specific requirements depending on the type of temporary permit.',
+      process: language === 'fr'
+        ? 'Soumission d\'une demande de prolongation avant l\'expiration du statut actuel, fourniture des documents justificatifs, et maintien du statut implicite pendant le traitement de la demande.'
+        : 'Submit an extension application before current status expires, provide supporting documents, and maintain implied status during application processing.'
+    }
+  ];
+  
+  const faqItems = [
+    {
+      question: language === 'fr' ? 'Quels sont les délais de traitement pour les nouveaux programmes 2025 ?' : 'What are the processing times for the new 2025 programs?',
+      answer: language === 'fr' 
+        ? 'Les délais de traitement varient selon le programme et le volume de demandes, mais le gouvernement canadien s\'engage à réduire les délais pour tous les nouveaux programmes 2025. Consultez régulièrement le site d\'IRCC pour les mises à jour des délais de traitement.' 
+        : 'Processing times vary by program and application volume, but the Canadian government is committed to reducing times for all new 2025 programs. Check the IRCC website regularly for processing time updates.'
+    },
+    {
+      question: language === 'fr' ? 'Puis-je déposer une demande pour plusieurs programmes simultanément ?' : 'Can I apply for multiple programs simultaneously?',
+      answer: language === 'fr'
+        ? 'Oui, vous pouvez soumettre des demandes pour plusieurs programmes d\'immigration simultanément. Cependant, des frais distincts s\'appliquent à chaque demande, et vous devez satisfaire aux critères d\'admissibilité de chaque programme.' 
+        : 'Yes, you can submit applications for multiple immigration programs simultaneously. However, separate fees apply to each application, and you must meet the eligibility criteria for each program.'
+    },
+    {
+      question: language === 'fr' ? 'Comment puis-je vérifier l\'état de ma demande pour les nouveaux programmes ?' : 'How can I check the status of my application for the new programs?',
+      answer: language === 'fr'
+        ? 'Vous pouvez vérifier l\'état de votre demande en ligne via votre compte IRCC. Vous aurez besoin de votre numéro de confirmation de demande et de vos informations personnelles pour accéder à votre dossier.' 
+        : 'You can check your application status online through your IRCC account. You will need your application confirmation number and personal information to access your file.'
+    },
+    {
+      question: language === 'fr' ? 'Les nouveaux programmes de 2025 offrent-ils des avantages par rapport aux programmes existants ?' : 'Do the new 2025 programs offer advantages over existing programs?',
+      answer: language === 'fr'
+        ? 'Oui, les nouveaux programmes 2025 offrent généralement des processus simplifiés, des délais de traitement plus courts, et des critères d\'admissibilité mieux adaptés aux besoins actuels du marché du travail canadien et aux objectifs d\'immigration du pays.' 
+        : 'Yes, the new 2025 programs generally offer streamlined processes, shorter processing times, and eligibility criteria better adapted to the current needs of the Canadian labor market and the country\'s immigration objectives.'
     }
   ];
 
@@ -129,105 +110,41 @@ const NewImmigrationPrograms = () => {
       title={language === 'fr' ? 'Nouveaux Programmes d\'Immigration 2025' : 'New Immigration Programs 2025'}
       headerImage={headerImage}
       intro={language === 'fr' 
-        ? 'Découvrez les nouveaux programmes d\'immigration canadienne pour 2025, conçus pour faciliter et accélérer votre installation au Canada.'
-        : 'Discover new Canadian immigration programs for 2025, designed to facilitate and accelerate your settlement in Canada.'}
+        ? 'Découvrez les nouveaux programmes d\'immigration canadienne pour 2025, conçus pour attirer un plus grand nombre de travailleurs qualifiés, d\'entrepreneurs, d\'étudiants et de familles.'
+        : 'Discover new Canadian immigration programs for 2025, designed to attract more skilled workers, entrepreneurs, students and families.'}
       faqItems={faqItems}
     >
       <div className="space-y-10">
-        <div className="text-center max-w-3xl mx-auto mb-10">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            {language === 'fr' 
-              ? 'Cinq nouveaux programmes innovants pour 2025' 
-              : 'Five innovative new programs for 2025'}
-          </h2>
-          <p className="text-gray-600">
-            {language === 'fr'
-              ? 'Le gouvernement canadien a annoncé une refonte majeure de ses programmes d\'immigration pour 2025, visant à attirer et retenir davantage de talents internationaux tout en facilitant le regroupement familial.'
-              : 'The Canadian government has announced a major overhaul of its immigration programs for 2025, aimed at attracting and retaining more international talent while facilitating family reunification.'}
-          </p>
-        </div>
-
-        <Tabs defaultValue="family" className="w-full">
-          <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full h-auto bg-gray-100 p-1">
-            {programs.map(program => (
-              <TabsTrigger 
-                key={program.id} 
-                value={program.id}
-                className="py-3 data-[state=active]:bg-red-50 data-[state=active]:text-red-700 data-[state=active]:shadow-none"
-              >
-                {program.title}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          
-          {programs.map(program => (
-            <TabsContent key={program.id} value={program.id} className="mt-6">
-              <Card>
-                <CardHeader className="bg-red-50">
-                  <div className="flex items-center gap-4">
-                    {program.icon}
-                    <div>
-                      <CardTitle className="text-xl text-gray-800">{program.title}</CardTitle>
-                      <CardDescription className="text-gray-600 mt-1">{program.description}</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <h3 className="font-semibold text-gray-800 mb-3">
-                        {language === 'fr' ? 'Critères d\'admissibilité' : 'Eligibility Criteria'}
-                      </h3>
-                      <ul className="space-y-2 list-disc pl-5">
-                        {program.eligibility.map((item, index) => (
-                          <li key={index} className="text-gray-600">{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-800 mb-3">
-                        {language === 'fr' ? 'Avantages du programme' : 'Program Benefits'}
-                      </h3>
-                      <ul className="space-y-2 list-disc pl-5">
-                        {program.benefits.map((item, index) => (
-                          <li key={index} className="text-gray-600">{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6 flex justify-center">
-                    <Link to="/portal">
-                      <Button className="bg-red-600 hover:bg-red-700">
-                        {language === 'fr' ? 'Vérifier mon admissibilité' : 'Check my eligibility'}
-                        <ChevronRight size={16} className="ml-1" />
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          ))}
-        </Tabs>
-        
-        <div className="text-center mt-12 p-6 bg-gray-50 rounded-lg border border-gray-200">
-          <h3 className="text-xl font-semibold text-gray-800 mb-3">
-            {language === 'fr' ? 'Préparez votre demande dès maintenant' : 'Prepare your application now'}
-          </h3>
-          <p className="text-gray-600 mb-4">
-            {language === 'fr'
-              ? 'Bien que ces programmes ne seront officiellement lancés qu\'en 2025, vous pouvez déjà commencer à préparer votre dossier et vérifier votre admissibilité.'
-              : 'Although these programs will not be officially launched until 2025, you can already start preparing your file and checking your eligibility.'}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="outline" className="border-red-300 text-red-700 hover:bg-red-50">
-              {language === 'fr' ? 'Télécharger le guide 2025' : 'Download the 2025 guide'}
-            </Button>
-            <Button className="bg-red-600 hover:bg-red-700">
-              {language === 'fr' ? 'Créer mon compte' : 'Create my account'}
-            </Button>
-          </div>
-        </div>
+        {programs.map((program, index) => (
+          <Card key={index} className="overflow-hidden">
+            <div className="p-6 md:p-8">
+              <div className="flex flex-col md:flex-row gap-4 md:items-center mb-4">
+                <div className="bg-red-50 p-3 rounded-full inline-flex">
+                  {program.icon}
+                </div>
+                <h3 className="text-xl font-bold text-gray-800">{program.title}</h3>
+              </div>
+              
+              <p className="text-gray-700 mb-6">{program.description}</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold text-red-700 mb-2">
+                    {language === 'fr' ? 'Critères d\'admissibilité' : 'Eligibility Criteria'}
+                  </h4>
+                  <p className="text-gray-600">{program.eligibility}</p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-red-700 mb-2">
+                    {language === 'fr' ? 'Processus de demande' : 'Application Process'}
+                  </h4>
+                  <p className="text-gray-600">{program.process}</p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        ))}
       </div>
     </ImmigrationPageLayout>
   );

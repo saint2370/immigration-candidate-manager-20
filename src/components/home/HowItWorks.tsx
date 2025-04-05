@@ -1,18 +1,18 @@
 
 import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Search, FileText, Bell, MessageSquare } from 'lucide-react';
+import { FileText, Bell, MessageSquare, UserCheck } from 'lucide-react';
 
 const HowItWorks = () => {
   const { language } = useLanguage();
   
   const steps = [
     {
-      icon: <Search size={36} className="text-red-600" />,
-      title: language === 'fr' ? 'Entrez votre ID' : 'Enter your ID',
+      icon: <UserCheck size={36} className="text-red-600" />,
+      title: language === 'fr' ? 'Identifiez-vous' : 'Identify Yourself',
       description: language === 'fr'
-        ? 'Identifiez-vous en utilisant votre identifiant d\'immigration unique fourni par IRCC.'
-        : 'Identify yourself using your unique immigration ID provided by IRCC.'
+        ? 'Connectez-vous avec votre identifiant unique fourni par IRCC pour accéder à votre dossier.'
+        : 'Log in with your unique identifier provided by IRCC to access your file.'
     },
     {
       icon: <FileText size={36} className="text-red-600" />,

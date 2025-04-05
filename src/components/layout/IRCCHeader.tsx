@@ -1,17 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search, Menu, X, ChevronDown, Globe } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
 
 const IRCCHeader = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -54,40 +46,40 @@ const IRCCHeader = () => {
       id: 'immigration',
       title: language === 'fr' ? 'Immigration et Réfugiés' : 'Immigration and Refugees',
       subsections: [
-        { id: 'programs', title: language === 'fr' ? 'Programmes d\'immigration' : 'Immigration Programs' },
-        { id: 'family', title: language === 'fr' ? 'Parrainage familial' : 'Family Sponsorship' },
-        { id: 'refugees', title: language === 'fr' ? 'Accueil des réfugiés' : 'Refugee Reception' },
-        { id: 'permanent', title: language === 'fr' ? 'Résidence permanente' : 'Permanent Residence' },
+        { id: 'programs', title: language === 'fr' ? 'Programmes d\'immigration' : 'Immigration Programs', link: '/nouveaux-programmes' },
+        { id: 'family', title: language === 'fr' ? 'Parrainage familial' : 'Family Sponsorship', link: '/nouveaux-programmes' },
+        { id: 'refugees', title: language === 'fr' ? 'Réfugiés et demandes d\'asile' : 'Refugees and Asylum', link: '/nouveaux-programmes' },
+        { id: 'permanent', title: language === 'fr' ? 'Résidence permanente' : 'Permanent Residence', link: '/residence-permanente' },
       ]
     },
     {
       id: 'services',
       title: language === 'fr' ? 'Services' : 'Services',
       subsections: [
-        { id: 'status', title: language === 'fr' ? 'Vérification du statut' : 'Status Check' },
-        { id: 'documents', title: language === 'fr' ? 'Téléchargement de documents' : 'Document Upload' },
-        { id: 'biometrics', title: language === 'fr' ? 'Rendez-vous biométriques' : 'Biometric Appointments' },
-        { id: 'updates', title: language === 'fr' ? 'Mises à jour' : 'Updates' },
+        { id: 'application', title: language === 'fr' ? 'Ma demande' : 'My Application', link: '/portal' },
+        { id: 'forms', title: language === 'fr' ? 'Formulaires et guides' : 'Forms and Guides', link: '#' },
+        { id: 'newcomers', title: language === 'fr' ? 'Services aux nouveaux arrivants' : 'Newcomer Services', link: '#' },
+        { id: 'biometrics', title: language === 'fr' ? 'Rendez-vous biométriques' : 'Biometric Appointments', link: '/portal' },
       ]
     },
     {
       id: 'applications',
       title: language === 'fr' ? 'Demandes' : 'Applications',
       subsections: [
-        { id: 'visa', title: language === 'fr' ? 'Demande de visa' : 'Visa Application' },
-        { id: 'study', title: language === 'fr' ? 'Permis d\'étude' : 'Study Permit' },
-        { id: 'work', title: language === 'fr' ? 'Permis de travail' : 'Work Permit' },
-        { id: 'tracking', title: language === 'fr' ? 'Suivi des demandes' : 'Application Tracking' },
+        { id: 'visit', title: language === 'fr' ? 'Visiter le Canada' : 'Visit Canada', link: '/nouveaux-programmes' },
+        { id: 'study', title: language === 'fr' ? 'Étudier au Canada' : 'Study in Canada', link: '/visa-etudiant' },
+        { id: 'work', title: language === 'fr' ? 'Travailler au Canada' : 'Work in Canada', link: '/visa-travail' },
+        { id: 'tracking', title: language === 'fr' ? 'Suivi des demandes' : 'Application Tracking', link: '/portal' },
       ]
     },
     {
       id: 'resources',
       title: language === 'fr' ? 'Ressources' : 'Resources',
       subsections: [
-        { id: 'forms', title: language === 'fr' ? 'Formulaires' : 'Forms' },
-        { id: 'help', title: language === 'fr' ? 'Centres d\'aide' : 'Help Centers' },
-        { id: 'guides', title: language === 'fr' ? 'Guides officiels' : 'Official Guides' },
-        { id: 'contact', title: language === 'fr' ? 'Contact' : 'Contact' },
+        { id: 'support', title: language === 'fr' ? 'Centre de soutien à la clientèle' : 'Client Support Center', link: '#contact' },
+        { id: 'publications', title: language === 'fr' ? 'Publications et manuels' : 'Publications and Manuals', link: '#' },
+        { id: 'guides', title: language === 'fr' ? 'Guides officiels' : 'Official Guides', link: '#' },
+        { id: 'contact', title: language === 'fr' ? 'Contactez IRCC' : 'Contact IRCC', link: '#contact' },
       ]
     }
   ];
@@ -136,25 +128,27 @@ const IRCCHeader = () => {
             
             {/* Mobile controls */}
             <div className="flex items-center md:hidden space-x-1">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="text-gray-700 p-1 h-auto"
-                onClick={toggleLanguage}
-              >
-                <Globe size={16} className="mr-1" />
-                <span className="text-xs font-medium">
-                  {language === 'fr' ? 'EN' : 'FR'}
-                </span>
-              </Button>
-              
-              <Button
-                size="sm"
-                className="text-xs px-2 py-1 h-auto bg-red-700 hover:bg-red-800 text-white"
-                onClick={handleLoginClick}
-              >
-                {language === 'fr' ? 'Se connecter' : 'Login'}
-              </Button>
+              <div className="flex flex-col items-end">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-gray-700 p-1 h-auto"
+                  onClick={toggleLanguage}
+                >
+                  <Globe size={16} className="mr-1" />
+                  <span className="text-xs font-medium">
+                    {language === 'fr' ? 'EN' : 'FR'}
+                  </span>
+                </Button>
+                
+                <Button
+                  size="sm"
+                  className="text-xs px-2 py-1 h-auto bg-red-700 hover:bg-red-800 text-white mt-1"
+                  onClick={handleLoginClick}
+                >
+                  {language === 'fr' ? 'Se connecter' : 'Login'}
+                </Button>
+              </div>
               
               <button 
                 className="p-1 text-gray-700"
@@ -165,7 +159,7 @@ const IRCCHeader = () => {
               </button>
             </div>
             
-            {/* Desktop search */}
+            {/* Desktop controls */}
             <div className="hidden md:flex items-center space-x-4">
               <Button 
                 className="bg-red-700 hover:bg-red-800 text-white"
@@ -194,13 +188,14 @@ const IRCCHeader = () => {
                   <div className="absolute left-0 mt-0 w-64 bg-white shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-40">
                     <div className="py-2">
                       {section.subsections.map((subsection) => (
-                        <button
+                        <Link
                           key={subsection.id}
+                          to={subsection.link}
                           className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-red-50 hover:text-red-700"
-                          onClick={() => scrollToSection(`${section.id}-${subsection.id}`)}
+                          onClick={() => setIsMenuOpen(false)}
                         >
                           {subsection.title}
-                        </button>
+                        </Link>
                       ))}
                     </div>
                   </div>
@@ -238,13 +233,14 @@ const IRCCHeader = () => {
                 </button>
                 <div className="pl-4 mt-2 space-y-1">
                   {section.subsections.map((subsection) => (
-                    <button
+                    <Link
                       key={subsection.id}
-                      className="w-full text-left py-2 text-gray-600 hover:text-red-700"
-                      onClick={() => scrollToSection(`${section.id}-${subsection.id}`)}
+                      to={subsection.link}
+                      className="w-full block text-left py-2 text-gray-600 hover:text-red-700"
+                      onClick={() => setIsMenuOpen(false)}
                     >
                       {subsection.title}
-                    </button>
+                    </Link>
                   ))}
                 </div>
               </div>

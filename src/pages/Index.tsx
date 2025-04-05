@@ -12,6 +12,7 @@ import PlatformAdvantages from '@/components/home/PlatformAdvantages';
 import IntuitiveSecurePlatform from '@/components/home/IntuitiveSecurePlatform';
 import ImmigrationTestimonials from '@/components/home/ImmigrationTestimonials';
 import HowItWorks from '@/components/home/HowItWorks';
+import ImmigrationSections from '@/components/home/ImmigrationSections';
 import { 
   ChevronRight,
   Phone, 
@@ -20,22 +21,6 @@ import {
   Facebook,
   Twitter,
   Linkedin,
-  FileText,
-  Users,
-  FileCheck,
-  GraduationCap,
-  Briefcase,
-  Home,
-  Heart,
-  BookOpen,
-  FileSearch,
-  Upload,
-  Calendar,
-  HelpCircle,
-  PenTool,
-  AlertCircle,
-  Clock,
-  Globe
 } from 'lucide-react';
 import { 
   Accordion,
@@ -55,8 +40,8 @@ const Index = () => {
   const { getSettingValue: getStatValue } = useSiteSettings('statistics');
   const { getSettingValue: getContactValue } = useSiteSettings('contact');
 
-  // Image d'arrière-plan statique
-  const backgroundImage = '/lovable-uploads/7f62a887-7e55-4ec9-b913-cd152c1d0706.png';
+  // Background image for hero section
+  const backgroundImage = '/lovable-uploads/0791dc74-a2c6-4108-b35f-44c5bba6ddfb.png';
   
   // Get contact information
   const contactInfo = getContactValue('contact_info') || {};
@@ -68,190 +53,10 @@ const Index = () => {
     navigate('/portal');
   };
 
-  // Immigration section items
-  const immigrationItems = [
-    {
-      id: 'programs',
-      icon: <FileText className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Programmes d\'immigration' : 'Immigration Programs',
-      description: language === 'fr' 
-        ? 'Découvrez tous les programmes disponibles pour immigrer au Canada'
-        : 'Discover all available programs to immigrate to Canada',
-      link: '/visa-travail'
-    },
-    {
-      id: 'family',
-      icon: <Users className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Parrainage familial' : 'Family Sponsorship',
-      description: language === 'fr'
-        ? 'Parrainer un membre de votre famille pour qu\'il s\'installe au Canada'
-        : 'Sponsor a family member to settle in Canada',
-      link: '/nouveaux-programmes'
-    },
-    {
-      id: 'refugees',
-      icon: <Heart className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Accueil des réfugiés' : 'Refugee Reception',
-      description: language === 'fr'
-        ? 'Information sur les programmes d\'accueil des réfugiés au Canada'
-        : 'Information on refugee reception programs in Canada',
-      link: '/nouveaux-programmes'
-    },
-    {
-      id: 'permanent',
-      icon: <Home className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Résidence permanente' : 'Permanent Residence',
-      description: language === 'fr'
-        ? 'Conditions et démarches pour obtenir la résidence permanente'
-        : 'Conditions and steps to obtain permanent residence',
-      link: '/residence-permanente'
-    }
-  ];
-
-  // Services section items
-  const servicesItems = [
-    {
-      id: 'status',
-      icon: <FileCheck className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Vérification du statut' : 'Status Check',
-      description: language === 'fr'
-        ? 'Vérifiez l\'état de votre demande d\'immigration en ligne'
-        : 'Check the status of your immigration application online',
-      link: '/portal'
-    },
-    {
-      id: 'documents',
-      icon: <Upload className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Téléchargement de documents' : 'Document Upload',
-      description: language === 'fr'
-        ? 'Téléchargez des documents pour compléter votre demande'
-        : 'Upload documents to complete your application',
-      link: '/portal'
-    },
-    {
-      id: 'biometrics',
-      icon: <Calendar className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Rendez-vous biométriques' : 'Biometric Appointments',
-      description: language === 'fr'
-        ? 'Prenez rendez-vous pour vos données biométriques'
-        : 'Schedule an appointment for your biometric data',
-      link: '/portal'
-    },
-    {
-      id: 'updates',
-      icon: <AlertCircle className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Mises à jour' : 'Updates',
-      description: language === 'fr'
-        ? 'Restez informé des dernières mises à jour concernant votre dossier'
-        : 'Stay informed about the latest updates regarding your file',
-      link: '/portal'
-    }
-  ];
-
-  // Applications section items
-  const applicationsItems = [
-    {
-      id: 'visa',
-      icon: <Globe className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Demande de visa' : 'Visa Application',
-      description: language === 'fr'
-        ? 'Comment faire une demande de visa pour visiter le Canada'
-        : 'How to apply for a visa to visit Canada',
-      link: '/nouveaux-programmes'
-    },
-    {
-      id: 'study',
-      icon: <GraduationCap className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Permis d\'étude' : 'Study Permit',
-      description: language === 'fr'
-        ? 'Étapes pour obtenir un permis d\'étude pour étudier au Canada'
-        : 'Steps to obtain a study permit to study in Canada',
-      link: '/visa-etudiant'
-    },
-    {
-      id: 'work',
-      icon: <Briefcase className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Permis de travail' : 'Work Permit',
-      description: language === 'fr'
-        ? 'Comment obtenir un permis de travail pour travailler au Canada'
-        : 'How to obtain a work permit to work in Canada',
-      link: '/visa-travail'
-    },
-    {
-      id: 'tracking',
-      icon: <Clock className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Suivi des demandes' : 'Application Tracking',
-      description: language === 'fr'
-        ? 'Suivez l\'état d\'avancement de votre demande en temps réel'
-        : 'Track the progress of your application in real time',
-      link: '/portal'
-    }
-  ];
-
-  // Resources section items
-  const resourcesItems = [
-    {
-      id: 'forms',
-      icon: <FileSearch className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Formulaires' : 'Forms',
-      description: language === 'fr'
-        ? 'Accédez à tous les formulaires nécessaires pour vos démarches'
-        : 'Access all the forms needed for your procedures',
-      link: '#'
-    },
-    {
-      id: 'help',
-      icon: <HelpCircle className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Centres d\'aide' : 'Help Centers',
-      description: language === 'fr'
-        ? 'Trouvez de l\'aide pour vos démarches d\'immigration'
-        : 'Find help for your immigration procedures',
-      link: '#'
-    },
-    {
-      id: 'guides',
-      icon: <BookOpen className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Guides officiels' : 'Official Guides',
-      description: language === 'fr'
-        ? 'Consultez les guides officiels pour mieux comprendre les procédures'
-        : 'Consult the official guides to better understand the procedures',
-      link: '#'
-    },
-    {
-      id: 'contact',
-      icon: <PenTool className="text-red-600" size={42} />,
-      title: language === 'fr' ? 'Contact' : 'Contact',
-      description: language === 'fr'
-        ? 'Contactez-nous pour toute question concernant votre demande'
-        : 'Contact us for any questions regarding your application',
-      link: '#contact'
-    }
-  ];
-
-  const renderServiceCard = (item: any) => (
-    <div key={item.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 transition-all duration-300 hover:shadow-md">
-      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-        <div className="bg-red-50 p-3 rounded-full">
-          {item.icon}
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">{item.title}</h3>
-          <p className="text-gray-600 mb-3">{item.description}</p>
-          <Link to={item.link}>
-            <Button variant="outline" size="sm" className="border-red-300 text-red-700 hover:bg-red-50">
-              {language === 'fr' ? 'En savoir plus' : 'Learn more'}
-              <ChevronRight size={16} className="ml-1" />
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="flex flex-col min-h-screen relative">
-      {/* Image d'arrière-plan statique */}
-      <StaticBackground image={backgroundImage} opacity={0.6} />
+      {/* Static background image for hero section */}
+      <StaticBackground image={backgroundImage} opacity={0.7} />
       
       {/* Header */}
       <IRCCHeader />
@@ -282,129 +87,8 @@ const Index = () => {
       {/* Visa Updates Section */}
       <VisaUpdatesSection />
       
-      {/* Immigration and Refugees Section */}
-      <section id="immigration" className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">
-              {language === 'fr' ? 'Immigration et Réfugiés' : 'Immigration and Refugees'}
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {language === 'fr' 
-                ? 'Découvrez les différents programmes d\'immigration canadienne adaptés à votre situation'
-                : 'Discover the different Canadian immigration programs adapted to your situation'}
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {immigrationItems.map(item => (
-              <div 
-                id={`immigration-${item.id}`}
-                key={item.id} 
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex flex-col items-center text-center transition-all duration-300 hover:shadow-md"
-              >
-                <div className="bg-red-50 p-4 rounded-full mb-4">
-                  {item.icon}
-                </div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-3">{item.title}</h3>
-                <p className="text-gray-600 mb-4 flex-grow">{item.description}</p>
-                <Link to={item.link}>
-                  <Button variant="outline" className="border-red-300 text-red-700 hover:bg-red-50">
-                    {language === 'fr' ? 'En savoir plus' : 'Learn more'}
-                    <ChevronRight size={16} className="ml-1" />
-                  </Button>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Services Section */}
-      <section id="services" className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">
-              {language === 'fr' ? 'Services' : 'Services'}
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {language === 'fr' 
-                ? 'Accédez à nos services en ligne pour simplifier vos démarches d\'immigration'
-                : 'Access our online services to simplify your immigration procedures'}
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {servicesItems.map(item => (
-              <div id={`services-${item.id}`} key={item.id}>
-                {renderServiceCard(item)}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Applications Section */}
-      <section id="applications" className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">
-              {language === 'fr' ? 'Demandes' : 'Applications'}
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {language === 'fr' 
-                ? 'Toutes les informations pour soumettre et suivre votre demande d\'immigration'
-                : 'All the information to submit and track your immigration application'}
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {applicationsItems.map(item => (
-              <div 
-                id={`applications-${item.id}`}
-                key={item.id} 
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex flex-col items-center text-center transition-all duration-300 hover:shadow-md"
-              >
-                <div className="bg-red-50 p-4 rounded-full mb-4">
-                  {item.icon}
-                </div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-3">{item.title}</h3>
-                <p className="text-gray-600 mb-4 flex-grow">{item.description}</p>
-                <Link to={item.link}>
-                  <Button variant="outline" className="border-red-300 text-red-700 hover:bg-red-50">
-                    {language === 'fr' ? 'En savoir plus' : 'Learn more'}
-                    <ChevronRight size={16} className="ml-1" />
-                  </Button>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Resources Section */}
-      <section id="resources" className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">
-              {language === 'fr' ? 'Ressources' : 'Resources'}
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {language === 'fr' 
-                ? 'Consultez nos ressources pour vous guider dans vos démarches d\'immigration'
-                : 'Consult our resources to guide you through your immigration procedures'}
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {resourcesItems.map(item => (
-              <div id={`resources-${item.id}`} key={item.id}>
-                {renderServiceCard(item)}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Main sections: Immigration, Services, Applications, Resources */}
+      <ImmigrationSections />
       
       {/* Why Canada */}
       <WhyImmigrate />
