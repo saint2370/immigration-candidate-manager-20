@@ -224,6 +224,151 @@ const translations: Record<string, Record<Language, string>> = {
     en: 'Recommended Programs',
     fr: 'Programmes recommandés'
   },
+  // Add new translations for jobs section
+  jobs_in_canada: {
+    en: 'Jobs in Canada',
+    fr: 'Emplois au Canada'
+  },
+  job_management: {
+    en: 'Job Management',
+    fr: 'Gestion des offres d\'emploi'
+  },
+  job_title: {
+    en: 'Job Title',
+    fr: 'Titre du poste'
+  },
+  company: {
+    en: 'Company',
+    fr: 'Entreprise'
+  },
+  location: {
+    en: 'Location',
+    fr: 'Lieu'
+  },
+  job_type: {
+    en: 'Job Type',
+    fr: 'Type d\'emploi'
+  },
+  full_time: {
+    en: 'Full Time',
+    fr: 'Temps plein'
+  },
+  part_time: {
+    en: 'Part Time',
+    fr: 'Temps partiel'
+  },
+  contract: {
+    en: 'Contract',
+    fr: 'Contractuel'
+  },
+  temporary: {
+    en: 'Temporary',
+    fr: 'Temporaire'
+  },
+  internship: {
+    en: 'Internship',
+    fr: 'Stage'
+  },
+  description: {
+    en: 'Description',
+    fr: 'Description'
+  },
+  requirements: {
+    en: 'Requirements',
+    fr: 'Exigences'
+  },
+  salary_range: {
+    en: 'Salary Range',
+    fr: 'Fourchette de salaire'
+  },
+  apply_now: {
+    en: 'Apply Now',
+    fr: 'Postuler maintenant'
+  },
+  view_details: {
+    en: 'View Details',
+    fr: 'Voir les détails'
+  },
+  categories: {
+    en: 'Categories',
+    fr: 'Catégories'
+  },
+  all_categories: {
+    en: 'All Categories',
+    fr: 'Toutes les catégories'
+  },
+  province: {
+    en: 'Province',
+    fr: 'Province'
+  },
+  all_provinces: {
+    en: 'All Provinces',
+    fr: 'Toutes les provinces'
+  },
+  expiry_date: {
+    en: 'Expiry Date',
+    fr: 'Date d\'expiration'
+  },
+  status: {
+    en: 'Status',
+    fr: 'Statut'
+  },
+  active: {
+    en: 'Active',
+    fr: 'Active'
+  },
+  inactive: {
+    en: 'Inactive',
+    fr: 'Inactive'
+  },
+  search_jobs: {
+    en: 'Search Jobs',
+    fr: 'Rechercher des emplois'
+  },
+  add_job: {
+    en: 'Add Job',
+    fr: 'Ajouter une offre'
+  },
+  edit_job: {
+    en: 'Edit Job',
+    fr: 'Modifier l\'offre'
+  },
+  delete_job: {
+    en: 'Delete Job',
+    fr: 'Supprimer l\'offre'
+  },
+  confirm_delete: {
+    en: 'Confirm Delete',
+    fr: 'Confirmer la suppression'
+  },
+  cancel: {
+    en: 'Cancel',
+    fr: 'Annuler'
+  },
+  save: {
+    en: 'Save',
+    fr: 'Enregistrer'
+  },
+  job_resources: {
+    en: 'Job Resources',
+    fr: 'Ressources d\'emploi'
+  },
+  cv_template: {
+    en: 'CV Template',
+    fr: 'Modèle de CV'
+  },
+  interview_tips: {
+    en: 'Interview Tips',
+    fr: 'Conseils pour les entretiens'
+  },
+  jobs_available: {
+    en: 'Jobs Available',
+    fr: 'Offres d\'emploi disponibles'
+  },
+  no_jobs_found: {
+    en: 'No jobs found',
+    fr: 'Aucune offre d\'emploi trouvée'
+  },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);

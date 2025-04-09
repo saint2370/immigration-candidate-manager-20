@@ -25,6 +25,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   const navItems = [
     { name: 'Tableau de bord', path: '/tableaudebord/dashboard', icon: Home },
     { name: 'Candidats', path: '/tableaudebord/candidates', icon: Users },
+    { name: 'Offres d\'emploi', path: '/tableaudebord/jobs-management', icon: Briefcase },
     { name: 'Visas Travail', path: '/tableaudebord/work-visas', icon: Briefcase },
     { name: 'Visas Visiteur', path: '/tableaudebord/visitor-visas', icon: Plane },
     { name: 'Résidence Permanente', path: '/tableaudebord/permanent-residence', icon: CreditCard },

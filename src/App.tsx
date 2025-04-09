@@ -31,6 +31,8 @@ import ClientSupportCenter from '@/pages/resources/ClientSupportCenter';
 import Publications from '@/pages/resources/Publications';
 import OfficialGuides from '@/pages/resources/OfficialGuides';
 import EligibilityCalculator from '@/pages/services/EligibilityCalculator';
+import JobsManagement from '@/pages/JobsManagement';
+import JobsInCanada from '@/pages/services/JobsInCanada';
 
 function App() {
   const [queryClient] = useState(() => new QueryClient());
@@ -65,6 +67,7 @@ function App() {
             <Route path="/services-nouveaux-arrivants" element={<NewcomerServices />} />
             <Route path="/rendez-vous-biometriques" element={<BiometricAppointments />} />
             <Route path="/calculateur-eligibilite" element={<EligibilityCalculator />} />
+            <Route path="/emplois-canada" element={<JobsInCanada />} />
             
             {/* Resources Pages */}
             <Route path="/centre-soutien" element={<ClientSupportCenter />} />
@@ -81,6 +84,7 @@ function App() {
               <Route path="candidates/edit/:id" element={<CandidateDetail />} />
               <Route path="settings" element={<Settings />} />
               <Route path="site-management" element={<SiteManagement />} />
+              <Route path="jobs-management" element={<JobsManagement />} />
             </Route>
             
             {/* Legacy redirects to maintain backward compatibility */}
