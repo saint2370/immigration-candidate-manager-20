@@ -10,6 +10,7 @@ export const useJobCategories = () => {
   const { data: categories, isLoading, error } = useQuery({
     queryKey: ['jobCategories'],
     queryFn: async () => {
+      // Use explicit type casting to handle the Supabase client limitations
       const { data, error } = await supabase
         .from('job_categories')
         .select('*')
