@@ -1,30 +1,25 @@
 
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { JobOffer, JobOfferFormData } from '@/types/jobs';
-import { useToast } from '@/hooks/use-toast';
+import { JobOffer, JobOfferFormData, JobFilterParams } from '@/types/jobs';
+import { format } from 'date-fns';
 
 export const useJobOffers = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   // Récupérer toutes les offres d'emploi
   const { data: jobOffers, isLoading, error } = useQuery({
     queryKey: ['jobOffers'],
     queryFn: async () => {
-      // Cast the response to any initially to work around TypeScript limitations
       const { data, error } = await supabase
         .from('job_offers')
         .select(`
           *,
           job_offer_categories (
-            category_id,
             job_categories (
-              id,
-              name,
-              name_en
+              id, name, name_en
             )
           )
         `)
@@ -50,17 +45,13 @@ export const useJobOffers = () => {
 
   // Récupérer une offre d'emploi par ID
   const getJobOfferById = async (id: string) => {
-    // Cast the response to any initially to work around TypeScript limitations
     const { data, error } = await supabase
       .from('job_offers')
       .select(`
         *,
         job_offer_categories (
-          category_id,
           job_categories (
-            id,
-            name,
-            name_en
+            id, name, name_en
           )
         )
       `)
@@ -68,16 +59,11 @@ export const useJobOffers = () => {
       .single();
 
     if (error) {
-      toast({
-        title: 'Erreur',
-        description: `Impossible de récupérer l'offre d'emploi: ${error.message}`,
-        variant: 'destructive'
-      });
-      return null;
+      throw new Error(error.message);
     }
 
-    // Transformer les données
     const categories = data.job_offer_categories.map((cat: any) => cat.job_categories);
+
     return {
       ...data,
       categories,
@@ -89,7 +75,7 @@ export const useJobOffers = () => {
   const createJobOffer = async (data: JobOfferFormData) => {
     setIsSubmitting(true);
     try {
-      // Créer l'offre d'emploi (cast to any to work around TypeScript limitations)
+      // Créer l'offre d'emploi
       const { data: newOffer, error } = await supabase
         .from('job_offers')
         .insert({
@@ -111,14 +97,13 @@ export const useJobOffers = () => {
 
       if (error) throw new Error(error.message);
 
-      // Associer les catégories
+      // Ajouter les catégories si sélectionnées
       if (data.category_ids && data.category_ids.length > 0) {
         const categoryAssociations = data.category_ids.map(categoryId => ({
           job_offer_id: newOffer.id,
           category_id: categoryId
         }));
 
-        // Cast to any to work around TypeScript limitations
         const { error: categoryError } = await supabase
           .from('job_offer_categories')
           .insert(categoryAssociations as any);
@@ -126,22 +111,17 @@ export const useJobOffers = () => {
         if (categoryError) throw new Error(categoryError.message);
       }
 
-      toast({
-        title: 'Succès',
-        description: 'Offre d\'emploi créée avec succès'
-      });
-
+      // Invalidate the cache to trigger refetch
+      queryClient.invalidateQueries({ queryKey: ['jobOffers'] });
+      
       return newOffer.id;
-    } catch (error: any) {
-      toast({
-        title: 'Erreur',
-        description: `Impossible de créer l'offre d'emploi: ${error.message}`,
-        variant: 'destructive'
-      });
-      return null;
+    } catch (err) {
+      if (err instanceof Error) {
+        throw err;
+      }
+      throw new Error('Une erreur est survenue lors de la création de l\'offre d\'emploi');
     } finally {
       setIsSubmitting(false);
-      queryClient.invalidateQueries({ queryKey: ['jobOffers'] });
     }
   };
 
@@ -149,7 +129,7 @@ export const useJobOffers = () => {
   const updateJobOffer = async (id: string, data: JobOfferFormData) => {
     setIsSubmitting(true);
     try {
-      // Mettre à jour l'offre d'emploi (cast to any to work around TypeScript limitations)
+      // Mettre à jour l'offre d'emploi
       const { error } = await supabase
         .from('job_offers')
         .update({
@@ -170,7 +150,7 @@ export const useJobOffers = () => {
 
       if (error) throw new Error(error.message);
 
-      // Supprimer les associations de catégories existantes (cast to any)
+      // Supprimer les associations de catégories existantes
       const { error: deleteError } = await supabase
         .from('job_offer_categories')
         .delete()
@@ -178,14 +158,13 @@ export const useJobOffers = () => {
 
       if (deleteError) throw new Error(deleteError.message);
 
-      // Ajouter les nouvelles associations de catégories
+      // Ajouter les nouvelles catégories si sélectionnées
       if (data.category_ids && data.category_ids.length > 0) {
         const categoryAssociations = data.category_ids.map(categoryId => ({
           job_offer_id: id,
           category_id: categoryId
         }));
 
-        // Cast to any to work around TypeScript limitations
         const { error: categoryError } = await supabase
           .from('job_offer_categories')
           .insert(categoryAssociations as any);
@@ -193,29 +172,24 @@ export const useJobOffers = () => {
         if (categoryError) throw new Error(categoryError.message);
       }
 
-      toast({
-        title: 'Succès',
-        description: 'Offre d\'emploi mise à jour avec succès'
-      });
-
-      return true;
-    } catch (error: any) {
-      toast({
-        title: 'Erreur',
-        description: `Impossible de mettre à jour l'offre d'emploi: ${error.message}`,
-        variant: 'destructive'
-      });
-      return false;
+      // Invalidate the cache to trigger refetch
+      queryClient.invalidateQueries({ queryKey: ['jobOffers'] });
+      queryClient.invalidateQueries({ queryKey: ['jobOffer', id] });
+      
+      return id;
+    } catch (err) {
+      if (err instanceof Error) {
+        throw err;
+      }
+      throw new Error('Une erreur est survenue lors de la mise à jour de l\'offre d\'emploi');
     } finally {
       setIsSubmitting(false);
-      queryClient.invalidateQueries({ queryKey: ['jobOffers'] });
     }
   };
 
   // Supprimer une offre d'emploi
   const deleteJobOffer = async (id: string) => {
     try {
-      // Cast to any to work around TypeScript limitations
       const { error } = await supabase
         .from('job_offers')
         .delete()
@@ -223,28 +197,21 @@ export const useJobOffers = () => {
 
       if (error) throw new Error(error.message);
 
-      toast({
-        title: 'Succès',
-        description: 'Offre d\'emploi supprimée avec succès'
-      });
-
-      return true;
-    } catch (error: any) {
-      toast({
-        title: 'Erreur',
-        description: `Impossible de supprimer l'offre d'emploi: ${error.message}`,
-        variant: 'destructive'
-      });
-      return false;
-    } finally {
+      // Invalidate the cache to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['jobOffers'] });
+      
+      return true;
+    } catch (err) {
+      if (err instanceof Error) {
+        throw err;
+      }
+      throw new Error('Une erreur est survenue lors de la suppression de l\'offre d\'emploi');
     }
   };
 
   // Changer le statut actif d'une offre d'emploi
   const toggleJobOfferStatus = async (id: string, isActive: boolean) => {
     try {
-      // Cast to any to work around TypeScript limitations
       const { error } = await supabase
         .from('job_offers')
         .update({ is_active: isActive } as any)
@@ -252,21 +219,66 @@ export const useJobOffers = () => {
 
       if (error) throw new Error(error.message);
 
-      toast({
-        title: 'Succès',
-        description: `Offre d'emploi ${isActive ? 'activée' : 'désactivée'} avec succès`
-      });
-
-      return true;
-    } catch (error: any) {
-      toast({
-        title: 'Erreur',
-        description: `Impossible de changer le statut de l'offre d'emploi: ${error.message}`,
-        variant: 'destructive'
-      });
-      return false;
-    } finally {
+      // Invalidate the cache to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['jobOffers'] });
+      queryClient.invalidateQueries({ queryKey: ['jobOffer', id] });
+      
+      return true;
+    } catch (err) {
+      if (err instanceof Error) {
+        throw err;
+      }
+      throw new Error('Une erreur est survenue lors de la mise à jour du statut de l\'offre d\'emploi');
+    }
+  };
+
+  // Filtrer les offres d'emploi (pour l'affichage côté utilisateur)
+  const filterJobOffers = (offers: JobOffer[] | undefined, filters: JobFilterParams): JobOffer[] => {
+    if (!offers) return [];
+    
+    return offers.filter(offer => {
+      // Filter by active status first
+      if (!offer.is_active) return false;
+      
+      // Filter by category
+      if (filters.category && offer.categories && offer.categories.length > 0) {
+        if (!offer.categories.some(cat => cat.id === filters.category)) {
+          return false;
+        }
+      }
+      
+      // Filter by location
+      if (filters.location && offer.location.toLowerCase() !== filters.location.toLowerCase()) {
+        return false;
+      }
+      
+      // Filter by job type
+      if (filters.jobType && offer.job_type.toLowerCase() !== filters.jobType.toLowerCase()) {
+        return false;
+      }
+      
+      // Filter by search query
+      if (filters.query) {
+        const query = filters.query.toLowerCase();
+        return (
+          offer.title.toLowerCase().includes(query) ||
+          offer.company.toLowerCase().includes(query) ||
+          offer.description.toLowerCase().includes(query) ||
+          (offer.requirements && offer.requirements.toLowerCase().includes(query))
+        );
+      }
+      
+      return true;
+    });
+  };
+
+  // Format human-readable dates
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    try {
+      return format(new Date(dateString), 'dd/MM/yyyy');
+    } catch {
+      return 'Date invalide';
     }
   };
 
@@ -275,10 +287,12 @@ export const useJobOffers = () => {
     isLoading,
     error,
     isSubmitting,
+    getJobOfferById,
     createJobOffer,
     updateJobOffer,
     deleteJobOffer,
     toggleJobOfferStatus,
-    getJobOfferById
+    filterJobOffers,
+    formatDate
   };
 };
