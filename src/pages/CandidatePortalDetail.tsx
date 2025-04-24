@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +14,7 @@ import { fr } from 'date-fns/locale';
 import { NotificationCarousel } from '@/components/notifications/NotificationCarousel';
 import { ApprovalCelebration } from '@/components/effects/ApprovalCelebration';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { calculateProgressFromDocuments } from '@/utils/progressCalculator';
 
 // Define types for the documents and permanent residence details
 type DocumentWithTypeName = Database['public']['Tables']['documents']['Row'] & {
@@ -62,15 +62,7 @@ const CandidatePortalDetail = () => {
 
   // Calculate progress based on status
   const calculateProgress = (status: string): number => {
-    switch (status) {
-      case 'En attente': return 15;
-      case 'En cours': return 45;
-      case 'Approuvé': return 85;
-      case 'Complété': return 100;
-      case 'Rejeté': return 100;
-      case 'Expiré': return 100;
-      default: return 0;
-    }
+    return calculateProgressFromDocuments(documents, status);
   };
 
   // Get status color based on status
