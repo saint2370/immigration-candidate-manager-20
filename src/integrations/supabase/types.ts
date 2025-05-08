@@ -54,6 +54,258 @@ export type Database = {
           },
         ]
       }
+      candidates: {
+        Row: {
+          adresse: string | null
+          bureau: string
+          created_at: string
+          date_naissance: string
+          date_soumission: string
+          date_voyage: string
+          delai_traitement: string | null
+          email: string | null
+          id: string
+          identification_number: string | null
+          lieu_naissance: string
+          nationalite: string | null
+          nom: string
+          notes: string | null
+          numero_passport: string
+          photo_url: string | null
+          prenom: string
+          procedure: string | null
+          status: Database["public"]["Enums"]["status_type"]
+          telephone: string
+          visa_type: Database["public"]["Enums"]["visa_type"]
+        }
+        Insert: {
+          adresse?: string | null
+          bureau: string
+          created_at?: string
+          date_naissance: string
+          date_soumission: string
+          date_voyage: string
+          delai_traitement?: string | null
+          email?: string | null
+          id?: string
+          identification_number?: string | null
+          lieu_naissance: string
+          nationalite?: string | null
+          nom: string
+          notes?: string | null
+          numero_passport: string
+          photo_url?: string | null
+          prenom: string
+          procedure?: string | null
+          status?: Database["public"]["Enums"]["status_type"]
+          telephone: string
+          visa_type: Database["public"]["Enums"]["visa_type"]
+        }
+        Update: {
+          adresse?: string | null
+          bureau?: string
+          created_at?: string
+          date_naissance?: string
+          date_soumission?: string
+          date_voyage?: string
+          delai_traitement?: string | null
+          email?: string | null
+          id?: string
+          identification_number?: string | null
+          lieu_naissance?: string
+          nationalite?: string | null
+          nom?: string
+          notes?: string | null
+          numero_passport?: string
+          photo_url?: string | null
+          prenom?: string
+          procedure?: string | null
+          status?: Database["public"]["Enums"]["status_type"]
+          telephone?: string
+          visa_type?: Database["public"]["Enums"]["visa_type"]
+        }
+        Relationships: []
+      }
+      details_vol: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          date_arrivee: string | null
+          date_depart: string | null
+          id: string
+          numero_vol: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          date_arrivee?: string | null
+          date_depart?: string | null
+          id?: string
+          numero_vol: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          date_arrivee?: string | null
+          date_depart?: string | null
+          id?: string
+          numero_vol?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "details_vol_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_types: {
+        Row: {
+          created_at: string
+          id: string
+          nom: string
+          required: boolean
+          visa_type: Database["public"]["Enums"]["visa_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nom: string
+          required?: boolean
+          visa_type: Database["public"]["Enums"]["visa_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nom?: string
+          required?: boolean
+          visa_type?: Database["public"]["Enums"]["visa_type"]
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          candidate_id: string
+          document_type_id: string
+          file_path: string | null
+          filename: string | null
+          id: string
+          notes: string | null
+          status: Database["public"]["Enums"]["document_status"] | null
+          upload_date: string
+          validation_date: string | null
+        }
+        Insert: {
+          candidate_id: string
+          document_type_id: string
+          file_path?: string | null
+          filename?: string | null
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["document_status"] | null
+          upload_date?: string
+          validation_date?: string | null
+        }
+        Update: {
+          candidate_id?: string
+          document_type_id?: string
+          file_path?: string | null
+          filename?: string | null
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["document_status"] | null
+          upload_date?: string
+          validation_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_document_type_id_fkey"
+            columns: ["document_type_id"]
+            isOneToOne: false
+            referencedRelation: "document_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      enfants: {
+        Row: {
+          age: number
+          created_at: string
+          id: string
+          nom: string
+          permanent_residence_id: string
+          prenom: string
+        }
+        Insert: {
+          age: number
+          created_at?: string
+          id?: string
+          nom: string
+          permanent_residence_id: string
+          prenom: string
+        }
+        Update: {
+          age?: number
+          created_at?: string
+          id?: string
+          nom?: string
+          permanent_residence_id?: string
+          prenom?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enfants_permanent_residence_id_fkey"
+            columns: ["permanent_residence_id"]
+            isOneToOne: false
+            referencedRelation: "permanent_residence_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      history: {
+        Row: {
+          action: string
+          candidate_id: string
+          date: string
+          details: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          candidate_id: string
+          date?: string
+          details?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          candidate_id?: string
+          date?: string
+          details?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "history_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investment_progress: {
         Row: {
           checkpoint_status: Json
@@ -132,6 +384,47 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      permanent_residence_details: {
+        Row: {
+          candidate_id: string
+          conjoint_nom: string | null
+          conjoint_passport: string | null
+          conjoint_prenom: string | null
+          created_at: string
+          id: string
+          immigration_program: Database["public"]["Enums"]["immigration_program"]
+          nombre_personnes: number
+        }
+        Insert: {
+          candidate_id: string
+          conjoint_nom?: string | null
+          conjoint_passport?: string | null
+          conjoint_prenom?: string | null
+          created_at?: string
+          id?: string
+          immigration_program: Database["public"]["Enums"]["immigration_program"]
+          nombre_personnes?: number
+        }
+        Update: {
+          candidate_id?: string
+          conjoint_nom?: string | null
+          conjoint_passport?: string | null
+          conjoint_prenom?: string | null
+          created_at?: string
+          id?: string
+          immigration_program?: Database["public"]["Enums"]["immigration_program"]
+          nombre_personnes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permanent_residence_details_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
             referencedColumns: ["id"]
           },
         ]
@@ -622,7 +915,16 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      document_status: "uploaded" | "validated" | "rejected" | "pending"
+      immigration_program: "Entrée express" | "Arrima" | "Autre"
+      status_type:
+        | "En cours"
+        | "Approuvé"
+        | "En attente"
+        | "Rejeté"
+        | "Complété"
+        | "Expiré"
+      visa_type: "Visiteur" | "Travail" | "Résidence Permanente"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -737,6 +1039,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      document_status: ["uploaded", "validated", "rejected", "pending"],
+      immigration_program: ["Entrée express", "Arrima", "Autre"],
+      status_type: [
+        "En cours",
+        "Approuvé",
+        "En attente",
+        "Rejeté",
+        "Complété",
+        "Expiré",
+      ],
+      visa_type: ["Visiteur", "Travail", "Résidence Permanente"],
+    },
   },
 } as const
