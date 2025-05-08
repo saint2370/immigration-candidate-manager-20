@@ -2,8 +2,9 @@
 import { useState, useEffect } from 'react';
 import { 
   Search, Bell, Settings, ChevronDown, 
-  Menu, User, X
+  Menu, User, LogOut
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
   DropdownMenu,
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/hooks/useAuth';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -21,6 +23,8 @@ interface HeaderProps {
 const Header = ({ toggleSidebar }: HeaderProps) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   
   useEffect(() => {
     setMounted(true);
@@ -93,8 +97,11 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
               <User size={16} className="mr-2" />
               <span>Mon profil</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded-md transition-colors flex items-center text-red-500">
-              <X size={16} className="mr-2" />
+            <DropdownMenuItem 
+              className="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded-md transition-colors flex items-center text-red-500"
+              onClick={logout}
+            >
+              <LogOut size={16} className="mr-2" />
               <span>Déconnexion</span>
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -31,6 +31,8 @@ import ClientSupportCenter from '@/pages/resources/ClientSupportCenter';
 import Publications from '@/pages/resources/Publications';
 import OfficialGuides from '@/pages/resources/OfficialGuides';
 import EligibilityCalculator from '@/pages/services/EligibilityCalculator';
+import Login from '@/pages/Login';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 function App() {
   const [queryClient] = useState(() => new QueryClient());
@@ -49,6 +51,9 @@ function App() {
             <Route path="/index" element={<Navigate to="/" replace />} />
             <Route path="/portal" element={<CandidatePortal />} />
             <Route path="/portal/candidate/:id" element={<CandidatePortalDetail />} />
+            
+            {/* Login Route */}
+            <Route path="/connexion" element={<Login />} />
             
             {/* Immigration Program Pages */}
             <Route path="/visa-etudiant" element={<StudentVisa />} />
@@ -71,8 +76,12 @@ function App() {
             <Route path="/publications" element={<Publications />} />
             <Route path="/guides-officiels" element={<OfficialGuides />} />
             
-            {/* Admin routes - with admin layout */}
-            <Route path="/tableaudebord" element={<Layout><Outlet /></Layout>}>
+            {/* Admin routes - with admin layout - Now protected */}
+            <Route path="/tableaudebord" element={
+              <ProtectedRoute>
+                <Layout><Outlet /></Layout>
+              </ProtectedRoute>
+            }>
               <Route index element={<Dashboard />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="candidates" element={<CandidatesList />} />

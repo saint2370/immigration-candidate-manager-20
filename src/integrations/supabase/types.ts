@@ -351,33 +351,57 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          date_debut: string | null
+          date_fin: string | null
           end_date: string | null
           id: string
+          jours_restants: number | null
+          jours_total: number | null
+          montant: number | null
           plan_id: number
+          product_id: string | null
+          revenu_quotidien: number | null
           start_date: string | null
           status: string
+          statut: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           amount: number
           created_at?: string
+          date_debut?: string | null
+          date_fin?: string | null
           end_date?: string | null
           id?: string
+          jours_restants?: number | null
+          jours_total?: number | null
+          montant?: number | null
           plan_id: number
+          product_id?: string | null
+          revenu_quotidien?: number | null
           start_date?: string | null
           status?: string
+          statut?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           amount?: number
           created_at?: string
+          date_debut?: string | null
+          date_fin?: string | null
           end_date?: string | null
           id?: string
+          jours_restants?: number | null
+          jours_total?: number | null
+          montant?: number | null
           plan_id?: number
+          product_id?: string | null
+          revenu_quotidien?: number | null
           start_date?: string | null
           status?: string
+          statut?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -387,6 +411,20 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investments_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_custom"
             referencedColumns: ["id"]
           },
         ]
@@ -844,7 +882,7 @@ export type Database = {
       }
       buy_product: {
         Args: { user_id: string; product_id: string }
-        Returns: boolean
+        Returns: Json
       }
       create_transaction: {
         Args: { user_id: string; transaction_type: string; amount: number }
@@ -941,6 +979,10 @@ export type Database = {
       start_investment: {
         Args: { transaction_id: string }
         Returns: string
+      }
+      update_jours_restants: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       update_user_withdraw_code: {
         Args: { user_id: string; code: string }
