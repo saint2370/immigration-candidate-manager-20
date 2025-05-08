@@ -11,42 +11,5 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-// Force TypeScript to recognize the site_settings table
-// This is a temporary workaround until you regenerate types
-declare module '@/integrations/supabase/types' {
-  interface Database {
-    public: {
-      Tables: {
-        site_settings: {
-          Row: {
-            id: string;
-            key: string;
-            value: any;
-            description: string | null;
-            category: string;
-            created_at: string;
-            updated_at: string;
-          };
-          Insert: {
-            id?: string;
-            key: string;
-            value: any;
-            description?: string | null;
-            category: string;
-            created_at?: string;
-            updated_at?: string;
-          };
-          Update: {
-            id?: string;
-            key?: string;
-            value?: any;
-            description?: string | null;
-            category?: string;
-            created_at?: string;
-            updated_at?: string;
-          };
-        };
-      };
-    };
-  }
-}
+// Note: We removed the module augmentation since the site_settings table
+// is now properly defined in the types.ts file after our SQL migration

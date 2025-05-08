@@ -28,9 +28,8 @@ export function useSiteSettings(category?: string) {
     try {
       setLoading(true);
       
-      // Use any type assertion to bypass TypeScript errors temporarily
-      // This will work after regenerating types from Supabase
-      let query = supabase.from('site_settings' as any).select('*');
+      // We can now use the proper table name without type assertions
+      let query = supabase.from('site_settings').select('*');
       
       if (category) {
         query = query.eq('category', category);
@@ -42,8 +41,7 @@ export function useSiteSettings(category?: string) {
         throw fetchError;
       }
       
-      // Cast data to SiteSetting[] type
-      setSettings(data as unknown as SiteSetting[]);
+      setSettings(data as SiteSetting[]);
     } catch (err) {
       console.error('Erreur lors de la récupération des paramètres:', err);
       setError(err instanceof Error ? err : new Error('Une erreur est survenue'));
@@ -55,10 +53,10 @@ export function useSiteSettings(category?: string) {
   // Fonction pour mettre à jour un paramètre
   async function updateSetting(key: string, value: SiteSettingValue) {
     try {
-      // Use any type to bypass TypeScript errors
+      // We can now use the proper table name without type assertions
       const { error: updateError } = await supabase
-        .from('site_settings' as any)
-        .update({ value } as any)
+        .from('site_settings')
+        .update({ value })
         .eq('key', key);
       
       if (updateError) {
