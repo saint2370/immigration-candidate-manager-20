@@ -28,8 +28,9 @@ export function useSiteSettings(category?: string) {
     try {
       setLoading(true);
       
-      // Utiliser select() avant tout filtre pour retourner un objet PostgrestFilterBuilder correctement typé
-      let query = supabase.from('site_settings').select('*');
+      // Use any type assertion to bypass TypeScript errors temporarily
+      // This will work after regenerating types from Supabase
+      let query = supabase.from('site_settings' as any).select('*');
       
       if (category) {
         query = query.eq('category', category);
@@ -41,7 +42,7 @@ export function useSiteSettings(category?: string) {
         throw fetchError;
       }
       
-      // Cast explicite des données pour satisfaire TypeScript
+      // Cast data to SiteSetting[] type
       setSettings(data as unknown as SiteSetting[]);
     } catch (err) {
       console.error('Erreur lors de la récupération des paramètres:', err);
@@ -54,10 +55,10 @@ export function useSiteSettings(category?: string) {
   // Fonction pour mettre à jour un paramètre
   async function updateSetting(key: string, value: SiteSettingValue) {
     try {
-      // D'abord utiliser from et select pour obtenir un builder correctement typé
+      // Use any type to bypass TypeScript errors
       const { error: updateError } = await supabase
-        .from('site_settings')
-        .update({ value })
+        .from('site_settings' as any)
+        .update({ value } as any)
         .eq('key', key);
       
       if (updateError) {

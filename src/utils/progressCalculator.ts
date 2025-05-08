@@ -1,5 +1,4 @@
 
-
 import type { Database } from '@/integrations/supabase/types';
 
 type Document = Database['public']['Tables']['documents']['Row'] & {

@@ -76,6 +76,7 @@ export type Database = {
           procedure: string | null
           status: Database["public"]["Enums"]["status_type"]
           telephone: string
+          updated_at: string
           visa_type: Database["public"]["Enums"]["visa_type"]
         }
         Insert: {
@@ -99,6 +100,7 @@ export type Database = {
           procedure?: string | null
           status?: Database["public"]["Enums"]["status_type"]
           telephone: string
+          updated_at?: string
           visa_type: Database["public"]["Enums"]["visa_type"]
         }
         Update: {
@@ -122,6 +124,7 @@ export type Database = {
           procedure?: string | null
           status?: Database["public"]["Enums"]["status_type"]
           telephone?: string
+          updated_at?: string
           visa_type?: Database["public"]["Enums"]["visa_type"]
         }
         Relationships: []
@@ -589,6 +592,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      site_settings: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
       }
       transactions: {
         Row: {
