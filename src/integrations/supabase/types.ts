@@ -9,487 +9,620 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      candidates: {
-        Row: {
-          adresse: string | null
-          bureau: string
-          created_at: string
-          date_naissance: string
-          date_soumission: string
-          date_voyage: string | null
-          delai_traitement: string | null
-          dernier_diplome: string | null
-          email: string | null
-          emploi_actuel: string | null
-          id: string
-          identification_number: string | null
-          lieu_naissance: string
-          nationalite: string
-          nom: string
-          notes: string | null
-          numero_passport: string
-          photo_url: string | null
-          prenom: string
-          procedure: string | null
-          status: Database["public"]["Enums"]["status_type"]
-          telephone: string | null
-          updated_at: string
-          visa_type: Database["public"]["Enums"]["visa_type"]
-        }
-        Insert: {
-          adresse?: string | null
-          bureau: string
-          created_at?: string
-          date_naissance: string
-          date_soumission: string
-          date_voyage?: string | null
-          delai_traitement?: string | null
-          dernier_diplome?: string | null
-          email?: string | null
-          emploi_actuel?: string | null
-          id?: string
-          identification_number?: string | null
-          lieu_naissance: string
-          nationalite: string
-          nom: string
-          notes?: string | null
-          numero_passport: string
-          photo_url?: string | null
-          prenom: string
-          procedure?: string | null
-          status?: Database["public"]["Enums"]["status_type"]
-          telephone?: string | null
-          updated_at?: string
-          visa_type: Database["public"]["Enums"]["visa_type"]
-        }
-        Update: {
-          adresse?: string | null
-          bureau?: string
-          created_at?: string
-          date_naissance?: string
-          date_soumission?: string
-          date_voyage?: string | null
-          delai_traitement?: string | null
-          dernier_diplome?: string | null
-          email?: string | null
-          emploi_actuel?: string | null
-          id?: string
-          identification_number?: string | null
-          lieu_naissance?: string
-          nationalite?: string
-          nom?: string
-          notes?: string | null
-          numero_passport?: string
-          photo_url?: string | null
-          prenom?: string
-          procedure?: string | null
-          status?: Database["public"]["Enums"]["status_type"]
-          telephone?: string | null
-          updated_at?: string
-          visa_type?: Database["public"]["Enums"]["visa_type"]
-        }
-        Relationships: []
-      }
-      details_vol: {
-        Row: {
-          aeroport_arrivee: string | null
-          aeroport_depart: string | null
-          candidate_id: string
-          compagnie_aerienne: string | null
-          created_at: string
-          date_arrivee: string | null
-          date_depart: string | null
-          id: string
-          numero_vol: string | null
-          updated_at: string
-        }
-        Insert: {
-          aeroport_arrivee?: string | null
-          aeroport_depart?: string | null
-          candidate_id: string
-          compagnie_aerienne?: string | null
-          created_at?: string
-          date_arrivee?: string | null
-          date_depart?: string | null
-          id?: string
-          numero_vol?: string | null
-          updated_at?: string
-        }
-        Update: {
-          aeroport_arrivee?: string | null
-          aeroport_depart?: string | null
-          candidate_id?: string
-          compagnie_aerienne?: string | null
-          created_at?: string
-          date_arrivee?: string | null
-          date_depart?: string | null
-          id?: string
-          numero_vol?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "details_vol_candidate_id_fkey"
-            columns: ["candidate_id"]
-            isOneToOne: false
-            referencedRelation: "candidates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      document_types: {
+      admin_notifications: {
         Row: {
           created_at: string
           id: string
-          nom: string
-          required: boolean
-          updated_at: string
-          visa_type: Database["public"]["Enums"]["visa_type"]
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          nom: string
-          required?: boolean
-          updated_at?: string
-          visa_type: Database["public"]["Enums"]["visa_type"]
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          nom?: string
-          required?: boolean
-          updated_at?: string
-          visa_type?: Database["public"]["Enums"]["visa_type"]
-        }
-        Relationships: []
-      }
-      documents: {
-        Row: {
-          candidate_id: string
-          created_at: string
-          document_type_id: string
-          file_path: string | null
-          filename: string | null
-          id: string
-          status: Database["public"]["Enums"]["document_status"]
-          updated_at: string
-          upload_date: string | null
-        }
-        Insert: {
-          candidate_id: string
-          created_at?: string
-          document_type_id: string
-          file_path?: string | null
-          filename?: string | null
-          id?: string
-          status?: Database["public"]["Enums"]["document_status"]
-          updated_at?: string
-          upload_date?: string | null
-        }
-        Update: {
-          candidate_id?: string
-          created_at?: string
-          document_type_id?: string
-          file_path?: string | null
-          filename?: string | null
-          id?: string
-          status?: Database["public"]["Enums"]["document_status"]
-          updated_at?: string
-          upload_date?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "documents_candidate_id_fkey"
-            columns: ["candidate_id"]
-            isOneToOne: false
-            referencedRelation: "candidates"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "documents_document_type_id_fkey"
-            columns: ["document_type_id"]
-            isOneToOne: false
-            referencedRelation: "document_types"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      enfants: {
-        Row: {
-          age: number
-          created_at: string
-          id: string
-          nom: string
-          permanent_residence_id: string
-          prenom: string
-          updated_at: string
-        }
-        Insert: {
-          age: number
-          created_at?: string
-          id?: string
-          nom: string
-          permanent_residence_id: string
-          prenom: string
-          updated_at?: string
-        }
-        Update: {
-          age?: number
-          created_at?: string
-          id?: string
-          nom?: string
-          permanent_residence_id?: string
-          prenom?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "enfants_permanent_residence_id_fkey"
-            columns: ["permanent_residence_id"]
-            isOneToOne: false
-            referencedRelation: "permanent_residence_details"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      history: {
-        Row: {
-          action: string
-          candidate_id: string
-          date: string
-          id: string
+          message: string
+          read: boolean
+          transaction_id: string | null
+          type: string
           user_id: string | null
         }
         Insert: {
-          action: string
-          candidate_id: string
-          date?: string
+          created_at?: string
           id?: string
+          message: string
+          read?: boolean
+          transaction_id?: string | null
+          type: string
           user_id?: string | null
         }
         Update: {
-          action?: string
-          candidate_id?: string
-          date?: string
+          created_at?: string
           id?: string
+          message?: string
+          read?: boolean
+          transaction_id?: string | null
+          type?: string
           user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "history_candidate_id_fkey"
-            columns: ["candidate_id"]
+            foreignKeyName: "admin_notifications_transaction_id_fkey"
+            columns: ["transaction_id"]
             isOneToOne: false
-            referencedRelation: "candidates"
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_custom"
             referencedColumns: ["id"]
           },
         ]
       }
-      job_categories: {
+      investment_progress: {
         Row: {
+          checkpoint_status: Json
           created_at: string
+          current_checkpoint: string
           id: string
-          name: string
-          name_en: string
+          progress_percentage: number
+          transaction_id: string
           updated_at: string
         }
         Insert: {
+          checkpoint_status?: Json
           created_at?: string
+          current_checkpoint?: string
           id?: string
-          name: string
-          name_en: string
+          progress_percentage?: number
+          transaction_id: string
           updated_at?: string
         }
         Update: {
+          checkpoint_status?: Json
           created_at?: string
+          current_checkpoint?: string
           id?: string
-          name?: string
-          name_en?: string
+          progress_percentage?: number
+          transaction_id?: string
           updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_progress_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investments: {
+        Row: {
+          amount: number
+          created_at: string
+          end_date: string | null
+          id: string
+          plan_id: number
+          start_date: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          plan_id: number
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          plan_id?: number
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          created_at: string
+          duration_days: number
+          id: number
+          name: string
+          price: number
+          return_rate: number
+        }
+        Insert: {
+          created_at?: string
+          duration_days: number
+          id?: number
+          name: string
+          price: number
+          return_rate: number
+        }
+        Update: {
+          created_at?: string
+          duration_days?: number
+          id?: number
+          name?: string
+          price?: number
+          return_rate?: number
         }
         Relationships: []
       }
-      job_offer_categories: {
+      pointages: {
         Row: {
-          category_id: string
-          job_offer_id: string
+          date: string | null
+          id: number
+          user_id: string | null
         }
         Insert: {
-          category_id: string
-          job_offer_id: string
+          date?: string | null
+          id?: number
+          user_id?: string | null
         }
         Update: {
-          category_id?: string
-          job_offer_id?: string
+          date?: string | null
+          id?: number
+          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "job_offer_categories_category_id_fkey"
-            columns: ["category_id"]
+            foreignKeyName: "pointages_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "job_categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "job_offer_categories_job_offer_id_fkey"
-            columns: ["job_offer_id"]
-            isOneToOne: false
-            referencedRelation: "job_offers"
+            referencedRelation: "users_custom"
             referencedColumns: ["id"]
           },
         ]
       }
-      job_offers: {
+      products: {
         Row: {
-          application_url: string | null
-          company: string
-          contact_email: string | null
           created_at: string
           description: string
-          expiry_date: string | null
+          duree_jours: number
           id: string
-          is_active: boolean
-          job_type: string
-          location: string
-          province: string | null
-          requirements: string | null
-          salary_range: string | null
-          title: string
-          updated_at: string
+          nom: string
+          prix: number
+          revenu_quotidien: number
         }
         Insert: {
-          application_url?: string | null
-          company: string
-          contact_email?: string | null
           created_at?: string
           description: string
-          expiry_date?: string | null
+          duree_jours: number
           id?: string
-          is_active?: boolean
-          job_type: string
-          location: string
-          province?: string | null
-          requirements?: string | null
-          salary_range?: string | null
-          title: string
-          updated_at?: string
+          nom: string
+          prix: number
+          revenu_quotidien: number
         }
         Update: {
-          application_url?: string | null
-          company?: string
-          contact_email?: string | null
           created_at?: string
           description?: string
-          expiry_date?: string | null
+          duree_jours?: number
           id?: string
-          is_active?: boolean
-          job_type?: string
-          location?: string
-          province?: string | null
-          requirements?: string | null
-          salary_range?: string | null
-          title?: string
-          updated_at?: string
+          nom?: string
+          prix?: number
+          revenu_quotidien?: number
         }
         Relationships: []
       }
-      permanent_residence_details: {
+      profiles: {
         Row: {
-          candidate_id: string
-          conjoint_nom: string | null
-          conjoint_passport: string | null
-          conjoint_prenom: string | null
+          avatar_url: string | null
           created_at: string
+          full_name: string | null
           id: string
-          immigration_program: Database["public"]["Enums"]["immigration_program"]
-          nombre_personnes: number
+          referral_code: string | null
+          referrer_id: string | null
           updated_at: string
+          username: string | null
+          vip_level: string | null
+          vip_status: boolean | null
         }
         Insert: {
-          candidate_id: string
-          conjoint_nom?: string | null
-          conjoint_passport?: string | null
-          conjoint_prenom?: string | null
+          avatar_url?: string | null
           created_at?: string
-          id?: string
-          immigration_program: Database["public"]["Enums"]["immigration_program"]
-          nombre_personnes?: number
+          full_name?: string | null
+          id: string
+          referral_code?: string | null
+          referrer_id?: string | null
           updated_at?: string
+          username?: string | null
+          vip_level?: string | null
+          vip_status?: boolean | null
         }
         Update: {
-          candidate_id?: string
-          conjoint_nom?: string | null
-          conjoint_passport?: string | null
-          conjoint_prenom?: string | null
+          avatar_url?: string | null
           created_at?: string
+          full_name?: string | null
           id?: string
-          immigration_program?: Database["public"]["Enums"]["immigration_program"]
-          nombre_personnes?: number
+          referral_code?: string | null
+          referrer_id?: string | null
           updated_at?: string
+          username?: string | null
+          vip_level?: string | null
+          vip_status?: boolean | null
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          bonus: number | null
+          created_at: string | null
+          filleul_id: string
+          id: string
+          parrain_id: string
+        }
+        Insert: {
+          bonus?: number | null
+          created_at?: string | null
+          filleul_id: string
+          id?: string
+          parrain_id: string
+        }
+        Update: {
+          bonus?: number | null
+          created_at?: string | null
+          filleul_id?: string
+          id?: string
+          parrain_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "permanent_residence_details_candidate_id_fkey"
-            columns: ["candidate_id"]
+            foreignKeyName: "referrals_filleul_id_fkey"
+            columns: ["filleul_id"]
             isOneToOne: false
-            referencedRelation: "candidates"
+            referencedRelation: "users_custom"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_parrain_id_fkey"
+            columns: ["parrain_id"]
+            isOneToOne: false
+            referencedRelation: "users_custom"
             referencedColumns: ["id"]
           },
         ]
       }
-      site_settings: {
+      transactions: {
         Row: {
-          category: string
           created_at: string
-          description: string | null
+          date_traitement: string | null
           id: string
-          key: string
-          updated_at: string
-          value: Json
+          montant: number
+          numero_paiement: string | null
+          operateur_paiement: string | null
+          product_id: string | null
+          statut: string
+          transaction_id: string | null
+          type: string
+          user_id: string
         }
         Insert: {
-          category: string
           created_at?: string
-          description?: string | null
+          date_traitement?: string | null
           id?: string
-          key: string
-          updated_at?: string
-          value: Json
+          montant: number
+          numero_paiement?: string | null
+          operateur_paiement?: string | null
+          product_id?: string | null
+          statut?: string
+          transaction_id?: string | null
+          type: string
+          user_id: string
         }
         Update: {
-          category?: string
           created_at?: string
-          description?: string | null
+          date_traitement?: string | null
           id?: string
-          key?: string
+          montant?: number
+          numero_paiement?: string | null
+          operateur_paiement?: string | null
+          product_id?: string | null
+          statut?: string
+          transaction_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_product"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_custom"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          session_data: Json | null
+          transaction_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          session_data?: Json | null
+          transaction_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          session_data?: Json | null
+          transaction_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sessions_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_custom"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users_custom: {
+        Row: {
+          code_parrain: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          is_admin: boolean | null
+          lien_parrain: string | null
+          mot_de_passe: string
+          nom: string
+          numero_telephone: string
+          parrain_code: string | null
+          solde: number | null
+        }
+        Insert: {
+          code_parrain?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_admin?: boolean | null
+          lien_parrain?: string | null
+          mot_de_passe: string
+          nom: string
+          numero_telephone: string
+          parrain_code?: string | null
+          solde?: number | null
+        }
+        Update: {
+          code_parrain?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_admin?: boolean | null
+          lien_parrain?: string | null
+          mot_de_passe?: string
+          nom?: string
+          numero_telephone?: string
+          parrain_code?: string | null
+          solde?: number | null
+        }
+        Relationships: []
+      }
+      withdrawals: {
+        Row: {
+          amount: number
+          created_at: string
+          fee: number
+          final_amount: number
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          fee: number
+          final_amount: number
+          id?: string
+          status?: string
           updated_at?: string
-          value?: Json
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          fee?: number
+          final_amount?: number
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
     }
     Views: {
-      [_ in never]: never
+      public_stats: {
+        Row: {
+          total_invested: number | null
+          total_investments: number | null
+          total_users: number | null
+          total_withdrawn: number | null
+        }
+        Relationships: []
+      }
+      referral_stats: {
+        Row: {
+          active_referrals: number | null
+          full_name: string | null
+          referral_count: number | null
+          total_commission: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      vip_user_info: {
+        Row: {
+          full_name: string | null
+          id: string | null
+          referral_count: number | null
+          total_invested: number | null
+          vip_level: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      approve_checkpoint: {
+        Args: { progress_id: string; checkpoint: string }
+        Returns: boolean
+      }
+      approve_investment_checkpoint: {
+        Args: { user_id: string; checkpoint: string }
+        Returns: boolean
+      }
+      authenticate_user: {
+        Args: { phone_number: string; user_password: string }
+        Returns: string
+      }
+      buy_product: {
+        Args: { user_id: string; product_id: string }
+        Returns: boolean
+      }
+      create_transaction: {
+        Args: { user_id: string; transaction_type: string; amount: number }
+        Returns: string
+      }
+      credit_user_balance: {
+        Args: { user_id: string; amount: number }
+        Returns: boolean
+      }
+      daily_checkin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      get_dashboard_totals: {
+        Args: { user_id: string }
+        Returns: Json
+      }
+      get_user_by_phone: {
+        Args: { phone_number: string }
+        Returns: {
+          code_parrain: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          is_admin: boolean | null
+          lien_parrain: string | null
+          mot_de_passe: string
+          nom: string
+          numero_telephone: string
+          parrain_code: string | null
+          solde: number | null
+        }[]
+      }
+      get_user_custom: {
+        Args: { user_id: string }
+        Returns: {
+          code_parrain: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          is_admin: boolean | null
+          lien_parrain: string | null
+          mot_de_passe: string
+          nom: string
+          numero_telephone: string
+          parrain_code: string | null
+          solde: number | null
+        }[]
+      }
+      get_user_referrals: {
+        Args: { user_id: string }
+        Returns: {
+          id: string
+          parrain_id: string
+          filleul_id: string
+          bonus: number
+          date_creation: string
+          filleul_details: Json
+        }[]
+      }
+      get_user_transactions: {
+        Args: { user_id: string }
+        Returns: {
+          created_at: string
+          date_traitement: string | null
+          id: string
+          montant: number
+          numero_paiement: string | null
+          operateur_paiement: string | null
+          product_id: string | null
+          statut: string
+          transaction_id: string | null
+          type: string
+          user_id: string
+        }[]
+      }
+      get_users_with_investment_status: {
+        Args: Record<PropertyKey, never>
+        Returns: Json[]
+      }
+      register_user: {
+        Args: {
+          parrain_code: string
+          phone_number: string
+          user_nom: string
+          user_password: string
+        }
+        Returns: string
+      }
+      set_user_balance: {
+        Args: { user_id: string; new_balance: number }
+        Returns: boolean
+      }
+      start_investment: {
+        Args: { transaction_id: string }
+        Returns: string
+      }
+      update_user_withdraw_code: {
+        Args: { user_id: string; code: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      document_status:
-        | "uploaded"
-        | "verified"
-        | "pending"
-        | "rejected"
-        | "expired"
-      immigration_program: "Entrée express" | "Arrima" | "Autre"
-      status_type:
-        | "En cours"
-        | "Approuvé"
-        | "En attente"
-        | "Rejeté"
-        | "Complété"
-        | "Expiré"
-      visa_type: "Visiteur" | "Travail" | "Résidence Permanente"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -604,24 +737,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      document_status: [
-        "uploaded",
-        "verified",
-        "pending",
-        "rejected",
-        "expired",
-      ],
-      immigration_program: ["Entrée express", "Arrima", "Autre"],
-      status_type: [
-        "En cours",
-        "Approuvé",
-        "En attente",
-        "Rejeté",
-        "Complété",
-        "Expiré",
-      ],
-      visa_type: ["Visiteur", "Travail", "Résidence Permanente"],
-    },
+    Enums: {},
   },
 } as const
