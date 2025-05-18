@@ -9,6 +9,64 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from '@/integrations/supabase/types';
 
+// Import UI components
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+
+// DateInput component (custom component for date selection)
+type DateInputProps = {
+  value?: Date;
+  onChange: (date: Date) => void;
+};
+
+const DateInput: React.FC<DateInputProps> = ({ value, onChange }) => {
+  return (
+    <Input
+      type="date"
+      value={value ? format(value, 'yyyy-MM-dd') : ''}
+      onChange={(e) => {
+        const date = new Date(e.target.value);
+        if (!isNaN(date.getTime())) {
+          onChange(date);
+        }
+      }}
+    />
+  );
+};
+
 // Types précis basés sur la base de données
 type VisaType = Database['public']['Enums']['visa_type'];
 type StatusType = Database['public']['Enums']['status_type'];
