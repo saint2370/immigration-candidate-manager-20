@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -258,6 +259,130 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
     const currentYear = new Date().getFullYear().toString().slice(-2);
     const randomPart = Math.floor(10000 + Math.random() * 90000); // Nombre à 5 chiffres
     return `CAN-${currentYear}-${randomPart}`;
+  };
+
+  // Implémentation des fonctions manquantes
+  
+  // Téléverser la photo de profil
+  const uploadProfilePhoto = async (candidateId: string): Promise<string | null> => {
+    if (!photoFile) return null;
+    
+    try {
+      // Générer un nom de fichier unique
+      const fileExt = photoFile.name.split('.').pop();
+      const fileName = `${candidateId}-${Date.now()}.${fileExt}`;
+      const filePath = `profile-photos/${fileName}`;
+      
+      // Téléverser le fichier dans le storage
+      const { error: uploadError } = await supabase.storage
+        .from('candidates')
+        .upload(filePath, photoFile);
+      
+      if (uploadError) throw uploadError;
+      
+      // Obtenir l'URL publique
+      const { data } = supabase.storage
+        .from('candidates')
+        .getPublicUrl(filePath);
+      
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading profile photo:', error);
+      return null;
+    }
+  };
+  
+  // Insérer l'historique de création
+  const insertHistory = async (candidateId: string, action: string) => {
+    try {
+      await supabase.from('history').insert({
+        candidate_id: candidateId,
+        action: action,
+        details: `Action effectuée par un administrateur`
+      });
+    } catch (error) {
+      console.error('Error inserting history:', error);
+    }
+  };
+  
+  // Insérer les détails de résidence permanente
+  const insertResidenceDetails = async (candidateId: string) => {
+    try {
+      const residenceData = residenceForm.getValues();
+      
+      // Insérer les détails de résidence permanente
+      const { data: insertedResidence, error: residenceError } = await supabase
+        .from('permanent_residence_details')
+        .insert({
+          candidate_id: candidateId,
+          immigration_program: residenceData.programmeImmigration as ImmigrationProgram,
+          nombre_personnes: residenceData.nombrePersonnes,
+          conjoint_nom: residenceData.conjointNom || null,
+          conjoint_prenom: residenceData.conjointPrenom || null,
+          conjoint_passport: residenceData.conjointPassport || null
+        })
+        .select();
+      
+      if (residenceError) throw residenceError;
+      
+      // Si des enfants ont été ajoutés, les insérer
+      if (enfants.length > 0 && insertedResidence && insertedResidence.length > 0) {
+        const residenceId = insertedResidence[0].id;
+        
+        for (const enfant of enfants) {
+          await supabase.from('enfants').insert({
+            permanent_residence_id: residenceId,
+            nom: enfant.nom,
+            prenom: enfant.prenom,
+            age: parseInt(enfant.age, 10)
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error inserting residence details:', error);
+    }
+  };
+  
+  // Insérer les détails du vol
+  const insertFlightDetails = async (candidateId: string, flightDetails: string) => {
+    try {
+      await supabase.from('details_vol').insert({
+        candidate_id: candidateId,
+        numero_vol: flightDetails
+      });
+    } catch (error) {
+      console.error('Error inserting flight details:', error);
+    }
+  };
+  
+  // Insérer les documents
+  const insertDocuments = async (candidateId: string) => {
+    try {
+      for (const [documentTypeId, file] of Object.entries(uploadedDocuments)) {
+        if (!file) continue;
+        
+        // Générer un nom de fichier unique
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${candidateId}-${documentTypeId}-${Date.now()}.${fileExt}`;
+        const filePath = `documents/${fileName}`;
+        
+        // Téléverser le fichier
+        await supabase.storage
+          .from('candidates')
+          .upload(filePath, file);
+        
+        // Enregistrer les métadonnées du document
+        await supabase.from('documents').insert({
+          candidate_id: candidateId,
+          document_type_id: documentTypeId,
+          status: 'uploaded' as DocumentStatus,
+          file_path: filePath,
+          filename: file.name
+        });
+      }
+    } catch (error) {
+      console.error('Error uploading documents:', error);
+    }
   };
 
   // Soumission du formulaire
