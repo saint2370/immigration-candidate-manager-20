@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,42 +8,6 @@ import { Plus, X, Upload } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from '@/integrations/supabase/types';
-
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { Input, DateInput } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { Label } from '../ui/label';
 
 // Types précis basés sur la base de données
 type VisaType = Database['public']['Enums']['visa_type'];
@@ -390,6 +353,17 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
     setIsSubmitting(true);
     
     try {
+      // Vérifier que la date de naissance est définie
+      if (!data.dateNaissance) {
+        toast({
+          title: "Erreur de validation",
+          description: "La date de naissance est obligatoire",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       // Formater les dates pour la base de données (YYYY-MM-DD)
       const formatDateForDB = (date: Date) => format(date, 'yyyy-MM-dd');
 
@@ -398,6 +372,27 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
 
       // Variables pour stocker les résultats d'upload
       let photoUrlPath = null;
+      
+      console.log("Données à envoyer:", {
+        nom: data.nom,
+        prenom: data.prenom,
+        date_naissance: formatDateForDB(data.dateNaissance),
+        lieu_naissance: data.lieuNaissance,
+        nationalite: data.lieuNaissance, // Using lieu_naissance as nationality
+        numero_passport: data.numeroPassport,
+        telephone: data.numeroTelephone,
+        email: data.email || null,
+        adresse: data.adresse || null,
+        visa_type: data.typeVisa,
+        procedure: data.procedure || null,
+        date_soumission: formatDateForDB(data.dateSoumission),
+        delai_traitement: data.delaiTraitement || null,
+        status: data.status,
+        date_voyage: formatDateForDB(data.dateVoyagePrevue),
+        bureau: data.bureau,
+        notes: data.notes || null,
+        identification_number: identificationNumber
+      });
       
       // Insérer le candidat
       const { data: insertedCandidate, error: insertError } = await supabase
@@ -426,8 +421,14 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
         .select();
       
       if (insertError) {
-        console.error('Insert error:', insertError);
-        throw insertError;
+        console.error('Error saving candidate:', insertError);
+        toast({
+          title: "Erreur",
+          description: `Une erreur s'est produite lors de l'ajout du candidat: ${insertError.message}`,
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
       }
       
       if (!insertedCandidate || insertedCandidate.length === 0) {
