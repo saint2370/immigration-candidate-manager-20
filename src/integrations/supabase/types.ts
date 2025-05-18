@@ -365,7 +365,7 @@ export type Database = {
           status: string
           statut: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           amount: number
@@ -384,7 +384,7 @@ export type Database = {
           status?: string
           statut?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           amount?: number
@@ -403,7 +403,7 @@ export type Database = {
           status?: string
           statut?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -673,7 +673,7 @@ export type Database = {
           statut: string
           transaction_id: string | null
           type: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -686,7 +686,7 @@ export type Database = {
           statut?: string
           transaction_id?: string | null
           type: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -699,7 +699,7 @@ export type Database = {
           statut?: string
           transaction_id?: string | null
           type?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -956,19 +956,31 @@ export type Database = {
           statut: string
           transaction_id: string | null
           type: string
-          user_id: string
+          user_id: string | null
         }[]
       }
       get_users_with_investment_status: {
         Args: Record<PropertyKey, never>
         Returns: Json[]
       }
+      get_vip_daily_bonus: {
+        Args: { vip_level: string }
+        Returns: number
+      }
+      get_vip_withdrawal_delay: {
+        Args: { vip_level: string }
+        Returns: number
+      }
+      get_vip_withdrawal_fee: {
+        Args: { vip_level: string }
+        Returns: number
+      }
       register_user: {
         Args: {
           parrain_code: string
           phone_number: string
-          user_nom: string
           user_password: string
+          user_nom: string
         }
         Returns: string
       }
@@ -986,6 +998,10 @@ export type Database = {
       }
       update_user_withdraw_code: {
         Args: { user_id: string; code: string }
+        Returns: boolean
+      }
+      valider_depot: {
+        Args: { transaction_id: string; admin_id: string }
         Returns: boolean
       }
     }

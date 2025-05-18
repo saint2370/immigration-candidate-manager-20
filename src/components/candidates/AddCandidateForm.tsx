@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -254,225 +253,11 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
     setPhotoPreview(null);
   };
 
-  // Téléverser un fichier dans le storage Supabase
-  const uploadFile = async (file: File, candidateId: string, documentTypeId: string) => {
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${candidateId}/${documentTypeId}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${fileName}`;
-      
-      console.log('Uploading file:', fileName, 'to path:', filePath);
-      
-      const { data, error } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-      
-      if (error) {
-        console.error('Error uploading to storage:', error);
-        throw error;
-      }
-      
-      console.log('Upload successful:', data);
-      return { filePath, fileName: file.name };
-    } catch (error) {
-      console.error('Exception during upload:', error);
-      throw error;
-    }
-  };
-
-  // Téléverser la photo de profil
-  const uploadProfilePhoto = async (candidateId: string): Promise<string | null> => {
-    if (!photoFile) return null;
-    
-    try {
-      const fileExt = photoFile.name.split('.').pop();
-      const fileName = `${candidateId}/profile.${fileExt}`;
-      
-      const { data, error } = await supabase.storage
-        .from('profile_photos')
-        .upload(fileName, photoFile, {
-          cacheControl: '3600',
-          upsert: false
-        });
-      
-      if (error) {
-        console.error('Error uploading profile photo:', error);
-        throw error;
-      }
-      
-      console.log('Upload profile photo successful:', data);
-      return fileName;
-    } catch (error) {
-      console.error('Exception during profile photo upload:', error);
-      throw error;
-    }
-  };
-
-  // Insérer des documents dans la base de données
-  const insertDocuments = async (candidateId: string) => {
-    const documentsPromises = [];
-    
-    for (const [documentTypeId, file] of Object.entries(uploadedDocuments)) {
-      if (!file) continue;
-      
-      try {
-        console.log('Processing document:', documentTypeId, 'for candidate:', candidateId);
-        
-        // Upload the file
-        const { filePath, fileName } = await uploadFile(file, candidateId, documentTypeId);
-        
-        // Insert document record
-        const insertPromise = supabase
-          .from('documents')
-          .insert({
-            candidate_id: candidateId,
-            document_type_id: documentTypeId,
-            file_path: filePath,
-            filename: fileName,
-            status: 'uploaded' as DocumentStatus,
-            upload_date: new Date().toISOString()
-          });
-        
-        documentsPromises.push(insertPromise);
-      } catch (error) {
-        console.error('Error uploading document:', error);
-        toast({
-          title: "Avertissement",
-          description: `Échec du téléversement d'un document: ${file.name}`,
-          variant: "destructive"
-        });
-        // Continue with other documents even if one fails
-      }
-    }
-    
-    // Wait for all document inserts to complete
-    if (documentsPromises.length > 0) {
-      try {
-        await Promise.all(documentsPromises);
-        console.log('All documents inserted successfully');
-      } catch (error) {
-        console.error('Error inserting documents:', error);
-      }
-    }
-  };
-
-  // Insérer l'historique du candidat
-  const insertHistory = async (candidateId: string, action: string) => {
-    try {
-      const { error } = await supabase
-        .from('history')
-        .insert({
-          candidate_id: candidateId,
-          action,
-          date: new Date().toISOString()
-        });
-      
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error inserting history:', error);
-    }
-  };
-
-  // Insérer les détails du vol
-  const insertFlightDetails = async (candidateId: string, detailsBillet: string) => {
-    if (!detailsBillet) return;
-    
-    try {
-      const { error } = await supabase
-        .from('details_vol')
-        .insert({
-          candidate_id: candidateId,
-          numero_vol: detailsBillet
-        });
-      
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error inserting flight details:', error);
-    }
-  };
-
-  // Insérer les détails de résidence permanente
-  const insertResidenceDetails = async (candidateId: string) => {
-    if (visaType !== 'Résidence Permanente') return null;
-    
-    try {
-      const residenceData = residenceForm.getValues();
-      
-      const { data, error } = await supabase
-        .from('permanent_residence_details')
-        .insert({
-          candidate_id: candidateId,
-          immigration_program: residenceData.programmeImmigration as ImmigrationProgram,
-          nombre_personnes: residenceData.nombrePersonnes,
-          conjoint_nom: residenceData.conjointNom || null,
-          conjoint_prenom: residenceData.conjointPrenom || null,
-          conjoint_passport: residenceData.conjointPassport || null
-        })
-        .select();
-      
-      if (error) throw error;
-      
-      // Si nous avons des enfants, les insérer également
-      if (enfants.length > 0 && data && data.length > 0) {
-        const permanentResidenceId = data[0].id;
-        
-        for (const enfant of enfants) {
-          const { error: enfantError } = await supabase
-            .from('enfants')
-            .insert({
-              permanent_residence_id: permanentResidenceId,
-              nom: enfant.nom,
-              prenom: enfant.prenom,
-              age: parseInt(enfant.age, 10)
-            });
-          
-          if (enfantError) throw enfantError;
-        }
-      }
-      
-      return data && data.length > 0 ? data[0].id : null;
-    } catch (error) {
-      console.error('Error inserting residence details:', error);
-      return null;
-    }
-  };
-
-  // Fonction pour valider et formater une date entrée manuellement
-  const parseDateString = (value: string): Date | null => {
-    // Format attendu: JJ/MM/AAAA
-    const parts = value.split('/');
-    if (parts.length !== 3) return null;
-    
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1; // Les mois commencent à 0
-    const year = parseInt(parts[2], 10);
-    
-    // Vérifier que les valeurs sont des nombres valides
-    if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
-    
-    // Vérifier que la date est valide
-    const date = new Date(year, month, day);
-    if (
-      date.getDate() !== day ||
-      date.getMonth() !== month ||
-      date.getFullYear() !== year
-    ) {
-      return null; // Date invalide (ex: 31/02/2023)
-    }
-    
-    return date;
-  };
-
-  // Formatter une date en chaîne de caractères (JJ/MM/AAAA)
-  const formatDateString = (date: Date | null): string => {
-    if (!date) return '';
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+  // Fonction pour générer un matricule unique
+  const generateIdentificationNumber = () => {
+    const currentYear = new Date().getFullYear().toString().slice(-2);
+    const randomPart = Math.floor(10000 + Math.random() * 90000); // Nombre à 5 chiffres
+    return `CAN-${currentYear}-${randomPart}`;
   };
 
   // Soumission du formulaire
@@ -482,6 +267,9 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
     try {
       // Formater les dates pour la base de données (YYYY-MM-DD)
       const formatDateForDB = (date: Date) => format(date, 'yyyy-MM-dd');
+
+      // Générer un matricule unique pour le candidat
+      const identificationNumber = generateIdentificationNumber();
 
       // Variables pour stocker les résultats d'upload
       let photoUrlPath = null;
@@ -507,7 +295,8 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
           date_voyage: formatDateForDB(data.dateVoyagePrevue),
           bureau: data.bureau,
           notes: data.notes || null,
-          photo_url: null // Initialisé à null, sera mis à jour après l'upload
+          photo_url: null, // Initialisé à null, sera mis à jour après l'upload
+          identification_number: identificationNumber // Ajout du matricule généré
         })
         .select();
       
@@ -564,7 +353,7 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
       
       toast({
         title: "Succès",
-        description: "Le candidat a été ajouté avec succès",
+        description: `Le candidat a été ajouté avec succès. Matricule: ${identificationNumber}`,
         variant: "default"
       });
       
@@ -573,7 +362,8 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
         id: candidateId,
         prenom: data.prenom,
         nom: data.nom,
-        photo_url: photoUrlPath
+        photo_url: photoUrlPath,
+        identification_number: identificationNumber
         // Autres données du candidat...
       });
       
