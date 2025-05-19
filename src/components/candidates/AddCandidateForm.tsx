@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { Plus, X, Upload } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -282,37 +281,57 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
     return `CAN-${currentYear}-${randomPart}`;
   };
 
-  // Implémentation des fonctions manquantes
-  
   // Téléverser la photo de profil
-  const uploadProfilePhoto = async (candidateId: string): Promise<string | null> => {
-    if (!photoFile) return null;
-    
+  const uploadProfilePhoto = async (candidateId: string, photoFile: File): Promise<string | null> => {
     try {
+      // Vérifier que le bucket "candidates" existe
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const candidatesBucketExists = buckets?.some(bucket => bucket.name === 'candidates');
+      
+      // Créer le bucket s'il n'existe pas
+      if (!candidatesBucketExists) {
+        const { error: createBucketError } = await supabase.storage.createBucket('candidates', {
+          public: true, // Rendre le bucket public pour accéder aux images
+        });
+        
+        if (createBucketError) {
+          console.error('Error creating bucket:', createBucketError);
+          return null;
+        }
+        console.log('Created candidates bucket successfully');
+      }
+      
       // Générer un nom de fichier unique
       const fileExt = photoFile.name.split('.').pop();
       const fileName = `${candidateId}-${Date.now()}.${fileExt}`;
       const filePath = `profile-photos/${fileName}`;
+      
+      console.log('Uploading file to path:', filePath);
       
       // Téléverser le fichier dans le storage
       const { error: uploadError } = await supabase.storage
         .from('candidates')
         .upload(filePath, photoFile);
       
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Error uploading profile photo:', uploadError);
+        return null;
+      }
       
       // Obtenir l'URL publique
       const { data } = supabase.storage
         .from('candidates')
         .getPublicUrl(filePath);
       
+      console.log('File uploaded successfully, URL:', data.publicUrl);
+      
       return data.publicUrl;
     } catch (error) {
-      console.error('Error uploading profile photo:', error);
+      console.error('Error in uploadProfilePhoto:', error);
       return null;
     }
   };
-  
+
   // Insérer l'historique de création
   const insertHistory = async (candidateId: string, action: string) => {
     try {
@@ -499,7 +518,7 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
       // Téléverser la photo de profil si disponible
       if (photoFile) {
         try {
-          photoUrlPath = await uploadProfilePhoto(candidateId);
+          photoUrlPath = await uploadProfilePhoto(candidateId, photoFile);
           
           // Mettre à jour le candidat avec l'URL de la photo
           if (photoUrlPath) {
