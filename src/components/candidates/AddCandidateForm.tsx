@@ -284,21 +284,50 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
   // Téléverser la photo de profil
   const uploadProfilePhoto = async (candidateId: string, photoFile: File): Promise<string | null> => {
     try {
+      console.log('Starting photo upload for candidate:', candidateId);
+      
       // Vérifier que le bucket "candidates" existe
-      const { data: buckets } = await supabase.storage.listBuckets();
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      
+      if (bucketsError) {
+        console.error('Error fetching buckets:', bucketsError);
+        return null;
+      }
+      
+      console.log('Available buckets:', buckets);
       const candidatesBucketExists = buckets?.some(bucket => bucket.name === 'candidates');
       
       // Créer le bucket s'il n'existe pas
       if (!candidatesBucketExists) {
+        console.log('Creating candidates bucket...');
+        
         const { error: createBucketError } = await supabase.storage.createBucket('candidates', {
           public: true, // Rendre le bucket public pour accéder aux images
         });
         
         if (createBucketError) {
           console.error('Error creating bucket:', createBucketError);
+          toast({
+            title: "Erreur",
+            description: `Impossible de créer le bucket de stockage: ${createBucketError.message}`,
+            variant: "destructive"
+          });
           return null;
         }
         console.log('Created candidates bucket successfully');
+      } else {
+        console.log('Candidates bucket already exists');
+        
+        // S'assurer que le bucket est public
+        const { error: updateBucketError } = await supabase.storage.updateBucket('candidates', {
+          public: true
+        });
+        
+        if (updateBucketError) {
+          console.error('Error updating bucket visibility:', updateBucketError);
+        } else {
+          console.log('Bucket visibility updated to public');
+        }
       }
       
       // Générer un nom de fichier unique
@@ -315,6 +344,11 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
       
       if (uploadError) {
         console.error('Error uploading profile photo:', uploadError);
+        toast({
+          title: "Erreur",
+          description: `Impossible de téléverser la photo: ${uploadError.message}`,
+          variant: "destructive"
+        });
         return null;
       }
       
@@ -328,6 +362,11 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
       return data.publicUrl;
     } catch (error) {
       console.error('Error in uploadProfilePhoto:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors du téléversement de la photo",
+        variant: "destructive"
+      });
       return null;
     }
   };
@@ -446,6 +485,7 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
 
       // Générer un matricule unique pour le candidat
       const identificationNumber = generateIdentificationNumber();
+      console.log("Matricule généré:", identificationNumber);
 
       // Variables pour stocker les résultats d'upload
       let photoUrlPath = null;
@@ -517,15 +557,23 @@ const AddCandidateForm: React.FC<AddCandidateFormProps> = ({ isOpen, onClose, on
       
       // Téléverser la photo de profil si disponible
       if (photoFile) {
+        console.log('Starting photo upload process');
         try {
           photoUrlPath = await uploadProfilePhoto(candidateId, photoFile);
+          console.log('Photo uploaded, URL path:', photoUrlPath);
           
           // Mettre à jour le candidat avec l'URL de la photo
           if (photoUrlPath) {
-            await supabase
+            const { error: updateError } = await supabase
               .from('candidates')
               .update({ photo_url: photoUrlPath })
               .eq('id', candidateId);
+              
+            if (updateError) {
+              console.error('Error updating candidate with photo URL:', updateError);
+            } else {
+              console.log('Candidate updated with photo URL');
+            }
           }
         } catch (error) {
           console.error('Error uploading profile photo:', error);

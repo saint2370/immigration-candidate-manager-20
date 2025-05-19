@@ -9,7 +9,16 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    persistSession: true
+  },
+  global: {
+    headers: {
+      'x-application-name': 'visa-management'
+    }
+  }
+});
 
 // Note: We removed the module augmentation since the site_settings table
 // is now properly defined in the types.ts file after our SQL migration
